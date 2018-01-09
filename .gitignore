@@ -1,0 +1,12 @@
+/bin
+engine.trace
+val.log
+main.obj
+vc140.pdb
+stats
+gmon.out
+log
+.tags
+.DS_Store
+*.tmx.*
+Makefile
