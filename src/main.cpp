@@ -51,7 +51,8 @@ struct GameStruct {
 	Button *loadButton;
 
 	MintSprite *mainText;
-	Button *choiceButtons[CHOICE_BUTTON_MAX];
+	Button *choices[CHOICE_BUTTON_MAX];
+	int choicesNum;
 };
 
 GameStruct *game;
@@ -156,7 +157,10 @@ void mainUpdate() {
 			const char *jsTest = ""
 				"print(\"This is a test mod\");"
 				"append(\"I'm appending some text\");"
-				"addChoice(\"click me\", \"Thing clicked\");";
+				"addChoice(\"click me\", \"Thing clicked\");"
+				"addChoice(\"No! Me!\", \"Thing clicked\");"
+				"addChoice(\"Don't click anything\", \"Thing clicked\");"
+				;
 			loadMod(jsTest);
 #endif
 		}
@@ -219,4 +223,9 @@ void js_append(CScriptVar *v, void *userdata) {
 void js_addChoice(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
 	const char *arg2 = v->getParameter("dest")->getString().c_str();
+
+	assert(game->choicesNum+1 < CHOICE_BUTTON_MAX);
+	Button *btn = createButton(arg1);
+	btn->sprite->x = btn->sprite->width * game->choicesNum;
+	game->choices[game->choicesNum++] = btn;
 }
