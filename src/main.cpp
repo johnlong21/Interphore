@@ -21,6 +21,9 @@
 extern "C" void entryPoint();
 void mainUpdate();
 void mainInit();
+void js_print(CScriptVar *v, void *userdata);
+
+CTinyJS *jsInterp;
 
 #ifdef SEMI_WIN32
 INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
@@ -39,8 +42,17 @@ void entryPoint() {
 
 void mainInit() {
 	printf("Init\n");
+
+	CTinyJS *jsInterp = new CTinyJS();
+	registerFunctions(jsInterp);
+	jsInterp->addNative("function print(text)", &js_print, 0);
+	jsInterp->execute("print(\"This is a print test in js\");");
 }
 
 void mainUpdate() {
-	printf("Update\n");
+}
+
+void js_print(CScriptVar *v, void *userdata) {
+	const char *arg1 = v->getParameter("text")->getString().c_str();
+	printf("> %s\n", arg1);
 }
