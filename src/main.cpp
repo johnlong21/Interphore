@@ -22,9 +22,11 @@ enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
 extern "C" void entryPoint();
 void mainUpdate();
 void mainInit();
-void js_print(CScriptVar *v, void *userdata);
 void changeState(GameState newState);
-void loadMod(char *serialData);
+void loadMod(const char *serialData);
+
+void js_print(CScriptVar *v, void *userdata);
+void js_append(CScriptVar *v, void *userdata);
 
 struct GameStruct {
 	GameState state;
@@ -61,10 +63,11 @@ void entryPoint() {
 void mainInit() {
 	printf("Init\n");
 
-	CTinyJS *jsInterp = new CTinyJS();
+	jsInterp = new CTinyJS();
 	registerFunctions(jsInterp);
 	jsInterp->addNative("function print(text)", &js_print, 0);
-	jsInterp->execute("print(\"This is a print test in js\");");
+	jsInterp->addNative("function append(text)", &js_append, 0);
+	jsInterp->execute("print(\"JS engine init\");");
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
 
 	game = (GameStruct *)zalloc(sizeof(GameStruct));
@@ -84,18 +87,19 @@ void changeState(GameState newState) {
 		{ /// Title
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(engine->width, 100);
+			game->bg->addChild(spr);
 			spr->setText("Writer");
-			spr->x = engine->width/2 - spr->getWidth()/2;
+			spr->gravitate(0.5, 0);
 
 			game->title = spr;
 		}
 
 		{ /// Subtitle
 			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width, 100);
-			spr->setText("A story tool");
-
 			game->title->addChild(spr);
+			spr->setupEmpty(engine->width, 100);
+
+			spr->setText("A story tool");
 			spr->gravitate(0.5, 0.5);
 			spr->y = spr->parent->getHeight() + 10;
 
@@ -104,9 +108,9 @@ void changeState(GameState newState) {
 
 		{ /// Load button
 			MintSprite *spr = createMintSprite();
+			game->bg->addChild(spr);
 			spr->setupRect(128, 64, 0x444444);
-			spr->x = engine->width/2 - spr->width/2;
-			spr->y = engine->height - spr->getHeight() - 10;
+			spr->gravitate(0.5, 0.9);
 
 			game->loadButton = spr;
 		}
@@ -122,21 +126,56 @@ void changeState(GameState newState) {
 		}
 	}
 
+	if (newState == STATE_MOD) {
+		{ /// Main text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width, engine->height*0.75);
+			spr->setText("Main Text");
+			game->bg->addChild(spr);
+
+			game->mainText = spr;
+		}
+	}
+
+	if (game->state == STATE_MENU) {
+		game->title->destroy();
+		game->loadButton->destroy();
+	}
+
 	game->state = newState;
 }
 
 void mainUpdate() {
 	if (game->state == STATE_MENU) {
-		if (game->loadButton->justPressed) platformLoadFromDisk(loadMod);
+		if (game->loadButton->justPressed) {
+#if 1
+			platformLoadFromDisk(loadMod);
+#else
+			const char *jsTest = ""
+				"print(\"This is a test mod\");"
+				"append(\"I'm appending some text\");";
+			loadMod(jsTest);
+#endif
+		}
 	}
 }
 
-void loadMod(char *serialData) {
+void loadMod(const char *serialData) {
+	changeState(STATE_MOD);
 	printf("Loaded data: %s\n", serialData);
-	// jsInterp->execute(serialData);
+
+	jsInterp->execute(serialData);
 }
 
 void js_print(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
 	printf("> %s\n", arg1);
+}
+
+void js_append(CScriptVar *v, void *userdata) {
+	const char *arg1 = v->getParameter("text")->getString().c_str();
+	printf("Raw text was: %s and We're adding %s\n", game->mainText->rawText, arg1);
+	strcat(game->mainText->rawText, arg1);
+	printf("Raw text is: %s\n", game->mainText->rawText);
+	game->mainText->setText(game->mainText->rawText);
 }
