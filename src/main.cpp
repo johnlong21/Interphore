@@ -160,6 +160,7 @@ void mainUpdate() {
 				"addChoice(\"click me\", \"Thing clicked\");"
 				"addChoice(\"No! Me!\", \"Thing clicked\");"
 				"addChoice(\"Don't click anything\", \"Thing clicked\");"
+				"addChoice(\"Don't click anything2\", \"Thing clicked\");"
 				;
 			loadMod(jsTest);
 #endif
@@ -224,7 +225,7 @@ void js_addChoice(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
 	const char *arg2 = v->getParameter("dest")->getString().c_str();
 
-	assert(game->choicesNum+1 < CHOICE_BUTTON_MAX);
+	assert(game->choicesNum+1 <= CHOICE_BUTTON_MAX);
 	Button *btn = createButton(arg1);
 	btn->sprite->x = btn->sprite->width * game->choicesNum;
 	game->choices[game->choicesNum++] = btn;
