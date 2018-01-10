@@ -1,5 +1,6 @@
 /// Game
 #define CHOICE_BUTTON_MAX 4
+#define BUTTON_MAX 32
 
 /// Debugging
 // #define LOG_ASSET_ADD
@@ -18,28 +19,39 @@
 #include "gameEngine.h"
 
 enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
+struct Button;
 
 extern "C" void entryPoint();
 void mainUpdate();
 void mainInit();
 void changeState(GameState newState);
 void loadMod(const char *serialData);
+Button *createButton(const char *text);
+void destroyButton(Button *btn);
 
 void js_print(CScriptVar *v, void *userdata);
 void js_append(CScriptVar *v, void *userdata);
+void js_addChoice(CScriptVar *v, void *userdata);
+
+struct Button {
+	bool exists;
+	MintSprite *sprite;
+	MintSprite *tf;
+};
 
 struct GameStruct {
 	GameState state;
+
+	Button buttons[BUTTON_MAX];
 
 	MintSprite *bg;
 	MintSprite *title;
 	MintSprite *subtitle;
 
-	MintSprite *loadButton;
-	MintSprite *loadButtonTf;
+	Button *loadButton;
 
 	MintSprite *mainText;
-	MintSprite *choiceButtons[CHOICE_BUTTON_MAX];
+	Button *choiceButtons[CHOICE_BUTTON_MAX];
 };
 
 GameStruct *game;
@@ -67,6 +79,7 @@ void mainInit() {
 	registerFunctions(jsInterp);
 	jsInterp->addNative("function print(text)", &js_print, 0);
 	jsInterp->addNative("function append(text)", &js_append, 0);
+	jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
 	jsInterp->execute("print(\"JS engine init\");");
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
 
@@ -107,22 +120,11 @@ void changeState(GameState newState) {
 		}
 
 		{ /// Load button
-			MintSprite *spr = createMintSprite();
-			game->bg->addChild(spr);
-			spr->setupRect(128, 64, 0x444444);
-			spr->gravitate(0.5, 0.9);
+			Button *btn = createButton("Load");
+			game->bg->addChild(btn->sprite);
+			btn->sprite->gravitate(0.5, 0.90);
 
-			game->loadButton = spr;
-		}
-
-		{ /// Load button text
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(game->loadButton->getFrameWidth(), game->loadButton->getFrameHeight());
-			spr->setText("Load");
-			game->loadButton->addChild(spr);
-			spr->gravitate(0.5, 0.5);
-
-			game->loadButtonTf = spr;
+			game->loadButton = btn;
 		}
 	}
 
@@ -139,7 +141,7 @@ void changeState(GameState newState) {
 
 	if (game->state == STATE_MENU) {
 		game->title->destroy();
-		game->loadButton->destroy();
+		destroyButton(game->loadButton);
 	}
 
 	game->state = newState;
@@ -147,13 +149,14 @@ void changeState(GameState newState) {
 
 void mainUpdate() {
 	if (game->state == STATE_MENU) {
-		if (game->loadButton->justPressed) {
-#if 1
+		if (game->loadButton->sprite->justPressed) {
+#if 0
 			platformLoadFromDisk(loadMod);
 #else
 			const char *jsTest = ""
 				"print(\"This is a test mod\");"
-				"append(\"I'm appending some text\");";
+				"append(\"I'm appending some text\");"
+				"addChoice(\"click me\", \"Thing clicked\");";
 			loadMod(jsTest);
 #endif
 		}
@@ -167,6 +170,41 @@ void loadMod(const char *serialData) {
 	jsInterp->execute(serialData);
 }
 
+void destroyButton(Button *btn) {
+	btn->exists = false;
+	btn->sprite->destroy();
+}
+
+Button *createButton(const char *text) {
+	int slot;
+	for (slot = 0; slot < BUTTON_MAX; slot++)
+		if (!game->buttons[slot].exists)
+			break;
+	assert(slot < BUTTON_MAX);
+
+	Button *btn = &game->buttons[slot];
+	btn->exists = true;
+
+	{ /// Button sprite
+		MintSprite *spr = createMintSprite();
+		spr->setupRect(128, 64, 0x444444);
+
+		btn->sprite = spr;
+	}
+
+	{ /// Button text
+		MintSprite *spr = createMintSprite();
+		spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
+		spr->setText(text);
+		btn->sprite->addChild(spr);
+		spr->gravitate(0.5, 0.5);
+
+		btn->tf = spr;
+	}
+
+	return btn;
+}
+
 void js_print(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
 	printf("> %s\n", arg1);
@@ -174,8 +212,11 @@ void js_print(CScriptVar *v, void *userdata) {
 
 void js_append(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
-	printf("Raw text was: %s and We're adding %s\n", game->mainText->rawText, arg1);
 	strcat(game->mainText->rawText, arg1);
-	printf("Raw text is: %s\n", game->mainText->rawText);
 	game->mainText->setText(game->mainText->rawText);
+}
+
+void js_addChoice(CScriptVar *v, void *userdata) {
+	const char *arg1 = v->getParameter("text")->getString().c_str();
+	const char *arg2 = v->getParameter("dest")->getString().c_str();
 }
