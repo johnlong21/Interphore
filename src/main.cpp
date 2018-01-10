@@ -31,9 +31,10 @@ void changeState(GameState newState);
 void loadMod(const char *serialData);
 Button *createButton(const char *text);
 void destroyButton(Button *btn);
-void gotoPasage(const char *passageName);
+void gotoPassage(const char *passageName);
 void append(const char *text);
 void addChoice(const char *text, const char *dest);
+void clear();
 
 void js_print(CScriptVar *v, void *userdata);
 void js_append(CScriptVar *v, void *userdata);
@@ -182,7 +183,7 @@ void mainUpdate() {
 				"passage += \"Test Passage\n\";"
 				"passage += \"This is a test of a passage\n\";"
 				"passage += \"[With Simple Buttons]\n\";"
-				"passage += \"[And With Complex Buttons|With Complex Button]\n\";"
+				"passage += \"[And With Complex Buttons|With Complex Buttons]\n\";"
 				"submitPassage(passage);"
 				""
 				"passage = \"\";"
@@ -201,6 +202,14 @@ void mainUpdate() {
 				;
 			loadMod(jsTest);
 #endif
+		}
+	}
+
+	if (game->state == STATE_MOD) {
+		for (int i = 0; i < game->choicesNum; i++) {
+			if (game->choices[i]->sprite->justPressed) {
+				gotoPassage(game->choices[i]->destPassageName);
+			}
 		}
 	}
 }
@@ -247,7 +256,15 @@ Button *createButton(const char *text) {
 	return btn;
 }
 
+void clear() {
+	game->mainText->setText("");
+	for (int i = 0; i < game->choicesNum; i++) destroyButton(game->choices[i]);
+	game->choicesNum = 0;
+}
+
 void gotoPassage(const char *passageName) {
+	clear();
+
 	for (int i = 0; i < game->passagesNum; i++) {
 		Passage *passage = game->passages[i];
 		if (streq(passage->name, passageName)) {
