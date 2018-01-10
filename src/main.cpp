@@ -177,29 +177,52 @@ void mainUpdate() {
 			platformLoadFromDisk(loadMod);
 #else
 			const char *jsTest = ""
-				"var passage;"
-				""
-				"passage = \"\";"
-				"passage += \"Test Passage\n\";"
-				"passage += \"This is a test of a passage\n\";"
-				"passage += \"[With Simple Buttons]\n\";"
-				"passage += \"[And With Complex Buttons|With Complex Buttons]\n\";"
-				"submitPassage(passage);"
-				""
-				"passage = \"\";"
-				"passage += \"With Simple Buttons\n\";"
-				"passage += \"You pressed the Simple Button\n\";"
-				"passage += \"[Go back|Test Passage]\n\";"
-				"submitPassage(passage);"
-				""
-				"passage = \"\";"
-				"passage += \"With Complex Buttons\n\";"
-				"passage += \"You pressed the Complex Button\n\";"
-				"passage += \"[Go back|Test Passage]\n\";"
-				"submitPassage(passage);"
-				""
-				"gotoPassage(\"Test Passage\");"
+				"START_PASSAGE\n"
+				"Test Passage\n"
+				"This is a test of a passage, \"no need to escape quotes\"\n"
+				"[With Simple Buttons]\n"
+				"[And With Complex Buttons|With Complex Buttons]\n"
+				"END_PASSAGE\n"
+				"\n"
+				"START_PASSAGE\n"
+				"With Simple Buttons\n"
+				"You pressed the Simple Button\n"
+				"[Go back|Test Passage]\n"
+				"END_PASSAGE\n"
+				"\n"
+				"START_PASSAGE\n"
+				"With Complex Buttons\n"
+				"You pressed the Complex Button\n\n"
+				"[Go back|Test Passage]\n"
+				"END_PASSAGE\n"
+				"\n"
+				"gotoPassage(\"Test Passage\");\n"
 				;
+
+			// const char *jsTest = ""
+			// 	"var passage;"
+			// 	""
+			// 	"passage = \"\";"
+			// 	"passage += \"Test Passage\n\";"
+			// 	"passage += \"This is a test of a passage\n\";"
+			// 	"passage += \"[With Simple Buttons]\n\";"
+			// 	"passage += \"[And With Complex Buttons|With Complex Buttons]\n\";"
+			// 	"submitPassage(passage);"
+			// 	""
+			// 	"passage = \"\";"
+			// 	"passage += \"With Simple Buttons\n\";"
+			// 	"passage += \"You pressed the Simple Button\n\";"
+			// 	"passage += \"[Go back|Test Passage]\n\";"
+			// 	"submitPassage(passage);"
+			// 	""
+			// 	"passage = \"\";"
+			// 	"passage += \"With Complex Buttons\n\";"
+			// 	"passage += \"You pressed the Complex Button\n\";"
+			// 	"passage += \"[Go back|Test Passage]\n\";"
+			// 	"submitPassage(passage);"
+			// 	""
+			// 	"gotoPassage(\"Test Passage\");"
+			// 	;
 			loadMod(jsTest);
 #endif
 		}
@@ -217,8 +240,50 @@ void mainUpdate() {
 void loadMod(const char *serialData) {
 	if (game->state != STATE_MOD) changeState(STATE_MOD);
 	// printf("Loaded data: %s\n", serialData);
+	char realData[HUGE_STR] = {};
+	strcat(realData, "var __passage = \"\";\n\n");
 
-	jsInterp->execute(serialData);
+	char delim[3];
+	if (strstr(serialData, "\r\n")) strcpy(delim, "\r\n");
+	else strcpy(delim, "\n\0");
+
+	bool inPassage = false;
+	const char *lineStart = serialData;
+	for (int i = 0;; i++) {
+		const char *lineEnd = strstr(lineStart, delim);
+		if (!lineEnd) break;
+
+		char line[LARGE_STR] = {};
+		strncpy(line, lineStart, lineEnd-lineStart);
+		
+		if (strstr(line, "START_PASSAGE")) {
+			inPassage = true;
+			strcat(realData, "__passage = \"\";");
+		} else if (strstr(line, "END_PASSAGE")) {
+			inPassage = false;
+			strcat(realData, "submitPassage(__passage);");
+		} else if (inPassage) {
+			char parsedLine[LARGE_STR] = {}; //@cleanup What size should this be?
+			strcat(parsedLine, "__passage += \"");
+			for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
+				if (line[lineIndex] == '"') strcat(parsedLine, "\\\"");
+				else strncat(parsedLine, &line[lineIndex], 1);
+			}
+			strcat(parsedLine, "\\n\";");
+			strcat(realData, parsedLine);
+		} else {
+			strcat(realData, line);
+		}
+		strcat(realData, "\n");
+		// printf("Line %s\n", line);
+
+		lineStart = lineEnd+1;
+	}
+
+	printf("Gonna exec:\n%s\n", realData);
+	// exit(1);
+
+	jsInterp->execute(realData);
 }
 
 void destroyButton(Button *btn) {
