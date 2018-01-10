@@ -1,6 +1,9 @@
 /// Game
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 32
+#define PASSAGE_NAME_MAX MED_STR
+#define CHOICE_TEXT_MAX MED_STR
+#define PASSAGE_MAX 1024
 
 /// Debugging
 // #define LOG_ASSET_ADD
@@ -32,11 +35,20 @@ void destroyButton(Button *btn);
 void js_print(CScriptVar *v, void *userdata);
 void js_append(CScriptVar *v, void *userdata);
 void js_addChoice(CScriptVar *v, void *userdata);
+void js_submitPassage(CScriptVar *v, void *userdata);
+
+struct Passage {
+	char name[PASSAGE_NAME_MAX];
+	char appendData[HUGE_STR];
+	char choices[CHOICE_BUTTON_MAX][CHOICE_TEXT_MAX];
+	int choicesNum;
+};
 
 struct Button {
 	bool exists;
 	MintSprite *sprite;
 	MintSprite *tf;
+	char destPassageName[PASSAGE_NAME_MAX];
 };
 
 struct GameStruct {
@@ -53,6 +65,9 @@ struct GameStruct {
 	MintSprite *mainText;
 	Button *choices[CHOICE_BUTTON_MAX];
 	int choicesNum;
+
+	Passage *passages[PASSAGE_MAX];
+	int passagesNum;
 };
 
 GameStruct *game;
@@ -81,6 +96,7 @@ void mainInit() {
 	jsInterp->addNative("function print(text)", &js_print, 0);
 	jsInterp->addNative("function append(text)", &js_append, 0);
 	jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
+	jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 	jsInterp->execute("print(\"JS engine init\");");
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
 
@@ -155,12 +171,26 @@ void mainUpdate() {
 			platformLoadFromDisk(loadMod);
 #else
 			const char *jsTest = ""
-				"print(\"This is a test mod\");"
-				"append(\"I'm appending some text\");"
-				"addChoice(\"click me\", \"Thing clicked\");"
-				"addChoice(\"No! Me!\", \"Thing clicked\");"
-				"addChoice(\"Don't click anything\", \"Thing clicked\");"
-				"addChoice(\"Don't click anything2\", \"Thing clicked\");"
+				"var passage;"
+				""
+				"passage = \"\";"
+				"passage += \"Test Passage\n\";"
+				"passage += \"This is a test of a passage\n\";"
+				"passage += \"[With Simple Buttons]\n\";"
+				"passage += \"[And With Complex Buttons|With Complex Button]\n\";"
+				"submitPassage(passage);"
+				""
+				"passage = \"\";"
+				"passage += \"With Simple Buttons\n\";"
+				"passage += \"You pressed the Simple Button\n\";"
+				"passage += \"[Go back|Test Passage]\n\";"
+				"submitPassage(passage);"
+				""
+				"passage = \"\";"
+				"passage += \"With Complex Buttons\n\";"
+				"passage += \"You pressed the Complex Button\n\";"
+				"passage += \"[Go back|Test Passage]\n\";"
+				"submitPassage(passage);"
 				;
 			loadMod(jsTest);
 #endif
@@ -169,7 +199,7 @@ void mainUpdate() {
 }
 
 void loadMod(const char *serialData) {
-	changeState(STATE_MOD);
+	if (game->state != STATE_MOD) changeState(STATE_MOD);
 	printf("Loaded data: %s\n", serialData);
 
 	jsInterp->execute(serialData);
@@ -227,6 +257,42 @@ void js_addChoice(CScriptVar *v, void *userdata) {
 
 	assert(game->choicesNum+1 <= CHOICE_BUTTON_MAX);
 	Button *btn = createButton(arg1);
-	btn->sprite->x = btn->sprite->width * game->choicesNum;
+	btn->sprite->x = (btn->sprite->width+5) * game->choicesNum;
+	btn->sprite->y = engine->height - btn->sprite->height;
 	game->choices[game->choicesNum++] = btn;
 }
+
+void js_submitPassage(CScriptVar *v, void *userdata) {
+	const char *arg1 = v->getParameter("text")->getString().c_str();
+
+	char delim[3];
+	if (strstr(arg1, "\r\n")) strcpy(delim, "\r\n");
+	else strcpy(delim, "\n\0");
+	int delimNum = strlen(delim);
+
+	const char *lineStart = arg1;
+
+	Passage *passage = (Passage *)zalloc(sizeof(Passage));
+	for (int i = 0;; i++) {
+		const char *lineEnd = strstr(lineStart, delim);
+		if (!lineEnd) break;
+
+		char line[LARGE_STR] = {};
+		strncpy(line, lineStart, lineEnd-lineStart);
+
+		if (i == 0) strcpy(passage->name, line);
+		else if (line[0] == '[') strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
+		else strcat(passage->appendData, line);
+
+		lineStart = lineEnd+1;
+	}
+	printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
+	for (int i = 0; i < passage->choicesNum; i++) {
+		printf("Button: %s\n", passage->choices[i]);
+	}
+
+	assert(game->passagesNum+1 <= PASSAGE_MAX);
+	game->passages[game->passagesNum++] = passage;
+	// printf("Passage text %s\n", arg1);
+}
+
