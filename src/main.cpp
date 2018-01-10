@@ -28,7 +28,7 @@ extern "C" void entryPoint();
 void mainUpdate();
 void mainInit();
 void changeState(GameState newState);
-void loadMod(const char *serialData);
+void loadMod(char *serialData);
 Button *createButton(const char *text);
 void destroyButton(Button *btn);
 void gotoPassage(const char *passageName);
@@ -173,8 +173,30 @@ void changeState(GameState newState) {
 void mainUpdate() {
 	if (game->state == STATE_MENU) {
 		if (game->loadButton->sprite->justPressed) {
-#if 0
-			platformLoadFromDisk(loadMod);
+#ifdef SEMI_WIN32
+#if 1
+			const char *jsTest = ""
+				"START_PASSAGE\r\n"
+				"Test Passage\r\n"
+				"This is a test of a passage, \"no need to escape quotes\"\r\n"
+				"[With Simple Buttons]\r\n"
+				"[And With Complex Buttons|With Complex Buttons]\r\n"
+				"END_PASSAGE\r\n"
+				"\r\n"
+				"START_PASSAGE\r\n"
+				"With Simple Buttons\r\n"
+				"You pressed the Simple Button\r\n"
+				"[Go back|Test Passage]\r\n"
+				"END_PASSAGE\r\n"
+				"\r\n"
+				"START_PASSAGE\r\n"
+				"With Complex Buttons\r\n"
+				"You pressed the Complex Button\r\n\r\n"
+				"[Go back|Test Passage]\r\n"
+				"END_PASSAGE\r\n"
+				"\r\n"
+				"gotoPassage(\"Test Passage\");\r\n"
+				;
 #else
 			const char *jsTest = ""
 				"START_PASSAGE\n"
@@ -198,32 +220,10 @@ void mainUpdate() {
 				"\n"
 				"gotoPassage(\"Test Passage\");\n"
 				;
-
-			// const char *jsTest = ""
-			// 	"var passage;"
-			// 	""
-			// 	"passage = \"\";"
-			// 	"passage += \"Test Passage\n\";"
-			// 	"passage += \"This is a test of a passage\n\";"
-			// 	"passage += \"[With Simple Buttons]\n\";"
-			// 	"passage += \"[And With Complex Buttons|With Complex Buttons]\n\";"
-			// 	"submitPassage(passage);"
-			// 	""
-			// 	"passage = \"\";"
-			// 	"passage += \"With Simple Buttons\n\";"
-			// 	"passage += \"You pressed the Simple Button\n\";"
-			// 	"passage += \"[Go back|Test Passage]\n\";"
-			// 	"submitPassage(passage);"
-			// 	""
-			// 	"passage = \"\";"
-			// 	"passage += \"With Complex Buttons\n\";"
-			// 	"passage += \"You pressed the Complex Button\n\";"
-			// 	"passage += \"[Go back|Test Passage]\n\";"
-			// 	"submitPassage(passage);"
-			// 	""
-			// 	"gotoPassage(\"Test Passage\");"
-			// 	;
-			loadMod(jsTest);
+#endif
+			loadMod((char *)jsTest);
+#else
+			platformLoadFromDisk(loadMod);
 #endif
 		}
 	}
@@ -237,20 +237,24 @@ void mainUpdate() {
 	}
 }
 
-void loadMod(const char *serialData) {
+void loadMod(char *serialData) {
 	if (game->state != STATE_MOD) changeState(STATE_MOD);
 	// printf("Loaded data: %s\n", serialData);
+	char *inputData = (char *)zalloc(SERIAL_SIZE);
+
 	char realData[HUGE_STR] = {};
 	strcat(realData, "var __passage = \"\";\n\n");
 
-	char delim[3];
-	if (strstr(serialData, "\r\n")) strcpy(delim, "\r\n");
-	else strcpy(delim, "\n\0");
+	int serialLen = strlen(serialData);
+	int inputLen = 0;
+	for (int i = 0; i < serialLen; i++)
+		if (serialData[i] != '\r')
+			inputData[inputLen++] = serialData[i];
 
 	bool inPassage = false;
-	const char *lineStart = serialData;
+	const char *lineStart = inputData;
 	for (int i = 0;; i++) {
-		const char *lineEnd = strstr(lineStart, delim);
+		const char *lineEnd = strstr(lineStart, "\n");
 		if (!lineEnd) break;
 
 		char line[LARGE_STR] = {};
@@ -269,13 +273,13 @@ void loadMod(const char *serialData) {
 				if (line[lineIndex] == '"') strcat(parsedLine, "\\\"");
 				else strncat(parsedLine, &line[lineIndex], 1);
 			}
-			strcat(parsedLine, "\\n\";");
+			strcat(parsedLine, "\n");
+			strcat(parsedLine, "\";");
 			strcat(realData, parsedLine);
 		} else {
 			strcat(realData, line);
 		}
-		strcat(realData, "\n");
-		// printf("Line %s\n", line);
+			strcat(realData, "\n");
 
 		lineStart = lineEnd+1;
 	}
@@ -283,6 +287,7 @@ void loadMod(const char *serialData) {
 	printf("Gonna exec:\n%s\n", realData);
 	// exit(1);
 
+	free(inputData);
 	jsInterp->execute(realData);
 }
 
@@ -330,8 +335,10 @@ void clear() {
 void gotoPassage(const char *passageName) {
 	clear();
 
+	// printf("Passages %d\n", game->passagesNum);
 	for (int i = 0; i < game->passagesNum; i++) {
 		Passage *passage = game->passages[i];
+		// printf("Checking passage %s\n", passage->name);
 		if (streq(passage->name, passageName)) {
 			append(passage->appendData);
 			for (int choiceIndex = 0; choiceIndex < passage->choicesNum; choiceIndex++) {
