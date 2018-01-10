@@ -1,7 +1,5 @@
-#define VERSION "0.0.1"
-
 /// Game
-// nil
+#define CHOICE_BUTTON_MAX 4
 
 /// Debugging
 // #define LOG_ASSET_ADD
@@ -16,16 +14,21 @@
 #include "../bin/assetLib.cpp"
 #endif
 
+#define VERSION "0.0.1"
 #include "gameEngine.h"
+
+enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
 
 extern "C" void entryPoint();
 void mainUpdate();
 void mainInit();
 void js_print(CScriptVar *v, void *userdata);
-
-enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
+void changeState(GameState newState);
+void loadMod(char *serialData);
 
 struct GameStruct {
+	GameState state;
+
 	MintSprite *bg;
 	MintSprite *title;
 	MintSprite *subtitle;
@@ -33,7 +36,8 @@ struct GameStruct {
 	MintSprite *loadButton;
 	MintSprite *loadButtonTf;
 
-	GameState state;
+	MintSprite *mainText;
+	MintSprite *choiceButtons[CHOICE_BUTTON_MAX];
 };
 
 GameStruct *game;
@@ -65,55 +69,71 @@ void mainInit() {
 
 	game = (GameStruct *)zalloc(sizeof(GameStruct));
 
-	{ /// Bg
-		MintSprite *spr = createMintSprite();
-		spr->setupRect(engine->width, engine->height, 0x000000);
+	changeState(STATE_MENU);
+}
 
-		game->bg = spr;
+void changeState(GameState newState) {
+	if (newState == STATE_MENU) {
+		{ /// Bg
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(engine->width, engine->height, 0x000000);
+
+			game->bg = spr;
+		}
+
+		{ /// Title
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width, 100);
+			spr->setText("Writer");
+			spr->x = engine->width/2 - spr->getWidth()/2;
+
+			game->title = spr;
+		}
+
+		{ /// Subtitle
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width, 100);
+			spr->setText("A story tool");
+
+			game->title->addChild(spr);
+			spr->gravitate(0.5, 0.5);
+			spr->y = spr->parent->getHeight() + 10;
+
+			game->subtitle = spr;
+		}
+
+		{ /// Load button
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(128, 64, 0x444444);
+			spr->x = engine->width/2 - spr->width/2;
+			spr->y = engine->height - spr->getHeight() - 10;
+
+			game->loadButton = spr;
+		}
+
+		{ /// Load button text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(game->loadButton->getFrameWidth(), game->loadButton->getFrameHeight());
+			spr->setText("Load");
+			game->loadButton->addChild(spr);
+			spr->gravitate(0.5, 0.5);
+
+			game->loadButtonTf = spr;
+		}
 	}
 
-	{ /// Title
-		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(engine->width, 100);
-		spr->setText("Writer");
-		spr->x = engine->width/2 - spr->getWidth()/2;
-
-		game->title = spr;
-	}
-
-	{ /// Subtitle
-		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(engine->width, 100);
-		spr->setText("A story tool");
-
-		game->title->addChild(spr);
-		spr->gravitate(0.5, 0.5);
-		spr->y = spr->parent->getHeight() + 10;
-
-		game->subtitle = spr;
-	}
-
-	{ /// Load button
-		MintSprite *spr = createMintSprite();
-		spr->setupRect(128, 64, 0x444444);
-		spr->x = engine->width/2 - spr->width/2;
-		spr->y = engine->height - spr->getHeight() - 10;
-
-		game->loadButton = spr;
-	}
-
-	{ /// Load button text
-		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(game->loadButton->getFrameWidth(), game->loadButton->getFrameHeight());
-		spr->setText("Load");
-		game->loadButton->addChild(spr);
-		spr->gravitate(0.5, 0.5);
-
-		game->loadButtonTf = spr;
-	}
+	game->state = newState;
 }
 
 void mainUpdate() {
+	if (game->state == STATE_MENU) {
+		if (game->loadButton->justPressed) platformLoadFromDisk(loadMod);
+	}
+}
+
+void loadMod(char *serialData) {
+	printf("Loaded data: %s\n", serialData);
+	// jsInterp->execute(serialData);
 }
 
 void js_print(CScriptVar *v, void *userdata) {
