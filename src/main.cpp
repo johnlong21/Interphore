@@ -156,7 +156,7 @@ void changeState(GameState newState) {
 		{ /// Main text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(engine->width, engine->height*0.75);
-			spr->setText("Main Text");
+			spr->setText("Mod load failed");
 			game->bg->addChild(spr);
 
 			game->mainText = spr;
