@@ -252,7 +252,6 @@ void updateMain() {
 	if (game->state == STATE_MENU) {
 		if (game->loadButton->sprite->justPressed) {
 #ifdef SEMI_WIN32
-#if 1
 			const char *jsTest = ""
 				"START_PASSAGE\r\n"
 				"Test Passage\r\n"
@@ -275,30 +274,6 @@ void updateMain() {
 				"\r\n"
 				"gotoPassage(\"Test Passage\");"
 				;
-#else
-			const char *jsTest = ""
-				"START_PASSAGE\n"
-				"Test Passage\n"
-				"This is a test of a passage, \"no need to escape quotes\"\n"
-				"[With Simple Buttons]\n"
-				"[And With Complex Buttons|With Complex Buttons]\n"
-				"END_PASSAGE\n"
-				"\n"
-				"START_PASSAGE\n"
-				"With Simple Buttons\n"
-				"You pressed the Simple Button\n"
-				"[Go back|Test Passage]\n"
-				"END_PASSAGE\n"
-				"\n"
-				"START_PASSAGE\n"
-				"With Complex Buttons\n"
-				"You pressed the Complex Button\n\n"
-				"[Go back|Test Passage]\n"
-				"END_PASSAGE\n"
-				"\n"
-				"gotoPassage(\"Test Passage\");\n"
-				;
-#endif
 			loadMod((char *)jsTest);
 #else
 			platformLoadFromDisk(loadMod);
