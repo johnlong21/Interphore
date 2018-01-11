@@ -1,0 +1,20 @@
+START_PASSAGE
+Test Passage
+This is a test of a passage, "no need to escape quotes"
+[With Simple Buttons]
+[And With Complex Buttons|With Complex Buttons]
+END_PASSAGE
+
+START_PASSAGE
+With Simple Buttons
+You pressed the Simple Button
+[Go back|Test Passage]
+END_PASSAGE
+
+START_PASSAGE
+With Complex Buttons
+You pressed the Complex Button
+[Go back|Test Passage]
+END_PASSAGE
+
+gotoPassage("Test Passage");
