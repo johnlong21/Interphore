@@ -1,6 +1,6 @@
 START_PASSAGE
 Test Passage
-This is a test of a passage, "no need to escape quotes"
+This is a test of a passage
 [With Simple Buttons]
 [And With Complex Buttons|With Complex Buttons]
 END_PASSAGE
