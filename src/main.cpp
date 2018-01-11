@@ -67,6 +67,7 @@ struct GameStruct {
 	MintSprite *subtitle;
 
 	Button *loadButton;
+	Button *loadUrlButton;
 
 	MintSprite *mainText;
 	Button *choices[CHOICE_BUTTON_MAX];
@@ -143,6 +144,14 @@ void changeState(GameState newState) {
 			game->subtitle = spr;
 		}
 
+		{ /// Load url button
+			Button *btn = createButton("Load url");
+			game->bg->addChild(btn->sprite);
+			btn->sprite->gravitate(0.5, 0.70);
+
+			game->loadUrlButton = btn;
+		}
+
 		{ /// Load button
 			Button *btn = createButton("Load");
 			game->bg->addChild(btn->sprite);
@@ -166,6 +175,7 @@ void changeState(GameState newState) {
 	if (game->state == STATE_MENU) {
 		game->title->destroy();
 		destroyButton(game->loadButton);
+		destroyButton(game->loadUrlButton);
 	}
 
 	game->state = newState;
@@ -227,6 +237,9 @@ void mainUpdate() {
 			platformLoadFromDisk(loadMod);
 #endif
 		}
+
+		if (game->loadUrlButton->sprite->justPressed)
+			platformLoadFromUrl("https://pastebin.com/raw/SydjvVez", loadMod);
 	}
 
 	if (game->state == STATE_MOD) {
