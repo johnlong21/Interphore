@@ -41,6 +41,7 @@ void js_append(CScriptVar *v, void *userdata);
 void js_addChoice(CScriptVar *v, void *userdata);
 void js_submitPassage(CScriptVar *v, void *userdata);
 void js_gotoPassage(CScriptVar *v, void *userdata);
+void dumpHex(const void* data, size_t size);
 
 struct Passage {
 	char name[PASSAGE_NAME_MAX];
@@ -195,7 +196,7 @@ void mainUpdate() {
 				"[Go back|Test Passage]\r\n"
 				"END_PASSAGE\r\n"
 				"\r\n"
-				"gotoPassage(\"Test Passage\");\r\n"
+				"gotoPassage(\"Test Passage\");"
 				;
 #else
 			const char *jsTest = ""
@@ -255,10 +256,15 @@ void loadMod(char *serialData) {
 	const char *lineStart = inputData;
 	for (int i = 0;; i++) {
 		const char *lineEnd = strstr(lineStart, "\n");
-		if (!lineEnd) break;
+		if (!lineEnd) {
+			if (strlen(lineStart) == 0) break;
+			else lineEnd = lineStart+strlen(lineStart);
+		}
 
 		char line[LARGE_STR] = {};
 		strncpy(line, lineStart, lineEnd-lineStart);
+		// printf("Line: %s\n", line);
+		// dumpHex(line, strlen(line));
 		
 		if (strstr(line, "START_PASSAGE")) {
 			inPassage = true;
@@ -428,4 +434,33 @@ void js_submitPassage(CScriptVar *v, void *userdata) {
 void js_gotoPassage(CScriptVar *v, void *userdata) {
 	const char *arg1 = v->getParameter("text")->getString().c_str();
 	gotoPassage(arg1);
+}
+
+void dumpHex(const void* data, size_t size) {
+	char ascii[17];
+	size_t i, j;
+	ascii[16] = '\0';
+	for (i = 0; i < size; ++i) {
+		printf("%02X ", ((unsigned char*)data)[i]);
+		if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+			ascii[i % 16] = ((unsigned char*)data)[i];
+		} else {
+			ascii[i % 16] = '.';
+		}
+		if ((i+1) % 8 == 0 || i+1 == size) {
+			printf(" ");
+			if ((i+1) % 16 == 0) {
+				printf("|  %s \n", ascii);
+			} else if (i+1 == size) {
+				ascii[(i+1) % 16] = '\0';
+				if ((i+1) % 16 <= 8) {
+					printf(" ");
+				}
+				for (j = (i+1) % 16; j < 16; ++j) {
+					printf("   ");
+				}
+				printf("|  %s \n", ascii);
+			}
+		}
+	}
 }
