@@ -241,6 +241,10 @@ void changeState(GameState newState) {
 	}
 
 	if (game->state == STATE_MENU) {
+		for (int i = 0; i < game->urlModsNum; i++)
+			if (game->urlMods[i].button)
+				destroyButton(game->urlMods[i].button);
+
 		game->title->destroy();
 		game->browserBg->destroy();
 		destroyButton(game->loadButton);
@@ -252,6 +256,7 @@ void changeState(GameState newState) {
 		game->passagesNum = 0;
 
 		game->mainText->destroy();
+		destroyButton(game->exitButton);
 		destroyButton(game->refreshButton);
 	}
 
@@ -367,7 +372,7 @@ void loadMod(char *serialData) {
 		lineStart = lineEnd+1;
 	}
 
-	printf("Gonna exec:\n%s\n", realData);
+	// printf("Gonna exec:\n%s\n", realData);
 	// exit(1);
 
 	free(inputData);
@@ -384,6 +389,7 @@ Button *createButton(const char *text, int width, int height) {
 	for (slot = 0; slot < BUTTON_MAX; slot++)
 		if (!game->buttons[slot].exists)
 			break;
+
 	assert(slot < BUTTON_MAX);
 
 	Button *btn = &game->buttons[slot];
