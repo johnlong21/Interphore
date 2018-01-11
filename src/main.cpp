@@ -3,7 +3,9 @@
 #define BUTTON_MAX 32
 #define PASSAGE_NAME_MAX MED_STR
 #define CHOICE_TEXT_MAX MED_STR
+#define MOD_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
+#define MOD_ENTRIES_MAX 16
 
 /// Debugging
 // #define LOG_ASSET_ADD
@@ -29,7 +31,7 @@ void mainUpdate();
 void mainInit();
 void changeState(GameState newState);
 void loadMod(char *serialData);
-Button *createButton(const char *text);
+Button *createButton(const char *text, int width=256, int height=128);
 void destroyButton(Button *btn);
 void gotoPassage(const char *passageName);
 void append(const char *text);
@@ -50,6 +52,11 @@ struct Passage {
 	int choicesNum;
 };
 
+struct ModEntry {
+	char name[MOD_NAME_MAX];
+	char url[URL_LIMIT];
+};
+
 struct Button {
 	bool exists;
 	MintSprite *sprite;
@@ -65,6 +72,7 @@ struct GameStruct {
 	MintSprite *bg;
 	MintSprite *title;
 	MintSprite *subtitle;
+	MintSprite *browserBg;
 
 	Button *loadButton;
 	Button *loadUrlButton;
@@ -75,10 +83,18 @@ struct GameStruct {
 
 	Passage *passages[PASSAGE_MAX];
 	int passagesNum;
+
+	ModEntry urlMods[MOD_ENTRIES_MAX];
+	int urlModsNum;
 };
 
 GameStruct *game;
 CTinyJS *jsInterp;
+
+const char modRepo[] = ""
+"TestMod by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
+"TestMod2 by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
+;
 
 #ifdef SEMI_WIN32
 INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
@@ -98,17 +114,39 @@ void entryPoint() {
 void mainInit() {
 	printf("Init\n");
 
-	jsInterp = new CTinyJS();
-	registerFunctions(jsInterp);
-	jsInterp->addNative("function print(text)", &js_print, 0);
-	jsInterp->addNative("function append(text)", &js_append, 0);
-	jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
-	jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
-	jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
-	jsInterp->execute("print(\"JS engine init\");");
-	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
+	{ /// Setup js interp
+		jsInterp = new CTinyJS();
+		registerFunctions(jsInterp);
+		jsInterp->addNative("function print(text)", &js_print, 0);
+		jsInterp->addNative("function append(text)", &js_append, 0);
+		jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
+		jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
+		jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
+		jsInterp->execute("print(\"JS engine init\");");
+	}
 
+	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
 	game = (GameStruct *)zalloc(sizeof(GameStruct));
+
+	{ /// Parse modRepo
+		const char *lineStart = modRepo;
+		for (int i = 0;; i++) {
+			const char *lineEnd = strstr(lineStart, "\n");
+			if (!lineEnd) break;
+
+			ModEntry *entry = &game->urlMods[game->urlModsNum++];
+			memset(entry, 0, sizeof(ModEntry));
+
+			char line[URL_LIMIT+MOD_NAME_MAX+1] = {};
+			strncpy(line, lineStart, lineEnd-lineStart);
+
+			char *barPos = strstr(line, "|");
+			strncpy(entry->name, line, barPos - line);
+			strcpy(entry->url, barPos+1);
+
+			lineStart = lineEnd+1;
+		}
+	}
 
 	changeState(STATE_MENU);
 }
@@ -142,6 +180,13 @@ void changeState(GameState newState) {
 			spr->y = spr->parent->getHeight() + 10;
 
 			game->subtitle = spr;
+		}
+
+		{ /// Browser bg
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
+
+			game->browserBg = spr;
 		}
 
 		{ /// Load url button
@@ -315,7 +360,7 @@ void destroyButton(Button *btn) {
 	btn->sprite->destroy();
 }
 
-Button *createButton(const char *text) {
+Button *createButton(const char *text, int width, int height) {
 	int slot;
 	for (slot = 0; slot < BUTTON_MAX; slot++)
 		if (!game->buttons[slot].exists)
@@ -327,7 +372,7 @@ Button *createButton(const char *text) {
 
 	{ /// Button sprite
 		MintSprite *spr = createMintSprite();
-		spr->setupRect(256, 128, 0x444444);
+		spr->setupRect(width, height, 0x444444);
 
 		btn->sprite = spr;
 	}
