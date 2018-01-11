@@ -27,8 +27,8 @@ enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
 struct Button;
 
 extern "C" void entryPoint();
-void mainUpdate();
-void mainInit();
+void updateMain();
+void initMain();
 void changeState(GameState newState);
 void loadMod(char *serialData);
 Button *createButton(const char *text, int width=256, int height=128);
@@ -74,9 +74,9 @@ struct GameStruct {
 	MintSprite *title;
 	MintSprite *subtitle;
 	MintSprite *browserBg;
+	Button *exitButton;
 
 	Button *loadButton;
-	Button *loadUrlButton;
 
 	MintSprite *mainText;
 	Button *choices[CHOICE_BUTTON_MAX];
@@ -109,10 +109,10 @@ int main(int argc, char **argv) {
 }
 
 void entryPoint() {
-	initEngine(mainInit, mainUpdate);
+	initEngine(initMain, updateMain);
 }
 
-void mainInit() {
+void initMain() {
 	printf("Init\n");
 
 	{ /// Setup js interp
@@ -202,14 +202,6 @@ void changeState(GameState newState) {
 			}
 		}
 
-		{ /// Load url button
-			Button *btn = createButton("Load url");
-			game->bg->addChild(btn->sprite);
-			btn->sprite->gravitate(0.5, 0.70);
-
-			game->loadUrlButton = btn;
-		}
-
 		{ /// Load button
 			Button *btn = createButton("Load");
 			game->bg->addChild(btn->sprite);
@@ -228,19 +220,35 @@ void changeState(GameState newState) {
 
 			game->mainText = spr;
 		}
+
+		{ /// Exit button
+			Button *btn = createButton("X", 50, 50);
+			game->bg->addChild(btn->sprite);
+			btn->sprite->gravitate(1, 0);
+
+			game->exitButton = btn;
+		}
 	}
 
 	if (game->state == STATE_MENU) {
 		game->title->destroy();
 		game->browserBg->destroy();
 		destroyButton(game->loadButton);
-		destroyButton(game->loadUrlButton);
+	}
+
+	if (game->state == STATE_MOD) {
+		clear();
+		for (int i = 0; i < game->passagesNum; i++) free(game->passages[i]);
+		game->passagesNum = 0;
+
+		game->mainText->destroy();
+		destroyButton(game->exitButton);
 	}
 
 	game->state = newState;
 }
 
-void mainUpdate() {
+void updateMain() {
 	if (game->state == STATE_MENU) {
 		if (game->loadButton->sprite->justPressed) {
 #ifdef SEMI_WIN32
@@ -299,15 +307,9 @@ void mainUpdate() {
 
 		for (int i = 0; i < game->urlModsNum; i++) {
 			ModEntry *entry = &game->urlMods[i];
-			printf("Looking at mod %d\n", i);
-			if (entry->button->sprite->justPressed) {
-				printf("Pressed\n");
+			if (entry->button->sprite->justPressed) 
 				platformLoadFromUrl(entry->url, loadMod);
-			}
 		}
-
-		if (game->loadUrlButton->sprite->justPressed)
-			platformLoadFromUrl("https://pastebin.com/raw/SydjvVez", loadMod);
 	}
 
 	if (game->state == STATE_MOD) {
@@ -316,6 +318,8 @@ void mainUpdate() {
 				gotoPassage(game->choices[i]->destPassageName);
 			}
 		}
+
+		if (game->exitButton->sprite->justPressed) changeState(STATE_MENU);
 	}
 }
 
