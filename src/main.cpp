@@ -55,6 +55,7 @@ struct Passage {
 struct ModEntry {
 	char name[MOD_NAME_MAX];
 	char url[URL_LIMIT];
+	Button *button;
 };
 
 struct Button {
@@ -185,8 +186,20 @@ void changeState(GameState newState) {
 		{ /// Browser bg
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
+			game->bg->addChild(spr);
+			spr->gravitate(0.1, 0.5);
 
 			game->browserBg = spr;
+		}
+
+		{ /// Browser buttons
+			for (int i = 0; i < game->urlModsNum; i++) {
+				ModEntry *entry = &game->urlMods[i];
+				Button *btn = createButton(entry->name, game->browserBg->getWidth(), 64);
+				game->browserBg->addChild(btn->sprite);
+				btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
+				entry->button = btn;
+			}
 		}
 
 		{ /// Load url button
@@ -219,6 +232,7 @@ void changeState(GameState newState) {
 
 	if (game->state == STATE_MENU) {
 		game->title->destroy();
+		game->browserBg->destroy();
 		destroyButton(game->loadButton);
 		destroyButton(game->loadUrlButton);
 	}
@@ -281,6 +295,15 @@ void mainUpdate() {
 #else
 			platformLoadFromDisk(loadMod);
 #endif
+		}
+
+		for (int i = 0; i < game->urlModsNum; i++) {
+			ModEntry *entry = &game->urlMods[i];
+			printf("Looking at mod %d\n", i);
+			if (entry->button->sprite->justPressed) {
+				printf("Pressed\n");
+				platformLoadFromUrl(entry->url, loadMod);
+			}
 		}
 
 		if (game->loadUrlButton->sprite->justPressed)
