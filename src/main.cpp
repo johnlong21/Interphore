@@ -67,6 +67,7 @@ struct Button {
 
 struct GameStruct {
 	GameState state;
+	ModEntry *currentMod;
 
 	Button buttons[BUTTON_MAX];
 
@@ -75,6 +76,7 @@ struct GameStruct {
 	MintSprite *subtitle;
 	MintSprite *browserBg;
 	Button *exitButton;
+	Button *refreshButton;
 
 	Button *loadButton;
 
@@ -228,6 +230,14 @@ void changeState(GameState newState) {
 
 			game->exitButton = btn;
 		}
+
+		{ /// Refresh button
+			Button *btn = createButton("R", 50, 50);
+			game->bg->addChild(btn->sprite);
+			btn->sprite->gravitate(1, 0.1);
+
+			game->refreshButton = btn;
+		}
 	}
 
 	if (game->state == STATE_MENU) {
@@ -242,7 +252,7 @@ void changeState(GameState newState) {
 		game->passagesNum = 0;
 
 		game->mainText->destroy();
-		destroyButton(game->exitButton);
+		destroyButton(game->refreshButton);
 	}
 
 	game->state = newState;
@@ -282,8 +292,10 @@ void updateMain() {
 
 		for (int i = 0; i < game->urlModsNum; i++) {
 			ModEntry *entry = &game->urlMods[i];
-			if (entry->button->sprite->justPressed) 
+			if (entry->button->sprite->justPressed) {
+				game->currentMod = entry;
 				platformLoadFromUrl(entry->url, loadMod);
+			}
 		}
 	}
 
@@ -295,6 +307,11 @@ void updateMain() {
 		}
 
 		if (game->exitButton->sprite->justPressed) changeState(STATE_MENU);
+
+		if (game->refreshButton->sprite->justPressed) {
+			changeState(STATE_MENU);
+			platformLoadFromUrl(game->currentMod->url, loadMod);
+		}
 	}
 }
 
