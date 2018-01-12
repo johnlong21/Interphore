@@ -6,6 +6,7 @@
 #define MOD_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
 #define MOD_ENTRIES_MAX 16
+#define MSG_MAX 64
 
 /// Debugging
 // #define LOG_ASSET_ADD
@@ -16,26 +17,52 @@
 // #define LOG_TEXTURE_GEN
 // #define LOG_TEXTURE_STREAM
 
+const char *jsTest = ""
+"START_PASSAGE\r\n"
+"Test Passage\r\n"
+"This is a test of a passage, \"no need to escape quotes\"\r\n"
+"[With Simple Buttons]\r\n"
+"[And With Complex Buttons|With Complex Buttons]\r\n"
+"END_PASSAGE\r\n"
+"\r\n"
+"START_PASSAGE\r\n"
+"With Simple Buttons\r\n"
+"You pressed the Simple Button\r\n"
+"[Go back|Test Passage]\r\n"
+"END_PASSAGE\r\n"
+"\r\n"
+"START_PASSAGE\r\n"
+"With Complex Buttons\r\n"
+"You pressed the Complex Button\r\n\r\n"
+"[Go back|Test Passage]\r\n"
+"END_PASSAGE\r\n"
+"\r\n"
+"gotoPassage(\"Test Passage\");"
+;
+
 #ifndef STATIC_ASSETS
 #include "../bin/assetLib.cpp"
 #endif
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.1" //@cleanup I shouldn't have to do this
 #include "gameEngine.h"
 
 enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
+enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 struct Button;
 
 extern "C" void entryPoint();
 void updateMain();
 void initMain();
 void changeState(GameState newState);
+void urlModLoaded(char *serialData);
 void loadMod(char *serialData);
 Button *createButton(const char *text, int width=256, int height=128);
 void destroyButton(Button *btn);
 void gotoPassage(const char *passageName);
 void append(const char *text);
 void addChoice(const char *text, const char *dest);
+void msg(const char *str, MsgType type=MSG_INFO);
 void clear();
 
 void js_print(CScriptVar *v, void *userdata);
@@ -56,6 +83,11 @@ struct ModEntry {
 	char name[MOD_NAME_MAX];
 	char url[URL_LIMIT];
 	Button *button;
+};
+
+struct Msg {
+	bool exists;
+	MintSprite *spr;
 };
 
 struct Button {
@@ -89,6 +121,8 @@ struct GameStruct {
 
 	ModEntry urlMods[MOD_ENTRIES_MAX];
 	int urlModsNum;
+
+	Msg msgs[MSG_MAX];
 };
 
 GameStruct *game;
@@ -268,28 +302,6 @@ void updateMain() {
 	if (game->state == STATE_MENU) {
 		if (game->loadButton->sprite->justPressed) {
 #ifdef SEMI_WIN32
-			const char *jsTest = ""
-				"START_PASSAGE\r\n"
-				"Test Passage\r\n"
-				"This is a test of a passage, \"no need to escape quotes\"\r\n"
-				"[With Simple Buttons]\r\n"
-				"[And With Complex Buttons|With Complex Buttons]\r\n"
-				"END_PASSAGE\r\n"
-				"\r\n"
-				"START_PASSAGE\r\n"
-				"With Simple Buttons\r\n"
-				"You pressed the Simple Button\r\n"
-				"[Go back|Test Passage]\r\n"
-				"END_PASSAGE\r\n"
-				"\r\n"
-				"START_PASSAGE\r\n"
-				"With Complex Buttons\r\n"
-				"You pressed the Complex Button\r\n\r\n"
-				"[Go back|Test Passage]\r\n"
-				"END_PASSAGE\r\n"
-				"\r\n"
-				"gotoPassage(\"Test Passage\");"
-				;
 			loadMod((char *)jsTest);
 #else
 			platformLoadFromDisk(loadMod);
@@ -300,7 +312,7 @@ void updateMain() {
 			ModEntry *entry = &game->urlMods[i];
 			if (entry->button->sprite->justPressed) {
 				game->currentMod = entry;
-				platformLoadFromUrl(entry->url, loadMod);
+				platformLoadFromUrl(entry->url, urlModLoaded);
 			}
 		}
 	}
@@ -318,6 +330,14 @@ void updateMain() {
 			changeState(STATE_MENU);
 			platformLoadFromUrl(game->currentMod->url, loadMod);
 		}
+	}
+}
+
+void urlModLoaded(char *serialData) {
+	if (serialData) {
+		loadMod(serialData);
+	} else {
+		msg("Failed to load...");
 	}
 }
 
@@ -467,6 +487,17 @@ void addChoice(const char *text, const char *dest) {
 
 	strcpy(btn->destPassageName, dest);
 	game->choices[game->choicesNum++] = btn;
+}
+
+void msg(const char *str, MsgType type) {
+	int slot;
+	for (slot = 0; slot < MSG_MAX; slot++)
+		if (!game->msgs[slot].exists)
+			break;
+
+	assert(slot < MSG_MAX);
+	Msg *msg = &game->msgs[slot];
+	msg->exists = true;
 }
 
 void js_print(CScriptVar *v, void *userdata) {
