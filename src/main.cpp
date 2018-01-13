@@ -57,6 +57,7 @@ void updateMain();
 void initMain();
 void changeState(GameState newState);
 void urlModLoaded(char *serialData);
+void urlModSourceLoaded(char *serialData);
 void loadMod(char *serialData);
 Button *createButton(const char *text, int width=256, int height=128);
 void destroyButton(Button *btn);
@@ -85,6 +86,7 @@ struct ModEntry {
 	char name[MOD_NAME_MAX];
 	char url[URL_LIMIT];
 	Button *button;
+	Button *sourceButton;
 };
 
 struct Msg {
@@ -231,7 +233,7 @@ void changeState(GameState newState) {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
 			game->bg->addChild(spr);
-			spr->gravitate(0.5, 0.2);
+			spr->gravitate(0.3, 0.2);
 
 			game->browserBg = spr;
 		}
@@ -239,10 +241,23 @@ void changeState(GameState newState) {
 		{ /// Browser buttons
 			for (int i = 0; i < game->urlModsNum; i++) {
 				ModEntry *entry = &game->urlMods[i];
-				Button *btn = createButton(entry->name, game->browserBg->getWidth(), 64);
-				game->browserBg->addChild(btn->sprite);
-				btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
-				entry->button = btn;
+
+				{ /// Play button
+					Button *btn = createButton(entry->name, game->browserBg->getWidth()*0.78, 64);
+					game->browserBg->addChild(btn->sprite);
+					btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
+
+					entry->button = btn;
+				}
+
+				{ /// Source button
+					Button *btn = createButton("source", game->browserBg->getWidth()*0.20, 64);
+					game->browserBg->addChild(btn->sprite);
+					btn->sprite->gravitate(1, 0);
+					btn->sprite->y = entry->button->sprite->y;
+
+					entry->sourceButton = btn;
+				}
 			}
 		}
 
@@ -284,8 +299,10 @@ void changeState(GameState newState) {
 
 	if (game->state == STATE_MENU) {
 		for (int i = 0; i < game->urlModsNum; i++)
-			if (game->urlMods[i].button)
+			if (game->urlMods[i].button) {
 				destroyButton(game->urlMods[i].button);
+				destroyButton(game->urlMods[i].sourceButton);
+			}
 
 		game->title->destroy();
 		game->browserBg->destroy();
@@ -322,6 +339,9 @@ void updateMain() {
 			if (entry->button->sprite->justPressed) {
 				game->currentMod = entry;
 				platformLoadFromUrl(entry->url, urlModLoaded);
+			}
+			if (entry->sourceButton->sprite->justPressed) {
+				platformLoadFromUrl(entry->url, urlModSourceLoaded);
 			}
 		}
 	}
@@ -360,6 +380,10 @@ void updateMain() {
 			}
 		}
 	}
+}
+
+void urlModSourceLoaded(char *serialData) {
+	//@incomplete
 }
 
 void urlModLoaded(char *serialData) {
