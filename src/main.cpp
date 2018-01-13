@@ -337,7 +337,7 @@ void updateMain() {
 
 		if (game->refreshButton->sprite->justPressed) {
 			changeState(STATE_MENU);
-			platformLoadFromUrl(game->currentMod->url, loadMod);
+			platformLoadFromUrl(game->currentMod->url, urlModLoaded);
 		}
 	}
 
