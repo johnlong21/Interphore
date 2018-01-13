@@ -167,6 +167,10 @@ void initMain() {
 	}
 
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
+	engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
+	engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
+	engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
+
 	game = (GameStruct *)zalloc(sizeof(GameStruct));
 
 	{ /// Parse modRepo
@@ -302,6 +306,8 @@ void changeState(GameState newState) {
 }
 
 void updateMain() {
+	if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
+
 	if (game->state == STATE_MENU) {
 		if (game->loadButton->sprite->justPressed) {
 #ifdef SEMI_WIN32
@@ -543,7 +549,7 @@ void msg(const char *str, MsgType type) {
 			msg->sprite->setText(str);
 			msg->sprite->y = engine->height;
 		} else if (type == MSG_ERROR) {
-			msg->sprite->setText(str);
+			msg->sprite->setText("<ed38>%s</ed38>", str);
 			msg->sprite->gravitate(0.5, 0.9);
 		}
 	}
