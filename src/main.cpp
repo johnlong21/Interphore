@@ -89,6 +89,7 @@ struct ModEntry {
 
 struct Msg {
 	bool exists;
+	float elapsed;
 	MsgType type;
 	MintSprite *sprite;
 };
@@ -345,6 +346,7 @@ void updateMain() {
 		for (int i = 0; i < MSG_MAX; i++) {
 			Msg *msg = &game->msgs[i];
 			if (!msg->exists) continue;
+			msg->elapsed += engine->elapsed;
 
 			MintSprite *spr = msg->sprite;
 			if (msg->type == MSG_INFO) {
@@ -354,7 +356,7 @@ void updateMain() {
 				spr->y -= 3;
 				if (spr->y < -spr->getHeight()) destroyMsg(msg);
 			} else if (msg->type == MSG_ERROR) {
-				spr->alpha -= 0.01;
+				if (msg->elapsed > 5) spr->alpha -= 0.01;
 				if (spr->alpha <= 0) destroyMsg(msg);
 			}
 		}
@@ -425,7 +427,12 @@ void loadMod(char *serialData) {
 	// exit(1);
 
 	free(inputData);
-	jsInterp->execute(realData);
+
+	try {
+		jsInterp->execute(realData);
+	} catch (CScriptException *e) {
+		msg(e->text.c_str(), MSG_ERROR);
+	}
 }
 
 void destroyButton(Button *btn) {
@@ -535,7 +542,7 @@ void msg(const char *str, MsgType type) {
 
 	{ /// Msg body text
 		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(engine->width*0.25, engine->width*0.25);
+		spr->setupEmpty(engine->width*0.5, engine->height*0.5);
 		game->bg->addChild(spr);
 
 		msg->sprite = spr;
