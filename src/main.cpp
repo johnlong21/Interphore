@@ -50,6 +50,7 @@ const char *jsTest = ""
 enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
 enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 struct Button;
+struct Msg;
 
 extern "C" void entryPoint();
 void updateMain();
@@ -63,6 +64,7 @@ void gotoPassage(const char *passageName);
 void append(const char *text);
 void addChoice(const char *text, const char *dest);
 void msg(const char *str, MsgType type=MSG_INFO);
+void destroyMsg(Msg *msg);
 void clear();
 
 void js_print(CScriptVar *v, void *userdata);
@@ -87,7 +89,8 @@ struct ModEntry {
 
 struct Msg {
 	bool exists;
-	MintSprite *spr;
+	MsgType type;
+	MintSprite *sprite;
 };
 
 struct Button {
@@ -331,13 +334,32 @@ void updateMain() {
 			platformLoadFromUrl(game->currentMod->url, loadMod);
 		}
 	}
+
+	{ /// Msgs
+		for (int i = 0; i < MSG_MAX; i++) {
+			Msg *msg = &game->msgs[i];
+			if (!msg->exists) continue;
+
+			MintSprite *spr = msg->sprite;
+			if (msg->type == MSG_INFO) {
+				spr->y -= 3;
+				if (spr->y < -spr->getHeight()) destroyMsg(msg);
+			} else if (msg->type == MSG_WARNING) {
+				spr->y -= 3;
+				if (spr->y < -spr->getHeight()) destroyMsg(msg);
+			} else if (msg->type == MSG_ERROR) {
+				spr->alpha -= 0.01;
+				if (spr->alpha <= 0) destroyMsg(msg);
+			}
+		}
+	}
 }
 
 void urlModLoaded(char *serialData) {
 	if (serialData) {
 		loadMod(serialData);
 	} else {
-		msg("Failed to load...");
+		msg("Failed to load.", MSG_ERROR);
 	}
 }
 
@@ -489,6 +511,11 @@ void addChoice(const char *text, const char *dest) {
 	game->choices[game->choicesNum++] = btn;
 }
 
+void destroyMsg(Msg *msg) {
+	msg->exists = false;
+	msg->sprite->destroy();
+}
+
 void msg(const char *str, MsgType type) {
 	int slot;
 	for (slot = 0; slot < MSG_MAX; slot++)
@@ -498,6 +525,28 @@ void msg(const char *str, MsgType type) {
 	assert(slot < MSG_MAX);
 	Msg *msg = &game->msgs[slot];
 	msg->exists = true;
+	msg->type = type;
+
+	{ /// Msg body text
+		MintSprite *spr = createMintSprite();
+		spr->setupEmpty(engine->width*0.25, engine->width*0.25);
+		game->bg->addChild(spr);
+
+		msg->sprite = spr;
+	}
+
+	{ /// Type specific
+		if (type == MSG_INFO) {
+			msg->sprite->setText(str);
+			msg->sprite->y = engine->height;
+		} else if (type == MSG_WARNING) {
+			msg->sprite->setText(str);
+			msg->sprite->y = engine->height;
+		} else if (type == MSG_ERROR) {
+			msg->sprite->setText(str);
+			msg->sprite->gravitate(0.5, 0.9);
+		}
+	}
 }
 
 void js_print(CScriptVar *v, void *userdata) {
