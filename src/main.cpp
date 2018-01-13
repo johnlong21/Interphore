@@ -134,7 +134,7 @@ CTinyJS *jsInterp;
 
 const char modRepo[] = ""
 "TestMod by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
-"TestMod2 by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
+"TestMod2 by Kittery|https://pastebin.com/raw/FTHQxiWy\n"
 "Morphious86's Test|https://pastebin.com/raw/0MBv7bpK\n"
 ;
 
