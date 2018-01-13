@@ -446,7 +446,10 @@ Button *createButton(const char *text, int width, int height) {
 		if (!game->buttons[slot].exists)
 			break;
 
-	assert(slot < BUTTON_MAX);
+	if (slot >= BUTTON_MAX) {
+		msg("Too many buttons", MSG_ERROR);
+		return NULL;
+	}
 
 	Button *btn = &game->buttons[slot];
 	btn->exists = true;
@@ -514,9 +517,13 @@ void append(const char *text) {
 }
 
 void addChoice(const char *text, const char *dest) {
-	assert(game->choicesNum+1 <= CHOICE_BUTTON_MAX);
+	if (game->choicesNum+1 > CHOICE_BUTTON_MAX) {
+		msg("Too many choices", MSG_ERROR);
+		return;
+	}
 
 	Button *btn = createButton(text);
+	if (!btn) return;
 	btn->sprite->x = (btn->sprite->width+5) * game->choicesNum;
 	btn->sprite->y = engine->height - btn->sprite->height;
 
@@ -604,7 +611,10 @@ void js_submitPassage(CScriptVar *v, void *userdata) {
 	// printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
 	// for (int i = 0; i < passage->choicesNum; i++) printf("Button: %s\n", passage->choices[i]);
 
-	assert(game->passagesNum+1 <= PASSAGE_MAX);
+	if (game->passagesNum+1 > PASSAGE_MAX) {
+		msg("Too many passages", MSG_ERROR);
+		return;
+	}
 	game->passages[game->passagesNum++] = passage;
 }
 
