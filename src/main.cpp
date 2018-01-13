@@ -211,7 +211,7 @@ void changeState(GameState newState) {
 			spr->setupEmpty(engine->width, 100);
 			game->bg->addChild(spr);
 			spr->setText("Writer");
-			spr->gravitate(0.5, 0);
+			spr->gravitate(0.01, 0);
 
 			game->title = spr;
 		}
@@ -222,8 +222,7 @@ void changeState(GameState newState) {
 			spr->setupEmpty(engine->width, 100);
 
 			spr->setText("A story tool");
-			spr->gravitate(0.5, 0.5);
-			spr->y = spr->parent->getHeight() + 10;
+			spr->y += spr->getHeight() + 5;
 
 			game->subtitle = spr;
 		}
@@ -232,7 +231,7 @@ void changeState(GameState newState) {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
 			game->bg->addChild(spr);
-			spr->gravitate(0.1, 0.5);
+			spr->gravitate(0.5, 0.2);
 
 			game->browserBg = spr;
 		}
@@ -248,9 +247,9 @@ void changeState(GameState newState) {
 		}
 
 		{ /// Load button
-			Button *btn = createButton("Load");
+			Button *btn = createButton("Load your own", 256, 64);
 			game->bg->addChild(btn->sprite);
-			btn->sprite->gravitate(0.5, 0.90);
+			btn->sprite->gravitate(0.5, 0.95);
 
 			game->loadButton = btn;
 		}
