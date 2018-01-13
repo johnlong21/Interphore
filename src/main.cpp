@@ -115,6 +115,7 @@ struct GameStruct {
 	MintSprite *browserBg;
 	Button *exitButton;
 	Button *refreshButton;
+	MintSprite *modSourceText;
 
 	Button *loadButton;
 
@@ -251,7 +252,7 @@ void changeState(GameState newState) {
 				}
 
 				{ /// Source button
-					Button *btn = createButton("source", game->browserBg->getWidth()*0.20, 64);
+					Button *btn = createButton("view source", game->browserBg->getWidth()*0.20, 64);
 					game->browserBg->addChild(btn->sprite);
 					btn->sprite->gravitate(1, 0);
 					btn->sprite->y = entry->button->sprite->y;
@@ -268,6 +269,18 @@ void changeState(GameState newState) {
 
 			game->loadButton = btn;
 		}
+
+		{ /// Mod source text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width*0.5, engine->height);
+			game->bg->addChild(spr);
+			spr->setText("");
+			spr->x = game->browserBg->x + game->browserBg->getWidth() + 50;
+			spr->y = game->browserBg->y;
+
+			game->modSourceText = spr;
+		}
+
 	}
 
 	if (newState == STATE_MOD) {
@@ -306,6 +319,7 @@ void changeState(GameState newState) {
 
 		game->title->destroy();
 		game->browserBg->destroy();
+		game->modSourceText->destroy();
 		destroyButton(game->loadButton);
 	}
 
@@ -383,7 +397,7 @@ void updateMain() {
 }
 
 void urlModSourceLoaded(char *serialData) {
-	//@incomplete
+	game->modSourceText->setText(serialData);
 }
 
 void urlModLoaded(char *serialData) {
