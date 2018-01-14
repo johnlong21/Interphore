@@ -66,7 +66,6 @@ namespace Writer {
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
-		char startJs[HUGE_STR];
 		char choices[CHOICE_BUTTON_MAX][CHOICE_TEXT_MAX];
 		int choicesNum;
 	};
@@ -141,7 +140,7 @@ namespace Writer {
 			jsInterp->addNative("function print(text)", &js_print, 0);
 			jsInterp->addNative("function append(text)", &js_append, 0);
 			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
-			jsInterp->addNative("function submitPassage(text, startJs)", &js_submitPassage, 0);
+			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
@@ -397,7 +396,6 @@ namespace Writer {
 				inputData[inputLen++] = serialData[i];
 
 		bool inPassage = false;
-		bool inJs = false;
 		const char *lineStart = inputData;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, "\n");
@@ -414,27 +412,12 @@ namespace Writer {
 			if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
 				strcat(realData, "__passage = \"\";");
-				strcat(realData, "__startJs = \"\";");
 			} else if (strstr(line, "---")) {
-				strcat(realData, "submitPassage(__passage, __startJs);");
+				strcat(realData, "submitPassage(__passage);");
 				strcat(realData, "__passage = \"\";");
-				strcat(realData, "__startJs = \"\";");
 			} else if (strstr(line, "END_PASSAGES")) {
-				strcat(realData, "submitPassage(__passage, __startJs);");
+				strcat(realData, "submitPassage(__passage);");
 				inPassage = false;
-			} else if (strstr(line, "START_JS")) {
-				inJs = true;
-			} else if (strstr(line, "END_JS")) {
-				inJs = false;
-			} else if (inJs) {
-				char parsedLine[LARGE_STR] = {}; //@cleanup What size should this be?
-				strcat(parsedLine, "__startJs += \"");
-				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
-					if (line[lineIndex] == '"') strcat(parsedLine, "\\\"");
-					else strncat(parsedLine, &line[lineIndex], 1);
-				}
-				strcat(parsedLine, "\n\";");
-				strcat(realData, parsedLine);
 			} else if (inPassage) {
 				char parsedLine[LARGE_STR] = {}; //@cleanup What size should this be?
 				strcat(parsedLine, "__passage += \"");
@@ -518,8 +501,6 @@ namespace Writer {
 			Passage *passage = writer->passages[i];
 			// printf("Checking passage %s\n", passage->name);
 			if (streq(passage->name, passageName)) {
-				jsInterp->execute(passage->startJs);
-
 				const char *lineStart = passage->appendData;
 				for (int i = 0;; i++) {
 					const char *lineEnd = strstr(lineStart, "`");
@@ -659,7 +640,6 @@ namespace Writer {
 
 	void js_submitPassage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
-		const char *arg2 = v->getParameter("startJs")->getString().c_str();
 
 		char delim[3];
 		if (strstr(arg1, "\r\n")) strcpy(delim, "\r\n");
@@ -668,8 +648,6 @@ namespace Writer {
 		const char *lineStart = arg1;
 
 		Passage *passage = (Passage *)zalloc(sizeof(Passage));
-		strcpy(passage->startJs, arg2);
-
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, delim);
 			if (!lineEnd) break;
