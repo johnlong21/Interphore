@@ -19,39 +19,33 @@
 
 
 const char *jsTest = ""
-"START_PASSAGE\n"
-"Start\n"
+"START_PASSAGES\n"
+":Start\n"
 "START_JS\n"
 "var apples = 1;\n"
 "END_JS\n"
 "This passage shows off basic variables.\n"
 "[Let's get to it|Main]\n"
-"END_PASSAGE\n"
-"\n"
-"START_PASSAGE\n"
-"Main\n"
+"---\n"
+":Main\n"
 "You have `apples` apples.\n"
 "[Gain an apple]\n"
 "[Lose an apple]\n"
-"END_PASSAGE\n"
-"\n"
-"START_PASSAGE\n"
-"Gain an apple\n"
+"---\n"
+":Gain an apple\n"
 "START_JS\n"
 "apples += 1;\n"
 "END_JS\n"
 "You gained an apple.\n"
 "[Go back|Main]\n"
-"END_PASSAGE\n"
-"\n"
-"START_PASSAGE\n"
-"Lose an apple\n"
+"---\n"
+":Lose an apple\n"
 "START_JS\n"
 "apples -= 1;\n"
 "END_JS\n"
 "You lost an apple.\n"
 "[Go back|Main]\n"
-"END_PASSAGE\n"
+"END_PASSAGES\n"
 "\n"
 "gotoPassage(\"Start\");\n"
 ;
@@ -454,13 +448,17 @@ void loadMod(char *serialData) {
 		// printf("Line: %s\n", line);
 		// dumpHex(line, strlen(line));
 		
-		if (strstr(line, "START_PASSAGE")) {
+		if (strstr(line, "START_PASSAGES")) {
 			inPassage = true;
 			strcat(realData, "__passage = \"\";");
 			strcat(realData, "__startJs = \"\";");
-		} else if (strstr(line, "END_PASSAGE")) {
-			inPassage = false;
+		} else if (strstr(line, "---")) {
 			strcat(realData, "submitPassage(__passage, __startJs);");
+			strcat(realData, "__passage = \"\";");
+			strcat(realData, "__startJs = \"\";");
+		} else if (strstr(line, "END_PASSAGES")) {
+			strcat(realData, "submitPassage(__passage, __startJs);");
+			inPassage = false;
 		} else if (strstr(line, "START_JS")) {
 			inJs = true;
 		} else if (strstr(line, "END_JS")) {
@@ -703,9 +701,20 @@ void js_submitPassage(CScriptVar *v, void *userdata) {
 		char line[LARGE_STR] = {};
 		strncpy(line, lineStart, lineEnd-lineStart);
 
-		if (i == 0) strcpy(passage->name, line);
-		else if (line[0] == '[') strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
-		else strcat(passage->appendData, line);
+		if (i == 0) {
+			if (line[0] != ':') {
+				char buf[LARGE_STR] = {};
+				sprintf(buf, "Titles must start with a colon (%s)", line);
+				msg(buf, MSG_ERROR);
+				return;
+			}
+
+			strcpy(passage->name, &line[1]);
+		} else if (line[0] == '[') {
+			strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
+		} else {
+			strcat(passage->appendData, line);
+		}
 
 		lineStart = lineEnd+1;
 	}
