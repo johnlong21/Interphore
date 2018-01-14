@@ -1,6 +1,15 @@
 namespace Writer {
 #include "writer.h"
 
+#define CHOICE_BUTTON_MAX 4
+#define BUTTON_MAX 32
+#define PASSAGE_NAME_MAX MED_STR
+#define CHOICE_TEXT_MAX MED_STR
+#define MOD_NAME_MAX MED_STR
+#define PASSAGE_MAX 1024
+#define MOD_ENTRIES_MAX 16
+#define MSG_MAX 64
+
 	const char *jsTest = ""
 		"START_PASSAGES\n"
 		":Start\n"
