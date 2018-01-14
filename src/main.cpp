@@ -56,7 +56,7 @@ const char *jsTest = ""
 #define VERSION "0.0.1" //@cleanup I shouldn't have to do this
 #include "gameEngine.h"
 
-#include "writer.cpp"
+#include "writer/writer.cpp"
 
 #ifdef SEMI_WIN32
 INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
