@@ -10,6 +10,8 @@ namespace Writer {
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 
+	bool exists = false;
+
 	const char *jsTest = ""
 		"START_PASSAGES\n"
 		":Start\n"
@@ -137,6 +139,7 @@ namespace Writer {
 
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
+		exists = true;
 
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
@@ -149,7 +152,6 @@ namespace Writer {
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
-		strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
 		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
@@ -186,6 +188,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(engine->width, 100);
 				writer->bg->addChild(spr);
+				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
 				spr->gravitate(0.01, 0);
 
@@ -194,8 +197,9 @@ namespace Writer {
 
 			{ /// Subtitle
 				MintSprite *spr = createMintSprite();
-				writer->title->addChild(spr);
 				spr->setupEmpty(engine->width, 100);
+				writer->title->addChild(spr);
+				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 
 				spr->setText("A story tool");
 				spr->y += spr->getHeight() + 5;
@@ -247,6 +251,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(engine->width*0.5, engine->height);
 				writer->bg->addChild(spr);
+				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("");
 				spr->x = writer->browserBg->x + writer->browserBg->getWidth() + 50;
 				spr->y = writer->browserBg->y;
@@ -260,6 +265,7 @@ namespace Writer {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(engine->width, engine->height*0.75);
+				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
 				writer->bg->addChild(spr);
 
@@ -493,6 +499,7 @@ namespace Writer {
 		{ /// Button text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
+			strcpy(spr->defaultFont, "OpenSans-Regular_20");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
 			spr->gravitate(0.5, 0.5);
