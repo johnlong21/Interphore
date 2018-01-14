@@ -525,7 +525,25 @@ void gotoPassage(const char *passageName) {
 		Passage *passage = game->passages[i];
 		// printf("Checking passage %s\n", passage->name);
 		if (streq(passage->name, passageName)) {
-			append(passage->appendData);
+
+		const char *lineStart = passage->appendData;
+		for (int i = 0;; i++) {
+			const char *lineEnd = strstr(lineStart, "\n");
+			if (!lineEnd) {
+				if (strlen(lineStart) == 0) break;
+				else lineEnd = lineStart+strlen(lineStart);
+			}
+
+			char line[LARGE_STR] = {};
+			strncpy(line, lineStart, lineEnd-lineStart);
+			if (line[0] == '`' && line[strlen(line)-1] == '`') {
+				printf("js: %s\n", line);
+			}
+			append(line);
+
+			lineStart = lineEnd+1;
+		}
+
 			for (int choiceIndex = 0; choiceIndex < passage->choicesNum; choiceIndex++) {
 				char *choiceStr = passage->choices[choiceIndex];
 				char *barLoc = strstr(choiceStr, "|");
