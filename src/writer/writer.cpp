@@ -1,6 +1,38 @@
 namespace Writer {
 #include "writer.h"
 
+	const char *jsTest = ""
+		"START_PASSAGES\n"
+		":Start\n"
+		"START_JS\n"
+		"var apples = 1;\n"
+		"END_JS\n"
+		"This passage shows off basic variables.\n"
+		"[Let's get to it|Main]\n"
+		"---\n"
+		":Main\n"
+		"You have `apples` apples.\n"
+		"[Gain an apple]\n"
+		"[Lose an apple]\n"
+		"---\n"
+		":Gain an apple\n"
+		"START_JS\n"
+		"apples += 1;\n"
+		"END_JS\n"
+		"You gained an apple.\n"
+		"[Go back|Main]\n"
+		"---\n"
+		":Lose an apple\n"
+		"START_JS\n"
+		"apples -= 1;\n"
+		"END_JS\n"
+		"You lost an apple.\n"
+		"[Go back|Main]\n"
+		"END_PASSAGES\n"
+		"\n"
+		"gotoPassage(\"Start\");\n"
+		;
+
 	enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
 	enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 	struct Button;
