@@ -80,9 +80,9 @@ void entryPoint() {
 void initMain() {
 	MintSprite *spr = createMintSprite();
 	spr->setupRect(engine->width, engine->height, 0x000000);
-	initWriter(spr);
+	Writer::initWriter(spr);
 }
 
 void updateMain() {
-	updateWriter();
+	Writer::updateWriter();
 }
