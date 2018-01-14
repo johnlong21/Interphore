@@ -15,9 +15,7 @@ namespace Writer {
 	const char *jsTest = ""
 		"START_PASSAGES\n"
 		":Start\n"
-		"START_JS\n"
-		"var apples = 1;\n"
-		"END_JS\n"
+		"!`apples = 1;`\n"
 		"This passage shows off basic variables.\n"
 		"[Let's get to it|Main]\n"
 		"---\n"
@@ -27,16 +25,12 @@ namespace Writer {
 		"[Lose an apple]\n"
 		"---\n"
 		":Gain an apple\n"
-		"START_JS\n"
-		"apples += 1;\n"
-		"END_JS\n"
+		"!`apples += 1`\n"
 		"You gained an apple.\n"
 		"[Go back|Main]\n"
 		"---\n"
 		":Lose an apple\n"
-		"START_JS\n"
-		"apples -= 1;\n"
-		"END_JS\n"
+		"!`apples -= 1`\n"
 		"You lost an apple.\n"
 		"[Go back|Main]\n"
 		"END_PASSAGES\n"
@@ -541,15 +535,26 @@ namespace Writer {
 					append(line);
 
 					if (needToken) {
+						bool printResult = true;
+						if (lineStart != lineEnd) {
+							if (*(lineEnd-1) == '!') {
+								printResult = false;
+								writer->mainText->unAppend(1);
+							}
+						}
+
 						lineStart = lineEnd+1;
 						lineEnd = strstr(lineStart, "`");
 						if (!lineEnd) assert(0); // @incomplete need other percent error
 
 						strncpy(line, lineStart, lineEnd-lineStart);
 						line[lineEnd-lineStart] = '\0';
+						// printf("Gonna eval: %s\n", line);
 						std::string resultString = jsInterp->evaluate(line);
+						if (printResult) {
 						if (streq(resultString.c_str(), "undefined")) append("`");
 						else append(resultString.c_str());
+						}
 					}
 
 					lineStart = lineEnd+1;
@@ -590,8 +595,9 @@ namespace Writer {
 
 		Button *btn = createButton(text);
 		if (!btn) return;
+		writer->bg->addChild(btn->sprite);
+		btn->sprite->gravitate(0, 1);
 		btn->sprite->x = (btn->sprite->width+5) * writer->choicesNum;
-		btn->sprite->y = engine->height - btn->sprite->height;
 
 		strcpy(btn->destPassageName, dest);
 		writer->choices[writer->choicesNum++] = btn;
