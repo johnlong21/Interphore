@@ -731,4 +731,9 @@ namespace Writer {
 			}
 		}
 	}
+
+	void deinitWriter() {
+		if (writer->state != STATE_NULL) changeState(STATE_NULL);
+		exists = false;
+	}
 }
