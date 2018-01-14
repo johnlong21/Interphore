@@ -233,7 +233,7 @@ namespace Writer {
 			}
 
 			{ /// Load button
-				Button *btn = createButton("Load your own", 256, 64);
+				Button *btn = createButton("Load", 256, 64);
 				writer->bg->addChild(btn->sprite);
 				btn->sprite->gravitate(0.5, 0.95);
 
@@ -469,6 +469,7 @@ namespace Writer {
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(width, height, 0x444444);
+			spr->setup9Slice("ui/dialog/basicDialog", width + 10, height + 10, 15, 15, 30, 30);
 
 			btn->sprite = spr;
 		}
