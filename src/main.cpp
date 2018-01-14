@@ -58,6 +58,10 @@ const char *jsTest = ""
 
 #include "writer/writer.cpp"
 
+void updateMain();
+void initMain();
+extern "C" void entryPoint();
+
 #ifdef SEMI_WIN32
 INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
 #else
@@ -74,7 +78,9 @@ void entryPoint() {
 }
 
 void initMain() {
-	initWriter();
+	MintSprite *spr = createMintSprite();
+	spr->setupRect(engine->width, engine->height, 0x000000);
+	initWriter(spr);
 }
 
 void updateMain() {

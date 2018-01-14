@@ -5,9 +5,6 @@ enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 struct Button;
 struct Msg;
 
-extern "C" void entryPoint();
-void updateMain();
-void initMain();
 void changeState(GameState newState);
 void urlModLoaded(char *serialData);
 void urlModSourceLoaded(char *serialData);
@@ -96,7 +93,7 @@ const char modRepo[] = ""
 "Morphious86's Test|https://pastebin.com/raw/0MBv7bpK\n"
 ;
 
-void initWriter() {
+void initWriter(MintSprite *bgSpr) {
 	printf("Init\n");
 
 	{ /// Setup js interp
@@ -116,6 +113,7 @@ void initWriter() {
 	engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
 
 	game = (GameStruct *)zalloc(sizeof(GameStruct));
+	game->bg = bgSpr;
 
 	{ /// Parse modRepo
 		const char *lineStart = modRepo;
@@ -142,13 +140,6 @@ void initWriter() {
 
 void changeState(GameState newState) {
 	if (newState == STATE_MENU) {
-		{ /// Bg
-			MintSprite *spr = createMintSprite();
-			spr->setupRect(engine->width, engine->height, 0x000000);
-
-			game->bg = spr;
-		}
-
 		{ /// Title
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(engine->width, 100);

@@ -1,4 +1,4 @@
 #pragma once
 
-void initWriter();
+void initWriter(MintSprite *bgSpr);
 void updateWriter();
