@@ -18,44 +18,42 @@
 // #define LOG_TEXTURE_STREAM
 
 
-#ifdef NEVER
-START_PASSAGE
-Main
-START_JS
-var apples = 1;
-END_JS
-This passage shows off basic variables.
-You have `apples` apples. This is a real `` backtick sign.
-END_PASSAGE
-
-gotoPassage("Main");
-#endif
-
 const char *jsTest = ""
-"START_PASSAGE\r\n"
-"Test Passage\r\n"
-"This is a test of a passage, \"no need to escape quotes\"\r\n"
-"[With Simple Buttons]\r\n"
-"[And With Complex Buttons|With Complex Buttons]\r\n"
-"END_PASSAGE\r\n"
-"\r\n"
-"START_PASSAGE\r\n"
-"With Simple Buttons\r\n"
+"START_PASSAGE\n"
+"Start\n"
 "START_JS\n"
 "var apples = 1;\n"
-"print(\"We have \"+apples+\" apples\");\n"
 "END_JS\n"
-"You pressed the Simple Button, you have `apples` apples. This is a real `` backtick sign.\r\n"
-"[Go back|Test Passage]\r\n"
-"END_PASSAGE\r\n"
-"\r\n"
-"START_PASSAGE\r\n"
-"With Complex Buttons\r\n"
-"You pressed the Complex Button\r\n\r\n"
-"[Go back|Test Passage]\r\n"
-"END_PASSAGE\r\n"
-"\r\n"
-"gotoPassage(\"Test Passage\");"
+"This passage shows off basic variables.\n"
+"[Let's get to it|Main]\n"
+"END_PASSAGE\n"
+"\n"
+"START_PASSAGE\n"
+"Main\n"
+"You have `apples` apples.\n"
+"[Gain an apple]\n"
+"[Lose an apple]\n"
+"END_PASSAGE\n"
+"\n"
+"START_PASSAGE\n"
+"Gain an apple\n"
+"START_JS\n"
+"apples += 1;\n"
+"END_JS\n"
+"You gained an apple.\n"
+"[Go back|Main]\n"
+"END_PASSAGE\n"
+"\n"
+"START_PASSAGE\n"
+"Lose an apple\n"
+"START_JS\n"
+"apples -= 1;\n"
+"END_JS\n"
+"You lost an apple.\n"
+"[Go back|Main]\n"
+"END_PASSAGE\n"
+"\n"
+"gotoPassage(\"Start\");\n"
 ;
 
 #ifndef STATIC_ASSETS
@@ -493,7 +491,7 @@ void loadMod(char *serialData) {
 		lineStart = lineEnd+1;
 	}
 
-	// printf("Gonna exec:\n%s\n", realData);
+	printf("Gonna exec:\n%s\n", realData);
 	// exit(1);
 
 	free(inputData);
@@ -589,7 +587,6 @@ void gotoPassage(const char *passageName) {
 			lineStart = lineEnd+1;
 		}
 
-			// append(passage->appendData);
 			for (int choiceIndex = 0; choiceIndex < passage->choicesNum; choiceIndex++) {
 				char *choiceStr = passage->choices[choiceIndex];
 				char *barLoc = strstr(choiceStr, "|");
