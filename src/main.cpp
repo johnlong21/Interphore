@@ -17,6 +17,20 @@
 // #define LOG_TEXTURE_GEN
 // #define LOG_TEXTURE_STREAM
 
+
+#ifdef NEVER
+START_PASSAGE
+Main
+START_JS
+var apples = 1;
+END_JS
+This passage shows off basic variables.
+You have `apples` apples. This is a real `` backtick sign.
+END_PASSAGE
+
+gotoPassage("Main");
+#endif
+
 const char *jsTest = ""
 "START_PASSAGE\r\n"
 "Test Passage\r\n"
@@ -28,9 +42,10 @@ const char *jsTest = ""
 "START_PASSAGE\r\n"
 "With Simple Buttons\r\n"
 "START_JS\n"
-"print(\"This is a js test\");\n"
+"var apples = 1;\n"
+"print(\"We have \"+apples+\" apples\");\n"
 "END_JS\n"
-"You pressed the Simple Button\r\n"
+"You pressed the Simple Button, you have `apples` apples. This is a real `` backtick sign.\r\n"
 "[Go back|Test Passage]\r\n"
 "END_PASSAGE\r\n"
 "\r\n"
@@ -544,7 +559,37 @@ void gotoPassage(const char *passageName) {
 		// printf("Checking passage %s\n", passage->name);
 		if (streq(passage->name, passageName)) {
 			jsInterp->execute(passage->startJs);
-			append(passage->appendData);
+
+			const char *lineStart = passage->appendData;
+			for (int i = 0;; i++) {
+				const char *lineEnd = strstr(lineStart, "`");
+				bool needToken = true;
+				if (!lineEnd) {
+					needToken = false;
+					if (strlen(lineStart) == 0) break;
+					else lineEnd = lineStart+strlen(lineStart);
+				}
+
+				char line[LARGE_STR] = {};
+				strncpy(line, lineStart, lineEnd-lineStart);
+				append(line);
+
+				if (needToken) {
+					lineStart = lineEnd+1;
+					lineEnd = strstr(lineStart, "`");
+					if (!lineEnd) assert(0); // @incomplete need other percent error
+
+					strncpy(line, lineStart, lineEnd-lineStart);
+					line[lineEnd-lineStart] = '\0';
+				 std::string resultString = jsInterp->evaluate(line);
+					if (streq(resultString.c_str(), "undefined")) append("`");
+					else append(resultString.c_str());
+				}
+
+			lineStart = lineEnd+1;
+		}
+
+			// append(passage->appendData);
 			for (int choiceIndex = 0; choiceIndex < passage->choicesNum; choiceIndex++) {
 				char *choiceStr = passage->choices[choiceIndex];
 				char *barLoc = strstr(choiceStr, "|");
