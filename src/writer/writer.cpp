@@ -183,7 +183,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
-				spr->gravitate(0.01, 0);
+				spr->gravitate(0.01, 0.1);
 
 				writer->title = spr;
 			}
@@ -258,9 +258,10 @@ namespace Writer {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(engine->width, engine->height*0.75);
+				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
-				writer->bg->addChild(spr);
+				spr->x += 30;
 
 				writer->mainText = spr;
 			}
@@ -268,7 +269,7 @@ namespace Writer {
 			{ /// Exit button
 				Button *btn = createButton("X", 50, 50);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0);
+				btn->sprite->gravitate(1, 0.1);
 
 				writer->exitButton = btn;
 			}
@@ -276,7 +277,7 @@ namespace Writer {
 			{ /// Refresh button
 				Button *btn = createButton("R", 50, 50);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0.1);
+				btn->sprite->gravitate(1, 0.2);
 
 				writer->refreshButton = btn;
 			}
