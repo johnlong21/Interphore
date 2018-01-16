@@ -2,7 +2,7 @@ namespace Writer {
 #include "writer.h"
 
 #define CHOICE_BUTTON_MAX 4
-#define BUTTON_MAX 32
+#define BUTTON_MAX 128
 #define PASSAGE_NAME_MAX MED_STR
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
@@ -103,6 +103,7 @@ namespace Writer {
 		char name[MOD_NAME_MAX];
 		char url[URL_LIMIT];
 		Button *button;
+		Button *peakButton;
 		Button *sourceButton;
 	};
 
@@ -235,7 +236,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
-				spr->gravitate(0.01, 0.1);
+				spr->gravitate(0.01, 0.005);
 
 				writer->title = spr;
 			}
@@ -254,9 +255,9 @@ namespace Writer {
 
 			{ /// Browser bg
 				MintSprite *spr = createMintSprite();
-				spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
+				spr->setupRect(engine->width*0.5, engine->height*0.5, 0x111111);
 				writer->bg->addChild(spr);
-				spr->gravitate(0.3, 0.2);
+				spr->gravitate(0.15, 0.2);
 
 				writer->browserBg = spr;
 			}
@@ -266,11 +267,20 @@ namespace Writer {
 					ModEntry *entry = &writer->urlMods[i];
 
 					{ /// Play button
-						Button *btn = createButton(entry->name, writer->browserBg->getWidth()*0.78, 64);
+						Button *btn = createButton(entry->name, writer->browserBg->getWidth()*0.50, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
 
 						entry->button = btn;
+					}
+
+					{ /// Peak button
+						Button *btn = createButton("peak source", writer->browserBg->getWidth()*0.20, 64);
+						writer->browserBg->addChild(btn->sprite);
+						btn->sprite->gravitate(1, 0);
+						btn->sprite->y = entry->button->sprite->y;
+
+						entry->peakButton = btn;
 					}
 
 					{ /// Source button
@@ -278,6 +288,7 @@ namespace Writer {
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->gravitate(1, 0);
 						btn->sprite->y = entry->button->sprite->y;
+						btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
 
 						entry->sourceButton = btn;
 					}
@@ -340,6 +351,7 @@ namespace Writer {
 				if (writer->urlMods[i].button) {
 					destroyButton(writer->urlMods[i].button);
 					destroyButton(writer->urlMods[i].sourceButton);
+					destroyButton(writer->urlMods[i].peakButton);
 				}
 
 			writer->title->destroy();
@@ -380,9 +392,9 @@ namespace Writer {
 					writer->currentMod = entry;
 					platformLoadFromUrl(entry->url, urlModLoaded);
 				}
-				if (entry->sourceButton->sprite->justPressed) {
-					platformLoadFromUrl(entry->url, urlModSourceLoaded);
-				}
+
+				if (entry->peakButton->sprite->justPressed) platformLoadFromUrl(entry->url, urlModSourceLoaded);
+				if (entry->sourceButton->sprite->justPressed) gotoUrl(entry->url);
 			}
 		}
 
@@ -536,7 +548,7 @@ namespace Writer {
 
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(width, height, 0x444444);
+			// spr->setupRect(width, height, 0x444444);
 			spr->setup9Slice("ui/dialog/basicDialog", width + 10, height + 10, 15, 15, 30, 30);
 
 			btn->sprite = spr;
