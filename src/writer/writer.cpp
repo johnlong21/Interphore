@@ -261,7 +261,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
-				spr->x += 30;
+				spr->y += 30;
 
 				writer->mainText = spr;
 			}
@@ -396,8 +396,9 @@ namespace Writer {
 			if (serialData[i] != '\r')
 				inputData[inputLen++] = serialData[i];
 
-		bool inPassage = false;
 		const char *lineStart = inputData;
+		bool inPassage = false;
+		bool inImages = false;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, "\n");
 			if (!lineEnd) {
@@ -410,7 +411,10 @@ namespace Writer {
 			// printf("Line: %s\n", line);
 			// dumpHex(line, strlen(line));
 
-			if (strstr(line, "START_PASSAGES")) {
+			if (strstr(line, "START_IMAGES")) {
+				inImages = true;
+				strcat(realData, "__image = \"\";");
+			} else if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
 				strcat(realData, "__passage = \"\";");
 			} else if (strstr(line, "---")) {
