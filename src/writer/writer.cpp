@@ -9,6 +9,7 @@ namespace Writer {
 #define PASSAGE_MAX 1024
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
+#define IMAGES_MAX 128
 
 	char tempBytes[Megabytes(2)];
 	char tempBytes2[Megabytes(2)];
@@ -53,6 +54,7 @@ namespace Writer {
 	enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 	struct Button;
 	struct Msg;
+	struct Image;
 
 	void changeState(GameState newState);
 	void urlModLoaded(char *serialData);
@@ -63,8 +65,12 @@ namespace Writer {
 	void gotoPassage(const char *passageName);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
+	void addImage(const char *name, const char *path);
 	void msg(const char *str, MsgType type=MSG_INFO);
 	void destroyMsg(Msg *msg);
+	Image *getImage(const char *name);
+	void removeImage(const char *name);
+	void removeImage(Image *img);
 	void clear();
 
 	void js_print(CScriptVar *v, void *userdata);
@@ -73,7 +79,8 @@ namespace Writer {
 	void js_submitPassage(CScriptVar *v, void *userdata);
 	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
-	void js_addSprite(CScriptVar *v, void *userdata);
+	void js_addImage(CScriptVar *v, void *userdata);
+	void js_removeImage(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
 	struct Passage {
@@ -104,6 +111,12 @@ namespace Writer {
 		char destPassageName[PASSAGE_NAME_MAX];
 	};
 
+	struct Image {
+		bool exists;
+		char *name;
+		MintSprite *sprite;
+	};
+
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
@@ -131,6 +144,8 @@ namespace Writer {
 		int urlModsNum;
 
 		Msg msgs[MSG_MAX];
+
+		Image images[IMAGES_MAX];
 	};
 
 	WriterStruct *writer;
@@ -157,7 +172,8 @@ namespace Writer {
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
-			jsInterp->addNative("function addSprite(text)", &js_addSprite, 0);
+			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
+			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -521,6 +537,8 @@ namespace Writer {
 	}
 
 	void clear() {
+		for (int i = 0; i < IMAGES_MAX; i++) removeImage(&writer->images[i]);
+
 		writer->mainText->setText("");
 		for (int i = 0; i < writer->choicesNum; i++) destroyButton(writer->choices[i]);
 		writer->choicesNum = 0;
@@ -655,6 +673,46 @@ namespace Writer {
 		}
 	}
 
+	void addImage(const char *name, const char *path) {
+		int slot;
+		for (slot = 0; slot < IMAGES_MAX; slot++)
+			if (!writer->images[slot].exists)
+				break;
+
+		if (slot >= IMAGES_MAX) {
+			msg("Too many images", MSG_ERROR);
+			return;
+		}
+
+		Image *img = &writer->images[slot];
+		img->exists = true;
+		img->name = stringClone(name);
+		img->sprite = createMintSprite(path);
+	}
+
+	Image *getImage(const char *name) {
+		for (int i = 0; i < IMAGES_MAX; i++)
+			if (writer->images[i].exists)
+				if (streq(writer->images[i].name, name))
+					return &writer->images[i];
+
+		return NULL;
+	}
+
+	void removeImage(const char *name) {
+		Image *img = getImage(name);
+		if (!img) return;
+		removeImage(img);
+	}
+
+	void removeImage(Image *img) {
+		if (!img->exists) return;
+
+		img->exists = false;
+		img->sprite->destroy();
+		free(img->name);
+	}
+
 	void js_print(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		printf("> %s\n", arg1);
@@ -756,9 +814,15 @@ namespace Writer {
 		gotoPassage(arg1);
 	}
 
-	void js_addSprite(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		MintSprite *spr = createMintSprite(arg1);
+	void js_addImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		const char *arg2 = v->getParameter("path")->getString().c_str();
+		addImage(arg1, arg2);
+	}
+
+	void js_removeImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		removeImage(arg1);
 	}
 
 	void dumpHex(const void* data, size_t size) {
