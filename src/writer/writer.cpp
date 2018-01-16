@@ -73,6 +73,7 @@ namespace Writer {
 	void js_submitPassage(CScriptVar *v, void *userdata);
 	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
+	void js_addSprite(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
 	struct Passage {
@@ -156,6 +157,7 @@ namespace Writer {
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
+			jsInterp->addNative("function addSprite(text)", &js_addSprite, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -723,11 +725,17 @@ namespace Writer {
 
 		const char *newline = strstr(arg1, "\n");
 		strncat(imageName, arg1, newline-arg1);
-		printf("Image name: %s\n", imageName);
+		strcat(imageName, ".png");
+		// printf("Image name: %s\n", imageName);
 
 		char *b64Data = tempBytes;
 		strcpy(b64Data, newline+1);
 		b64Data[strlen(b64Data)-1] = '\0';
+
+		const char *junkHeader = "data:image/png;base64,";
+		if (stringStartsWith(b64Data, junkHeader)) {
+			b64Data = tempBytes+strlen(junkHeader);
+		}
 
 		// printf("b64 bytes: ");
 		// for (int j = 0; j < strlen(b64Data); j++) printf("%c(%d) ", b64Data[j], b64Data[j]);
@@ -736,43 +744,22 @@ namespace Writer {
 		std::string lineString(b64Data);
 		std::string decodedString = base64_decode(lineString);
 
-		char *data = (char *)malloc(decodedString.length()+1);
-		strcpy(data, decodedString.c_str());
-		int dataLen = decodedString.length();
+		char *data = (char *)malloc(decodedString.size()+1);
+				memcpy(data, decodedString.c_str(), decodedString.length());
+		int dataLen = decodedString.size();
 		addAsset(imageName, data, dataLen);
 		return;
 
-		for (int i = 0;; i++) {
-			const char *lineEnd = strstr(lineStart, "\n");
-			if (!lineEnd) break;
-
-			char line[LARGE_STR] = {};
-			strncpy(line, lineStart, lineEnd-lineStart);
-			
-			printf("Line is: %s\n", line);
-			if (i == 0) strcat(imageName, line);
-			if (i == 1) {
-				printf("line bytes: ");
-				for (int j = 0; j < strlen(line); j++) printf("%c(%d) ", line[j], line[j]);
-				printf("\n");
-				std::string lineString(line);
-				std::string decodedString = base64_decode(lineString);
-
-				char *data = (char *)malloc(decodedString.length()+1);
-				strcpy(data, decodedString.c_str());
-				int dataLen = decodedString.length();
-				printf("Decoded to %s\n", decodedString.c_str());
-				addAsset(imageName, data, dataLen);
-				return;
-			}
-
-			lineEnd = lineStart+1;
-		}
 	}
 
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		gotoPassage(arg1);
+	}
+
+	void js_addSprite(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("text")->getString().c_str();
+		MintSprite *spr = createMintSprite(arg1);
 	}
 
 	void dumpHex(const void* data, size_t size) {
