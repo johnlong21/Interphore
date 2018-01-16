@@ -88,6 +88,7 @@ namespace Writer {
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void js_addImage(CScriptVar *v, void *userdata);
 	void js_removeImage(CScriptVar *v, void *userdata);
+	void js_centerImage(CScriptVar *v, void *userdata);
 	void js_alignImage(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
@@ -175,11 +176,13 @@ namespace Writer {
 			jsInterp = new CTinyJS();
 			registerFunctions(jsInterp);
 
-			jsInterp->setVariable("CENTER", CENTER);
-			jsInterp->setVariable("TOP", TOP);
-			jsInterp->setVariable("BOTTOM", BOTTOM);
-			jsInterp->setVariable("LEFT", LEFT);
-			jsInterp->setVariable("RIGHT", RIGHT);
+			jsInterp->evaluateComplex(
+				"CENTER = \"CENTER\";\n"
+				"TOP = \"TOP\";\n"
+				"BOTTOM = \"BOTTOM\";\n"
+				"LEFT = \"LEFT\";\n"
+				"RIGHT = \"RIGHT\";\n"
+			);
 
 			jsInterp->addNative("function print(text)", &js_print, 0);
 			jsInterp->addNative("function append(text)", &js_append, 0);
@@ -189,6 +192,7 @@ namespace Writer {
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
+			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
@@ -717,7 +721,6 @@ namespace Writer {
 	}
 
 	void alignImage(const char *name, const char *gravity) {
-		printf("Align: %s %s\n", name, gravity);
 		Image *img = getImage(name);
 
 		if (!img) {
@@ -728,11 +731,11 @@ namespace Writer {
 		}
 
 		Point grav = {};
-		if (gravity == CENTER) grav.setTo(0.5, 0.5);
-		if (gravity == TOP) grav.setTo(0.5, 0);
-		if (gravity == BOTTOM) grav.setTo(0.5, 1);
-		if (gravity == LEFT) grav.setTo(0, 0.5);
-		if (gravity == RIGHT) grav.setTo(1, 0.5);
+		if (streq(gravity, CENTER)) grav.setTo(0.5, 0.5);
+		if (streq(gravity, TOP)) grav.setTo(0.5, 0);
+		if (streq(gravity, BOTTOM)) grav.setTo(0.5, 1);
+		if (streq(gravity, LEFT)) grav.setTo(0, 0.5);
+		if (streq(gravity, RIGHT)) grav.setTo(1, 0.5);
 
 		img->sprite->gravitate(grav.x, grav.y);
 	}
@@ -866,8 +869,12 @@ namespace Writer {
 	void js_alignImage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("name")->getString().c_str();
 		const char *arg2 = v->getParameter("gravity")->getString().c_str();
-		if (streq(arg2, "undefined")) alignImage(arg1);
-		else alignImage(arg1, arg2);
+		alignImage(arg1, arg2);
+	}
+
+	void js_centerImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		alignImage(arg1, CENTER);
 	}
 
 	void dumpHex(const void* data, size_t size) {
