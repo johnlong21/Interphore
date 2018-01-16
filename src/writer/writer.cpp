@@ -10,9 +10,20 @@ namespace Writer {
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 
+	char tempBytes[Megabytes(2)];
+	char tempBytes2[Megabytes(2)];
 	bool exists = false;
 
 	const char *jsTest = ""
+		"START_IMAGES\n"
+		"img1\n"
+		"data1\n"
+		"---\n"
+		"img2\n"
+		"data2\n"
+		"END_IMAGES\n"
+		"\n"
+		"\n"
 		"START_PASSAGES\n"
 		":Start\n"
 		"!`apples = 1;`\n"
@@ -60,6 +71,7 @@ namespace Writer {
 	void js_append(CScriptVar *v, void *userdata);
 	void js_addChoice(CScriptVar *v, void *userdata);
 	void js_submitPassage(CScriptVar *v, void *userdata);
+	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
@@ -126,6 +138,7 @@ namespace Writer {
 	const char modRepo[] = ""
 		"Basic mod example by Fallowwing|http://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|http://pastebin.com/raw/SydjvVez\n"
+		"Image example by Followwing|http://pastebin.com/raw/3XKFCwpi\n"
 		"TestMod2 by Kittery|http://pastebin.com/raw/FTHQxiWy\n"
 		"Morphious86's Test|http://pastebin.com/raw/0MBv7bpK\n"
 		;
@@ -141,6 +154,7 @@ namespace Writer {
 			jsInterp->addNative("function append(text)", &js_append, 0);
 			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
+			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
@@ -387,7 +401,7 @@ namespace Writer {
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
-		char realData[HUGE_STR] = {};
+		char *realData = tempBytes;
 		strcat(realData, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
@@ -406,32 +420,43 @@ namespace Writer {
 				else lineEnd = lineStart+strlen(lineStart);
 			}
 
-			char line[LARGE_STR] = {};
+			char *line = tempBytes2;
 			strncpy(line, lineStart, lineEnd-lineStart);
+			line[lineEnd-lineStart] = '\0';
 			// printf("Line: %s\n", line);
 			// dumpHex(line, strlen(line));
 
 			if (strstr(line, "START_IMAGES")) {
 				inImages = true;
 				strcat(realData, "__image = \"\";");
+			} else if (strstr(line, "END_IMAGES")) {
+				strcat(realData, "submitImage(__image);");
+				inImages = false;
 			} else if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
-				strcat(realData, "__passage = \"\";");
-			} else if (strstr(line, "---")) {
-				strcat(realData, "submitPassage(__passage);");
 				strcat(realData, "__passage = \"\";");
 			} else if (strstr(line, "END_PASSAGES")) {
 				strcat(realData, "submitPassage(__passage);");
 				inPassage = false;
-			} else if (inPassage) {
-				char parsedLine[LARGE_STR] = {}; //@cleanup What size should this be?
-				strcat(parsedLine, "__passage += \"");
-				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
-					if (line[lineIndex] == '"') strcat(parsedLine, "\\\"");
-					else strncat(parsedLine, &line[lineIndex], 1);
+			} else if (strstr(line, "---")) {
+				if (inPassage) {
+					strcat(realData, "submitPassage(__passage);");
+					strcat(realData, "__passage = \"\";");
+				} else if (inImages) {
+					strcat(realData, "submitImage(__image);");
+					strcat(realData, "__image = \"\";");
 				}
-				strcat(parsedLine, "\n\";");
-				strcat(realData, parsedLine);
+			} else if (inPassage) {
+				strcat(realData, "__passage += \"");
+				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
+					if (line[lineIndex] == '"') strcat(realData, "\\\"");
+					else strncat(realData, &line[lineIndex], 1);
+				}
+				strcat(realData, "\n\";");
+			} else if (inImages) {
+				strcat(realData, "__image += \"");
+				strcat(realData, line);
+				strcat(realData, "\n\";");
 			} else {
 				strcat(realData, line);
 			}
@@ -686,6 +711,63 @@ namespace Writer {
 			return;
 		}
 		writer->passages[writer->passagesNum++] = passage;
+	}
+
+	void js_submitImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("text")->getString().c_str();
+		// printf("Got image: %s\n", arg1);
+
+		const char *lineStart = arg1;
+		char imageName[PATH_LIMIT];
+		strcpy(imageName, "modPath/");
+
+		const char *newline = strstr(arg1, "\n");
+		strncat(imageName, arg1, newline-arg1);
+		printf("Image name: %s\n", imageName);
+
+		char *b64Data = tempBytes;
+		strcpy(b64Data, newline+1);
+		b64Data[strlen(b64Data)-1] = '\0';
+
+		// printf("b64 bytes: ");
+		// for (int j = 0; j < strlen(b64Data); j++) printf("%c(%d) ", b64Data[j], b64Data[j]);
+		// printf("\n");
+
+		std::string lineString(b64Data);
+		std::string decodedString = base64_decode(lineString);
+
+		char *data = (char *)malloc(decodedString.length()+1);
+		strcpy(data, decodedString.c_str());
+		int dataLen = decodedString.length();
+		addAsset(imageName, data, dataLen);
+		return;
+
+		for (int i = 0;; i++) {
+			const char *lineEnd = strstr(lineStart, "\n");
+			if (!lineEnd) break;
+
+			char line[LARGE_STR] = {};
+			strncpy(line, lineStart, lineEnd-lineStart);
+			
+			printf("Line is: %s\n", line);
+			if (i == 0) strcat(imageName, line);
+			if (i == 1) {
+				printf("line bytes: ");
+				for (int j = 0; j < strlen(line); j++) printf("%c(%d) ", line[j], line[j]);
+				printf("\n");
+				std::string lineString(line);
+				std::string decodedString = base64_decode(lineString);
+
+				char *data = (char *)malloc(decodedString.length()+1);
+				strcpy(data, decodedString.c_str());
+				int dataLen = decodedString.length();
+				printf("Decoded to %s\n", decodedString.c_str());
+				addAsset(imageName, data, dataLen);
+				return;
+			}
+
+			lineEnd = lineStart+1;
+		}
 	}
 
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
