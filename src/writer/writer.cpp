@@ -719,7 +719,6 @@ namespace Writer {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		// printf("Got image: %s\n", arg1);
 
-		const char *lineStart = arg1;
 		char imageName[PATH_LIMIT];
 		strcpy(imageName, "modPath/");
 
