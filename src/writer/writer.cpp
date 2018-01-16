@@ -11,6 +11,12 @@ namespace Writer {
 #define MSG_MAX 64
 #define IMAGES_MAX 128
 
+	const char *CENTER = "CENTER";
+	const char *TOP = "TOP";
+	const char *BOTTOM = "BOTTOM";
+	const char *LEFT = "LEFT";
+	const char *RIGHT = "RIGHT";
+
 	char tempBytes[Megabytes(2)];
 	char tempBytes2[Megabytes(2)];
 	bool exists = false;
@@ -71,6 +77,7 @@ namespace Writer {
 	Image *getImage(const char *name);
 	void removeImage(const char *name);
 	void removeImage(Image *img);
+	void alignImage(const char *name, const char *gravity=CENTER);
 	void clear();
 
 	void js_print(CScriptVar *v, void *userdata);
@@ -81,6 +88,7 @@ namespace Writer {
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void js_addImage(CScriptVar *v, void *userdata);
 	void js_removeImage(CScriptVar *v, void *userdata);
+	void js_alignImage(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
 	struct Passage {
@@ -166,6 +174,13 @@ namespace Writer {
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
 			registerFunctions(jsInterp);
+
+			jsInterp->setVariable("CENTER", CENTER);
+			jsInterp->setVariable("TOP", TOP);
+			jsInterp->setVariable("BOTTOM", BOTTOM);
+			jsInterp->setVariable("LEFT", LEFT);
+			jsInterp->setVariable("RIGHT", RIGHT);
+
 			jsInterp->addNative("function print(text)", &js_print, 0);
 			jsInterp->addNative("function append(text)", &js_append, 0);
 			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
@@ -174,6 +189,7 @@ namespace Writer {
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
+			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -688,6 +704,7 @@ namespace Writer {
 		img->exists = true;
 		img->name = stringClone(name);
 		img->sprite = createMintSprite(path);
+		writer->bg->addChild(img->sprite);
 	}
 
 	Image *getImage(const char *name) {
@@ -697,6 +714,27 @@ namespace Writer {
 					return &writer->images[i];
 
 		return NULL;
+	}
+
+	void alignImage(const char *name, const char *gravity) {
+		printf("Align: %s %s\n", name, gravity);
+		Image *img = getImage(name);
+
+		if (!img) {
+			char buf[LARGE_STR] = {};
+			sprintf(buf, "Image named %s doesn't exist", name);
+			msg(buf, MSG_ERROR);
+			return;
+		}
+
+		Point grav = {};
+		if (gravity == CENTER) grav.setTo(0.5, 0.5);
+		if (gravity == TOP) grav.setTo(0.5, 0);
+		if (gravity == BOTTOM) grav.setTo(0.5, 1);
+		if (gravity == LEFT) grav.setTo(0, 0.5);
+		if (gravity == RIGHT) grav.setTo(1, 0.5);
+
+		img->sprite->gravitate(grav.x, grav.y);
 	}
 
 	void removeImage(const char *name) {
@@ -823,6 +861,13 @@ namespace Writer {
 	void js_removeImage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("name")->getString().c_str();
 		removeImage(arg1);
+	}
+
+	void js_alignImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		const char *arg2 = v->getParameter("gravity")->getString().c_str();
+		if (streq(arg2, "undefined")) alignImage(arg1);
+		else alignImage(arg1, arg2);
 	}
 
 	void dumpHex(const void* data, size_t size) {
