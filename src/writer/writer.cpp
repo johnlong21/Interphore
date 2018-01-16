@@ -137,11 +137,11 @@ namespace Writer {
 	CTinyJS *jsInterp;
 
 	const char modRepo[] = ""
-		"Basic mod example by Fallowwing|http://pastebin.com/raw/zuGa9n8A\n"
-		"Variables example by Fallowwing|http://pastebin.com/raw/SydjvVez\n"
-		"Image example by Followwing|http://pastebin.com/raw/3XKFCwpi\n"
-		"TestMod2 by Kittery|http://pastebin.com/raw/FTHQxiWy\n"
-		"Morphious86's Test|http://pastebin.com/raw/0MBv7bpK\n"
+		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
+		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
+		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
+		"TestMod2 by Kittery|https://pastebin.com/raw/FTHQxiWy\n"
+		"Morphious86's Test|https://pastebin.com/raw/0MBv7bpK\n"
 		;
 
 	void initWriter(MintSprite *bgSpr) {
