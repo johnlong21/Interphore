@@ -162,7 +162,7 @@ namespace Writer {
 	CTinyJS *jsInterp;
 
 	const char modRepo[] = ""
-		"Origin Story by Kittery|https://pastebin.com/LN1jWTeD"
+		"Origin Story by Kittery|https://pastebin.com/raw/LN1jWTeD"
 		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
 		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
@@ -448,11 +448,15 @@ namespace Writer {
 	}
 
 	void loadMod(char *serialData) {
+		for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
+		writer->passagesNum = 0;
+
 		if (writer->state != STATE_MOD) changeState(STATE_MOD);
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
 		char *realData = tempBytes;
+		tempBytes[0] = '\0';
 		strcat(realData, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
@@ -472,6 +476,7 @@ namespace Writer {
 			}
 
 			char *line = tempBytes2;
+			line[0] = '\0';
 			strncpy(line, lineStart, lineEnd-lineStart);
 			line[lineEnd-lineStart] = '\0';
 			// printf("Line: %s\n", line);
@@ -516,7 +521,7 @@ namespace Writer {
 			lineStart = lineEnd+1;
 		}
 
-		// printf("Gonna exec:\n%s\n", realData);
+		printf("Gonna exec:\n%s\n", realData);
 		// exit(1);
 
 		free(inputData);
