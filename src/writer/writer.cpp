@@ -163,6 +163,8 @@ namespace Writer {
 
 	const char modRepo[] = ""
 		"Origin Story by Kittery|https://pastebin.com/raw/T5rZ9ue6\n"
+		"Waking Up by Kittery|https://pastebin.com/raw/XNbdjHGA\n"
+		"Sexy Time by Kittery|https://pastebin.com/raw/s9mat6wK\n"
 		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
 		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
