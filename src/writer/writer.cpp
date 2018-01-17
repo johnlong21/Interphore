@@ -9,10 +9,28 @@ namespace Writer {
 #define PASSAGE_MAX 1024
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
+#define IMAGES_MAX 128
 
+	const char *CENTER = "CENTER";
+	const char *TOP = "TOP";
+	const char *BOTTOM = "BOTTOM";
+	const char *LEFT = "LEFT";
+	const char *RIGHT = "RIGHT";
+
+	char tempBytes[Megabytes(2)];
+	char tempBytes2[Megabytes(2)];
 	bool exists = false;
 
 	const char *jsTest = ""
+		"START_IMAGES\n"
+		"img1\n"
+		"data1\n"
+		"---\n"
+		"img2\n"
+		"data2\n"
+		"END_IMAGES\n"
+		"\n"
+		"\n"
 		"START_PASSAGES\n"
 		":Start\n"
 		"!`apples = 1;`\n"
@@ -42,6 +60,7 @@ namespace Writer {
 	enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 	struct Button;
 	struct Msg;
+	struct Image;
 
 	void changeState(GameState newState);
 	void urlModLoaded(char *serialData);
@@ -52,15 +71,25 @@ namespace Writer {
 	void gotoPassage(const char *passageName);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
+	void addImage(const char *name, const char *path);
 	void msg(const char *str, MsgType type=MSG_INFO);
 	void destroyMsg(Msg *msg);
+	Image *getImage(const char *name);
+	void removeImage(const char *name);
+	void removeImage(Image *img);
+	void alignImage(const char *name, const char *gravity=CENTER);
 	void clear();
 
 	void js_print(CScriptVar *v, void *userdata);
 	void js_append(CScriptVar *v, void *userdata);
 	void js_addChoice(CScriptVar *v, void *userdata);
 	void js_submitPassage(CScriptVar *v, void *userdata);
+	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
+	void js_addImage(CScriptVar *v, void *userdata);
+	void js_removeImage(CScriptVar *v, void *userdata);
+	void js_centerImage(CScriptVar *v, void *userdata);
+	void js_alignImage(CScriptVar *v, void *userdata);
 	void dumpHex(const void* data, size_t size);
 
 	struct Passage {
@@ -91,6 +120,12 @@ namespace Writer {
 		char destPassageName[PASSAGE_NAME_MAX];
 	};
 
+	struct Image {
+		bool exists;
+		char *name;
+		MintSprite *sprite;
+	};
+
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
@@ -118,6 +153,8 @@ namespace Writer {
 		int urlModsNum;
 
 		Msg msgs[MSG_MAX];
+
+		Image images[IMAGES_MAX];
 	};
 
 	WriterStruct *writer;
@@ -127,6 +164,7 @@ namespace Writer {
 		"Origin Story by Kittery|https://pastebin.com/LN1jWTeD"
 		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
+		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
 		"TestMod2 by Kittery|https://pastebin.com/raw/FTHQxiWy\n"
 		"Morphious86's Test|https://pastebin.com/raw/0MBv7bpK\n"
 		;
@@ -138,11 +176,25 @@ namespace Writer {
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
 			registerFunctions(jsInterp);
+
+			jsInterp->evaluateComplex(
+				"CENTER = \"CENTER\";\n"
+				"TOP = \"TOP\";\n"
+				"BOTTOM = \"BOTTOM\";\n"
+				"LEFT = \"LEFT\";\n"
+				"RIGHT = \"RIGHT\";\n"
+			);
+
 			jsInterp->addNative("function print(text)", &js_print, 0);
 			jsInterp->addNative("function append(text)", &js_append, 0);
 			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
+			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
+			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
+			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
+			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
+			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -184,7 +236,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
-				spr->gravitate(0.01, 0);
+				spr->gravitate(0.01, 0.1);
 
 				writer->title = spr;
 			}
@@ -259,9 +311,10 @@ namespace Writer {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(engine->width, engine->height*0.75);
+				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
-				writer->bg->addChild(spr);
+				spr->y += 30;
 
 				writer->mainText = spr;
 			}
@@ -269,7 +322,7 @@ namespace Writer {
 			{ /// Exit button
 				Button *btn = createButton("X", 50, 50);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0);
+				btn->sprite->gravitate(1, 0.1);
 
 				writer->exitButton = btn;
 			}
@@ -277,7 +330,7 @@ namespace Writer {
 			{ /// Refresh button
 				Button *btn = createButton("R", 50, 50);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0.1);
+				btn->sprite->gravitate(1, 0.2);
 
 				writer->refreshButton = btn;
 			}
@@ -387,7 +440,7 @@ namespace Writer {
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
-		char realData[HUGE_STR] = {};
+		char *realData = tempBytes;
 		strcat(realData, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
@@ -396,8 +449,9 @@ namespace Writer {
 			if (serialData[i] != '\r')
 				inputData[inputLen++] = serialData[i];
 
-		bool inPassage = false;
 		const char *lineStart = inputData;
+		bool inPassage = false;
+		bool inImages = false;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, "\n");
 			if (!lineEnd) {
@@ -405,29 +459,43 @@ namespace Writer {
 				else lineEnd = lineStart+strlen(lineStart);
 			}
 
-			char line[LARGE_STR] = {};
+			char *line = tempBytes2;
 			strncpy(line, lineStart, lineEnd-lineStart);
+			line[lineEnd-lineStart] = '\0';
 			// printf("Line: %s\n", line);
 			// dumpHex(line, strlen(line));
 
-			if (strstr(line, "START_PASSAGES")) {
+			if (strstr(line, "START_IMAGES")) {
+				inImages = true;
+				strcat(realData, "__image = \"\";");
+			} else if (strstr(line, "END_IMAGES")) {
+				strcat(realData, "submitImage(__image);");
+				inImages = false;
+			} else if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
-				strcat(realData, "__passage = \"\";");
-			} else if (strstr(line, "---")) {
-				strcat(realData, "submitPassage(__passage);");
 				strcat(realData, "__passage = \"\";");
 			} else if (strstr(line, "END_PASSAGES")) {
 				strcat(realData, "submitPassage(__passage);");
 				inPassage = false;
-			} else if (inPassage) {
-				char parsedLine[LARGE_STR] = {}; //@cleanup What size should this be?
-				strcat(parsedLine, "__passage += \"");
-				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
-					if (line[lineIndex] == '"') strcat(parsedLine, "\\\"");
-					else strncat(parsedLine, &line[lineIndex], 1);
+			} else if (strstr(line, "---")) {
+				if (inPassage) {
+					strcat(realData, "submitPassage(__passage);");
+					strcat(realData, "__passage = \"\";");
+				} else if (inImages) {
+					strcat(realData, "submitImage(__image);");
+					strcat(realData, "__image = \"\";");
 				}
-				strcat(parsedLine, "\n\";");
-				strcat(realData, parsedLine);
+			} else if (inPassage) {
+				strcat(realData, "__passage += \"");
+				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
+					if (line[lineIndex] == '"') strcat(realData, "\\\"");
+					else strncat(realData, &line[lineIndex], 1);
+				}
+				strcat(realData, "\n\";");
+			} else if (inImages) {
+				strcat(realData, "__image += \"");
+				strcat(realData, line);
+				strcat(realData, "\n\";");
 			} else {
 				strcat(realData, line);
 			}
@@ -490,6 +558,8 @@ namespace Writer {
 	}
 
 	void clear() {
+		for (int i = 0; i < IMAGES_MAX; i++) removeImage(&writer->images[i]);
+
 		writer->mainText->setText("");
 		for (int i = 0; i < writer->choicesNum; i++) destroyButton(writer->choices[i]);
 		writer->choicesNum = 0;
@@ -624,6 +694,67 @@ namespace Writer {
 		}
 	}
 
+	void addImage(const char *name, const char *path) {
+		int slot;
+		for (slot = 0; slot < IMAGES_MAX; slot++)
+			if (!writer->images[slot].exists)
+				break;
+
+		if (slot >= IMAGES_MAX) {
+			msg("Too many images", MSG_ERROR);
+			return;
+		}
+
+		Image *img = &writer->images[slot];
+		img->exists = true;
+		img->name = stringClone(name);
+		img->sprite = createMintSprite(path);
+		writer->bg->addChild(img->sprite);
+	}
+
+	Image *getImage(const char *name) {
+		for (int i = 0; i < IMAGES_MAX; i++)
+			if (writer->images[i].exists)
+				if (streq(writer->images[i].name, name))
+					return &writer->images[i];
+
+		return NULL;
+	}
+
+	void alignImage(const char *name, const char *gravity) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			char buf[LARGE_STR] = {};
+			sprintf(buf, "Image named %s doesn't exist", name);
+			msg(buf, MSG_ERROR);
+			return;
+		}
+
+		Point grav = {};
+		if (streq(gravity, CENTER)) grav.setTo(0.5, 0.5);
+		if (streq(gravity, TOP)) grav.setTo(0.5, 0);
+		if (streq(gravity, BOTTOM)) grav.setTo(0.5, 1);
+		if (streq(gravity, LEFT)) grav.setTo(0, 0.5);
+		if (streq(gravity, RIGHT)) grav.setTo(1, 0.5);
+
+		img->sprite->gravitate(grav.x, grav.y);
+	}
+
+	void removeImage(const char *name) {
+		Image *img = getImage(name);
+		if (!img) return;
+		removeImage(img);
+	}
+
+	void removeImage(Image *img) {
+		if (!img->exists) return;
+
+		img->exists = false;
+		img->sprite->destroy();
+		free(img->name);
+	}
+
 	void js_print(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		printf("> %s\n", arg1);
@@ -684,9 +815,67 @@ namespace Writer {
 		writer->passages[writer->passagesNum++] = passage;
 	}
 
+	void js_submitImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("text")->getString().c_str();
+		// printf("Got image: %s\n", arg1);
+
+		char imageName[PATH_LIMIT];
+		strcpy(imageName, "modPath/");
+
+		const char *newline = strstr(arg1, "\n");
+		strncat(imageName, arg1, newline-arg1);
+		strcat(imageName, ".png");
+		// printf("Image name: %s\n", imageName);
+
+		char *b64Data = tempBytes;
+		strcpy(b64Data, newline+1);
+		b64Data[strlen(b64Data)-1] = '\0';
+
+		const char *junkHeader = "data:image/png;base64,";
+		if (stringStartsWith(b64Data, junkHeader)) {
+			b64Data = tempBytes+strlen(junkHeader);
+		}
+
+		// printf("b64 bytes: ");
+		// for (int j = 0; j < strlen(b64Data); j++) printf("%c(%d) ", b64Data[j], b64Data[j]);
+		// printf("\n");
+
+		std::string lineString(b64Data);
+		std::string decodedString = base64_decode(lineString);
+
+		char *data = (char *)malloc(decodedString.size()+1);
+				memcpy(data, decodedString.c_str(), decodedString.length());
+		int dataLen = decodedString.size();
+		addAsset(imageName, data, dataLen);
+		return;
+
+	}
+
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		gotoPassage(arg1);
+	}
+
+	void js_addImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		const char *arg2 = v->getParameter("path")->getString().c_str();
+		addImage(arg1, arg2);
+	}
+
+	void js_removeImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		removeImage(arg1);
+	}
+
+	void js_alignImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		const char *arg2 = v->getParameter("gravity")->getString().c_str();
+		alignImage(arg1, arg2);
+	}
+
+	void js_centerImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		alignImage(arg1, CENTER);
 	}
 
 	void dumpHex(const void* data, size_t size) {
