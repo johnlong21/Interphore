@@ -2,7 +2,7 @@ namespace Writer {
 #include "writer.h"
 
 #define CHOICE_BUTTON_MAX 4
-#define BUTTON_MAX 32
+#define BUTTON_MAX 128
 #define PASSAGE_NAME_MAX MED_STR
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
@@ -103,6 +103,7 @@ namespace Writer {
 		char name[MOD_NAME_MAX];
 		char url[URL_LIMIT];
 		Button *button;
+		Button *peakButton;
 		Button *sourceButton;
 	};
 
@@ -162,6 +163,7 @@ namespace Writer {
 
 	const char modRepo[] = ""
 		"Origin Story by Kittery|https://pastebin.com/raw/WC8s8jYx"
+		"Origin Story by Kittery|https://pastebin.com/raw/LN1jWTeD\n"
 		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
 		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
@@ -236,7 +238,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
-				spr->gravitate(0.01, 0.1);
+				spr->gravitate(0.01, 0.005);
 
 				writer->title = spr;
 			}
@@ -255,9 +257,9 @@ namespace Writer {
 
 			{ /// Browser bg
 				MintSprite *spr = createMintSprite();
-				spr->setupRect(engine->width*0.25, engine->height*0.5, 0x111111);
+				spr->setupRect(engine->width*0.5, engine->height*0.5, 0x111111);
 				writer->bg->addChild(spr);
-				spr->gravitate(0.3, 0.2);
+				spr->gravitate(0.15, 0.2);
 
 				writer->browserBg = spr;
 			}
@@ -267,11 +269,20 @@ namespace Writer {
 					ModEntry *entry = &writer->urlMods[i];
 
 					{ /// Play button
-						Button *btn = createButton(entry->name, writer->browserBg->getWidth()*0.78, 64);
+						Button *btn = createButton(entry->name, writer->browserBg->getWidth()*0.50, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
 
 						entry->button = btn;
+					}
+
+					{ /// Peak button
+						Button *btn = createButton("peak source", writer->browserBg->getWidth()*0.20, 64);
+						writer->browserBg->addChild(btn->sprite);
+						btn->sprite->gravitate(1, 0);
+						btn->sprite->y = entry->button->sprite->y;
+
+						entry->peakButton = btn;
 					}
 
 					{ /// Source button
@@ -279,6 +290,7 @@ namespace Writer {
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->gravitate(1, 0);
 						btn->sprite->y = entry->button->sprite->y;
+						btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
 
 						entry->sourceButton = btn;
 					}
@@ -341,6 +353,7 @@ namespace Writer {
 				if (writer->urlMods[i].button) {
 					destroyButton(writer->urlMods[i].button);
 					destroyButton(writer->urlMods[i].sourceButton);
+					destroyButton(writer->urlMods[i].peakButton);
 				}
 
 			writer->title->destroy();
@@ -381,9 +394,9 @@ namespace Writer {
 					writer->currentMod = entry;
 					platformLoadFromUrl(entry->url, urlModLoaded);
 				}
-				if (entry->sourceButton->sprite->justPressed) {
-					platformLoadFromUrl(entry->url, urlModSourceLoaded);
-				}
+
+				if (entry->peakButton->sprite->justPressed) platformLoadFromUrl(entry->url, urlModSourceLoaded);
+				if (entry->sourceButton->sprite->justPressed) gotoUrl(entry->url);
 			}
 		}
 
@@ -436,11 +449,15 @@ namespace Writer {
 	}
 
 	void loadMod(char *serialData) {
+		for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
+		writer->passagesNum = 0;
+
 		if (writer->state != STATE_MOD) changeState(STATE_MOD);
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
 		char *realData = tempBytes;
+		tempBytes[0] = '\0';
 		strcat(realData, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
@@ -460,6 +477,7 @@ namespace Writer {
 			}
 
 			char *line = tempBytes2;
+			line[0] = '\0';
 			strncpy(line, lineStart, lineEnd-lineStart);
 			line[lineEnd-lineStart] = '\0';
 			// printf("Line: %s\n", line);
@@ -504,7 +522,7 @@ namespace Writer {
 			lineStart = lineEnd+1;
 		}
 
-		// printf("Gonna exec:\n%s\n", realData);
+		printf("Gonna exec:\n%s\n", realData);
 		// exit(1);
 
 		free(inputData);
@@ -537,7 +555,7 @@ namespace Writer {
 
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(width, height, 0x444444);
+			// spr->setupRect(width, height, 0x444444);
 			spr->setup9Slice("ui/dialog/basicDialog", width + 10, height + 10, 15, 15, 30, 30);
 
 			btn->sprite = spr;
@@ -909,6 +927,7 @@ namespace Writer {
 
 	void deinitWriter() {
 		if (writer->state != STATE_NULL) changeState(STATE_NULL);
+		writer->bg->destroy();
 		exists = false;
 	}
 }
