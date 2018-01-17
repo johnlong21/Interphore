@@ -162,8 +162,7 @@ namespace Writer {
 	CTinyJS *jsInterp;
 
 	const char modRepo[] = ""
-		"Origin Story by Kittery|https://pastebin.com/raw/WC8s8jYx"
-		"Origin Story by Kittery|https://pastebin.com/raw/LN1jWTeD\n"
+		"Origin Story by Kittery|https://pastebin.com/raw/T5rZ9ue6\n"
 		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
 		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
 		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
