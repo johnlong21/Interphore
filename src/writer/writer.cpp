@@ -920,6 +920,7 @@ namespace Writer {
 
 	void deinitWriter() {
 		if (writer->state != STATE_NULL) changeState(STATE_NULL);
+		writer->bg->destroy();
 		exists = false;
 	}
 }
