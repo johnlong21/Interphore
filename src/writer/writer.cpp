@@ -6,6 +6,7 @@ namespace Writer {
 #define PASSAGE_NAME_MAX MED_STR
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
+#define AUTHOR_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
@@ -101,6 +102,7 @@ namespace Writer {
 
 	struct ModEntry {
 		char name[MOD_NAME_MAX];
+		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
 		Button *button;
 		Button *peakButton;
@@ -161,15 +163,6 @@ namespace Writer {
 	WriterStruct *writer;
 	CTinyJS *jsInterp;
 
-	const char modRepo[] = ""
-		"Origin Story by Kittery|https://pastebin.com/raw/LN1jWTeD\n"
-		"Basic mod example by Fallowwing|https://pastebin.com/raw/zuGa9n8A\n"
-		"Variables example by Fallowwing|https://pastebin.com/raw/SydjvVez\n"
-		"Image example by Followwing|https://pastebin.com/raw/3XKFCwpi\n"
-		"TestMod2 by Kittery|https://pastebin.com/raw/FTHQxiWy\n"
-		"Morphious86's Test|https://pastebin.com/raw/0MBv7bpK\n"
-		;
-
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
 		exists = true;
@@ -206,24 +199,49 @@ namespace Writer {
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
 
-		{ /// Parse modRepo
-			const char *lineStart = modRepo;
-			for (int i = 0;; i++) {
-				const char *lineEnd = strstr(lineStart, "\n");
-				if (!lineEnd) break;
+		struct ModEntryDef {
+			const char *name;
+			const char *author;
+			const char *url;
+		};
 
-				ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
-				memset(entry, 0, sizeof(ModEntry));
-
-				char line[URL_LIMIT+MOD_NAME_MAX+1] = {};
-				strncpy(line, lineStart, lineEnd-lineStart);
-
-				char *barPos = strstr(line, "|");
-				strncpy(entry->name, line, barPos - line);
-				strcpy(entry->url, barPos+1);
-
-				lineStart = lineEnd+1;
+		ModEntryDef defs[] = {
+			{
+				"Origin Story",
+				"Kittery",
+				"https://pastebin.com/raw/LN1jWTeD"
+			}, {
+				"Basic mod",
+				"Fallowwing",
+				"https://pastebin.com/raw/zuGa9n8A"
+			}, {
+				"Variables",
+				"Fallowwing",
+				"https://pastebin.com/raw/SydjvVez"
+			}, {
+				"Image example",
+				"Fallowwing",
+				"https://pastebin.com/raw/3XKFCwpi"
+			}, {
+				"TestMod2",
+				"Kittery",
+				"https://pastebin.com/raw/FTHQxiWy"
+			}, {
+				"Morphious86's Test",
+				"Morphious86",
+				"https://pastebin.com/raw/0MBv7bpK"
 			}
+		};
+
+		int defsNum = ArrayLength(defs);
+
+		for (int i = 0; i < defsNum; i++) {
+			ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
+			memset(entry, 0, sizeof(ModEntry));
+
+			strcpy(entry->name, defs[i].name);
+			strcpy(entry->author, defs[i].author);
+			strcpy(entry->url, defs[i].url);
 		}
 
 		changeState(STATE_MENU);
