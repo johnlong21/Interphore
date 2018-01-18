@@ -36,6 +36,7 @@ namespace Writer {
 		":Start\n"
 		"!`apples = 1;`\n"
 		"This passage shows off basic variables.\n"
+		"And has two lines\n"
 		"[Let's get to it|Main]\n"
 		"---\n"
 		":Main\n"
@@ -534,7 +535,7 @@ namespace Writer {
 					if (line[lineIndex] == '"') strcat(realData, "\\\"");
 					else strncat(realData, &line[lineIndex], 1);
 				}
-				strcat(realData, "\n\";");
+				strcat(realData, "\\n\";");
 			} else if (inImages) {
 				strcat(realData, "__image += \"");
 				strcat(realData, line);
@@ -844,6 +845,7 @@ namespace Writer {
 				strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
 			} else {
 				strcat(passage->appendData, line);
+				strcat(passage->appendData, "\n");
 			}
 
 			lineStart = lineEnd+1;
