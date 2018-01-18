@@ -267,7 +267,7 @@ namespace Writer {
 		if (newState == STATE_MENU) {
 			{ /// Title
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width, 100);
+				spr->setupEmpty(writer->bg->getWidth(), 100);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
@@ -278,7 +278,7 @@ namespace Writer {
 
 			{ /// Subtitle
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width, 100);
+				spr->setupEmpty(writer->bg->getWidth(), 100);
 				writer->title->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 
@@ -290,7 +290,7 @@ namespace Writer {
 
 			{ /// Browser bg
 				MintSprite *spr = createMintSprite();
-				spr->setupRect(engine->width*0.5, engine->height*0.5, 0x111111);
+				spr->setupRect(writer->bg->getWidth()*0.5, writer->bg->getHeight()*0.5, 0x111111);
 				writer->bg->addChild(spr);
 				spr->gravitate(0.15, 0.2);
 
@@ -340,7 +340,7 @@ namespace Writer {
 
 			{ /// Mod source text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width*0.5, engine->height);
+				spr->setupEmpty(writer->bg->getWidth()*0.5, writer->bg->getHeight());
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("");
@@ -355,7 +355,7 @@ namespace Writer {
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width, engine->height*0.75);
+				spr->setupEmpty(writer->bg->getWidth(), writer->bg->getHeight()*0.75);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
@@ -733,7 +733,7 @@ namespace Writer {
 
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width*0.5, engine->height*0.5);
+			spr->setupEmpty(writer->bg->getWidth()*0.5, writer->bg->getHeight()*0.5);
 			writer->bg->addChild(spr);
 
 			msg->sprite = spr;
@@ -742,10 +742,10 @@ namespace Writer {
 		{ /// Type specific
 			if (type == MSG_INFO) {
 				msg->sprite->setText(buffer);
-				msg->sprite->y = engine->height;
+				msg->sprite->y = writer->bg->getHeight();
 			} else if (type == MSG_WARNING) {
 				msg->sprite->setText(buffer);
-				msg->sprite->y = engine->height;
+				msg->sprite->y = writer->bg->getHeight();
 			} else if (type == MSG_ERROR) {
 				msg->sprite->setText("<ed38>%s</ed38>", buffer);
 				msg->sprite->gravitate(0.5, 0.9);
