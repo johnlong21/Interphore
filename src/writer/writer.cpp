@@ -555,7 +555,7 @@ namespace Writer {
 			lineStart = lineEnd+1;
 		}
 
-		printf("Gonna exec:\n%s\n", realData);
+		// printf("Gonna exec:\n%s\n", realData);
 		// exit(1);
 
 		free(inputData);
@@ -622,7 +622,7 @@ namespace Writer {
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
 			Passage *passage = writer->passages[i];
-			printf("Checking passage %s\n", passage->name);
+			// printf("Checking passage %s\n", passage->name);
 			if (streq(passage->name, passageName)) {
 				const char *lineStart = passage->appendData;
 				for (int i = 0;; i++) {
@@ -768,9 +768,9 @@ namespace Writer {
 		img->exists = true;
 		img->name = stringClone(name);
 		printf("Creating sprite from %s\n", path);
-		// img->sprite = createMintSprite(path);
-		img->sprite = createMintSprite();
-		img->sprite->setupRect(128, 128, 0x00FF00);
+		img->sprite = createMintSprite(path);
+		// img->sprite = createMintSprite();
+		// img->sprite->setupRect(128, 128, 0x00FF00);
 		writer->bg->addChild(img->sprite);
 	}
 
@@ -881,7 +881,6 @@ namespace Writer {
 		char imageName[PATH_LIMIT];
 		strcpy(imageName, "modPath/");
 
-		// dumpHex(arg1, strlen(arg1));
 		const char *newline = strstr(arg1, "\n");
 		strncat(imageName, arg1, newline-arg1);
 		strcat(imageName, ".png");
@@ -896,19 +895,9 @@ namespace Writer {
 			b64Data = tempBytes+strlen(junkHeader);
 		}
 
-		// printf("b64 bytes: ");
-		// for (int j = 0; j < strlen(b64Data); j++) printf("%c(%d) ", b64Data[j], b64Data[j]);
-		// printf("\n");
-
-		std::string lineString(b64Data);
-		std::string decodedString = base64_decode(lineString);
-
-		char *data = (char *)malloc(decodedString.size()+1);
-				memcpy(data, decodedString.c_str(), decodedString.length());
-		int dataLen = decodedString.size();
+		size_t dataLen;
+		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
 		addAsset(imageName, data, dataLen);
-		return;
-
 	}
 
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
