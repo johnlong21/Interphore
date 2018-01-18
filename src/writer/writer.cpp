@@ -209,7 +209,15 @@ namespace Writer {
 			{
 				"Origin Story",
 				"Kittery",
-				"https://pastebin.com/raw/LN1jWTeD"
+				"https://pastebin.com/raw/T5rZ9ue6"
+			}, {
+				"Waking up",
+				"Kittery",
+				"https://pastebin.com/raw/XNbdjHGA"
+			}, {
+				"Sexy Time",
+				"Kittery",
+				"https://pastebin.com/raw/s9mat6wK"
 			}, {
 				"Basic mod",
 				"Fallowwing",
@@ -294,7 +302,7 @@ namespace Writer {
 					}
 
 					{ /// Peak button
-						Button *btn = createButton("peak source", writer->browserBg->getWidth()*0.20, 64);
+						Button *btn = createButton("peek source", writer->browserBg->getWidth()*0.20, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->gravitate(1, 0);
 						btn->sprite->y = entry->button->sprite->y;
