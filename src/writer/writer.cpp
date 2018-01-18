@@ -74,7 +74,7 @@ namespace Writer {
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
 	void addImage(const char *name, const char *path);
-	void msg(const char *str, MsgType type=MSG_INFO);
+	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
 	Image *getImage(const char *name);
 	void removeImage(const char *name);
@@ -92,7 +92,10 @@ namespace Writer {
 	void js_removeImage(CScriptVar *v, void *userdata);
 	void js_centerImage(CScriptVar *v, void *userdata);
 	void js_alignImage(CScriptVar *v, void *userdata);
-	void dumpHex(const void* data, size_t size);
+	void js_moveImage(CScriptVar *v, void *userdata);
+	void js_scaleImage(CScriptVar *v, void *userdata);
+	void js_rotateImage(CScriptVar *v, void *userdata);
+	void js_tintImage(CScriptVar *v, void *userdata);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -190,6 +193,10 @@ namespace Writer {
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
 			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
+			jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
+			jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
+			jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
+			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -230,7 +237,7 @@ namespace Writer {
 			}, {
 				"Image example",
 				"Fallowwing",
-				"https://pastebin.com/raw/3XKFCwpi"
+				"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1"
 			}, {
 				"TestMod2",
 				"Kittery",
@@ -615,7 +622,7 @@ namespace Writer {
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
 			Passage *passage = writer->passages[i];
-			// printf("Checking passage %s\n", passage->name);
+			printf("Checking passage %s\n", passage->name);
 			if (streq(passage->name, passageName)) {
 				const char *lineStart = passage->appendData;
 				for (int i = 0;; i++) {
@@ -705,7 +712,7 @@ namespace Writer {
 		msg->sprite->destroy();
 	}
 
-	void msg(const char *str, MsgType type) {
+	void msg(const char *str, MsgType type, ...) {
 		int slot;
 		for (slot = 0; slot < MSG_MAX; slot++)
 			if (!writer->msgs[slot].exists)
@@ -715,6 +722,14 @@ namespace Writer {
 		Msg *msg = &writer->msgs[slot];
 		msg->exists = true;
 		msg->type = type;
+
+		char buffer[HUGE_STR];
+		{ /// Parse format
+			va_list argptr;
+			va_start(argptr, type);
+			vsprintf(buffer, str, argptr);
+			va_end(argptr);
+		}
 
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
@@ -726,13 +741,13 @@ namespace Writer {
 
 		{ /// Type specific
 			if (type == MSG_INFO) {
-				msg->sprite->setText(str);
+				msg->sprite->setText(buffer);
 				msg->sprite->y = engine->height;
 			} else if (type == MSG_WARNING) {
-				msg->sprite->setText(str);
+				msg->sprite->setText(buffer);
 				msg->sprite->y = engine->height;
 			} else if (type == MSG_ERROR) {
-				msg->sprite->setText("<ed38>%s</ed38>", str);
+				msg->sprite->setText("<ed38>%s</ed38>", buffer);
 				msg->sprite->gravitate(0.5, 0.9);
 			}
 		}
@@ -752,7 +767,10 @@ namespace Writer {
 		Image *img = &writer->images[slot];
 		img->exists = true;
 		img->name = stringClone(name);
-		img->sprite = createMintSprite(path);
+		printf("Creating sprite from %s\n", path);
+		// img->sprite = createMintSprite(path);
+		img->sprite = createMintSprite();
+		img->sprite->setupRect(128, 128, 0x00FF00);
 		writer->bg->addChild(img->sprite);
 	}
 
@@ -769,9 +787,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			char buf[LARGE_STR] = {};
-			sprintf(buf, "Image named %s doesn't exist", name);
-			msg(buf, MSG_ERROR);
+			msg("Image named %s doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -834,9 +850,7 @@ namespace Writer {
 
 			if (i == 0) {
 				if (line[0] != ':') {
-					char buf[LARGE_STR] = {};
-					sprintf(buf, "Titles must start with a colon (%s)", line);
-					msg(buf, MSG_ERROR);
+					msg("Titles must start with a colon (%s)", MSG_ERROR, line);
 					return;
 				}
 
@@ -867,6 +881,7 @@ namespace Writer {
 		char imageName[PATH_LIMIT];
 		strcpy(imageName, "modPath/");
 
+		// dumpHex(arg1, strlen(arg1));
 		const char *newline = strstr(arg1, "\n");
 		strncat(imageName, arg1, newline-arg1);
 		strcat(imageName, ".png");
@@ -918,38 +933,65 @@ namespace Writer {
 		alignImage(arg1, arg2);
 	}
 
+	void js_moveImage(CScriptVar *v, void *userdata) {
+		const char *name = v->getParameter("name")->getString().c_str();
+		double x = v->getParameter("x")->getDouble();
+		double y = v->getParameter("y")->getDouble();
+
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Image named %s cannot be moved because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->gravitate(x, y);
+	}
+
+	void js_scaleImage(CScriptVar *v, void *userdata) {
+		const char *name = v->getParameter("name")->getString().c_str();
+		double x = v->getParameter("x")->getDouble();
+		double y = v->getParameter("y")->getDouble();
+
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Image named %s cannot be scaled because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->scale(x, y);
+	}
+
+	void js_rotateImage(CScriptVar *v, void *userdata) {
+		const char *name = v->getParameter("name")->getString().c_str();
+		double angle = v->getParameter("angle")->getDouble();
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Image named %s cannot be rotated because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->rotation = angle;
+	}
+
+	void js_tintImage(CScriptVar *v, void *userdata) {
+		const char *name = v->getParameter("name")->getString().c_str();
+		double tint = v->getParameter("tint")->getInt();
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Image named %s cannot be rotated because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->tint = tint;
+	}
+
 	void js_centerImage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("name")->getString().c_str();
 		alignImage(arg1, CENTER);
-	}
-
-	void dumpHex(const void* data, size_t size) {
-		char ascii[17];
-		size_t i, j;
-		ascii[16] = '\0';
-		for (i = 0; i < size; ++i) {
-			printf("%02X ", ((unsigned char*)data)[i]);
-			if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
-				ascii[i % 16] = ((unsigned char*)data)[i];
-			} else {
-				ascii[i % 16] = '.';
-			}
-			if ((i+1) % 8 == 0 || i+1 == size) {
-				printf(" ");
-				if ((i+1) % 16 == 0) {
-					printf("|  %s \n", ascii);
-				} else if (i+1 == size) {
-					ascii[(i+1) % 16] = '\0';
-					if ((i+1) % 16 <= 8) {
-						printf(" ");
-					}
-					for (j = (i+1) % 16; j < 16; ++j) {
-						printf("   ");
-					}
-					printf("|  %s \n", ascii);
-				}
-			}
-		}
 	}
 
 	void deinitWriter() {
