@@ -236,20 +236,25 @@ namespace Writer {
 
 		ModEntryDef defs[] = {
 			{
+				"False Moon",
+				"Kittery",
+				"https://pastebin.com/raw/72bbnRK5",
+				"Story"
+			}, {
 				"Origin Story",
 				"Kittery",
 				"https://pastebin.com/raw/T5rZ9ue6",
-				"Uncategorized"
+				"Story"
 			}, {
 				"Waking up",
 				"Kittery",
 				"https://pastebin.com/raw/XNbdjHGA",
-				"Uncategorized"
+				"Story"
 			}, {
 				"Sexy Time",
 				"Kittery",
 				"https://pastebin.com/raw/s9mat6wK",
-				"Uncategorized"
+				"Story"
 			}, {
 				"Basic mod",
 				"Fallowwing",
