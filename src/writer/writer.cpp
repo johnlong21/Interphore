@@ -7,10 +7,12 @@ namespace Writer {
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
 #define AUTHOR_NAME_MAX MED_STR
+#define CATEGORIES_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 #define IMAGES_MAX 128
+#define CATEGORIES_MAX 8
 
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
@@ -108,6 +110,7 @@ namespace Writer {
 		char name[MOD_NAME_MAX];
 		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
+		char category[CATEGORIES_NAME_MAX];
 		Button *button;
 		Button *peakButton;
 		Button *sourceButton;
@@ -143,6 +146,11 @@ namespace Writer {
 		MintSprite *title;
 		MintSprite *subtitle;
 		MintSprite *browserBg;
+
+		MintSprite *categoryBg;
+		Button *categoryButtons[CATEGORIES_MAX];
+		int categoryButtonsNum;
+
 		Button *exitButton;
 		Button *refreshButton;
 		MintSprite *modSourceText;
@@ -211,41 +219,50 @@ namespace Writer {
 			const char *name;
 			const char *author;
 			const char *url;
+			const char *category;
 		};
 
 		ModEntryDef defs[] = {
 			{
 				"Origin Story",
 				"Kittery",
-				"https://pastebin.com/raw/T5rZ9ue6"
+				"https://pastebin.com/raw/T5rZ9ue6",
+				"Uncategorized"
 			}, {
 				"Waking up",
 				"Kittery",
-				"https://pastebin.com/raw/XNbdjHGA"
+				"https://pastebin.com/raw/XNbdjHGA",
+				"Uncategorized"
 			}, {
 				"Sexy Time",
 				"Kittery",
-				"https://pastebin.com/raw/s9mat6wK"
+				"https://pastebin.com/raw/s9mat6wK",
+				"Uncategorized"
 			}, {
 				"Basic mod",
 				"Fallowwing",
-				"https://pastebin.com/raw/zuGa9n8A"
+				"https://pastebin.com/raw/zuGa9n8A",
+				"Examples"
 			}, {
 				"Variables",
 				"Fallowwing",
-				"https://pastebin.com/raw/SydjvVez"
+				"https://pastebin.com/raw/SydjvVez",
+				"Examples"
 			}, {
 				"Image example",
 				"Fallowwing",
-				"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1"
+				"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1",
+				"Examples"
 			}, {
 				"TestMod2",
 				"Kittery",
-				"https://pastebin.com/raw/FTHQxiWy"
+				"https://pastebin.com/raw/FTHQxiWy",
+				"Tests"
 			}, {
 				"Morphious86's Test",
 				"Morphious86",
-				"https://pastebin.com/raw/0MBv7bpK"
+				"https://pastebin.com/raw/0MBv7bpK",
+				"Tests"
 			}
 		};
 
@@ -258,6 +275,7 @@ namespace Writer {
 			strcpy(entry->name, defs[i].name);
 			strcpy(entry->author, defs[i].author);
 			strcpy(entry->url, defs[i].url);
+			strcpy(entry->category, defs[i].category);
 		}
 
 		changeState(STATE_MENU);
@@ -267,7 +285,7 @@ namespace Writer {
 		if (newState == STATE_MENU) {
 			{ /// Title
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->getWidth(), 100);
+				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Writer");
@@ -278,7 +296,7 @@ namespace Writer {
 
 			{ /// Subtitle
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->getWidth(), 100);
+				spr->setupEmpty(writer->bg->width, 100);
 				writer->title->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 
@@ -290,11 +308,21 @@ namespace Writer {
 
 			{ /// Browser bg
 				MintSprite *spr = createMintSprite();
-				spr->setupRect(writer->bg->getWidth()*0.5, writer->bg->getHeight()*0.5, 0x111111);
+				spr->setupRect(writer->bg->width*0.5, writer->bg->height*0.70, 0x111111);
 				writer->bg->addChild(spr);
-				spr->gravitate(0.15, 0.2);
+				spr->gravitate(0.3, 0.3);
 
 				writer->browserBg = spr;
+			}
+
+			{ /// Category bg
+				MintSprite *spr = createMintSprite();
+				spr->setupRect(writer->bg->width*0.1, writer->bg->height*0.5, 0x111111);
+				writer->bg->addChild(spr);
+				spr->gravitate(0.01, 0.3);
+				spr->y = writer->browserBg->y;
+
+				writer->categoryBg = spr;
 			}
 
 			{ /// Browser buttons
@@ -302,7 +330,7 @@ namespace Writer {
 					ModEntry *entry = &writer->urlMods[i];
 
 					{ /// Play button
-						Button *btn = createButton(entry->name, writer->browserBg->getWidth()*0.50, 64);
+						Button *btn = createButton(entry->name, writer->browserBg->width*0.50, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
 
@@ -310,7 +338,7 @@ namespace Writer {
 					}
 
 					{ /// Peak button
-						Button *btn = createButton("peek source", writer->browserBg->getWidth()*0.20, 64);
+						Button *btn = createButton("peek source", writer->browserBg->width*0.20, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->gravitate(1, 0);
 						btn->sprite->y = entry->button->sprite->y;
@@ -319,13 +347,40 @@ namespace Writer {
 					}
 
 					{ /// Source button
-						Button *btn = createButton("view source", writer->browserBg->getWidth()*0.20, 64);
+						Button *btn = createButton("view source", writer->browserBg->width*0.20, 64);
 						writer->browserBg->addChild(btn->sprite);
 						btn->sprite->gravitate(1, 0);
 						btn->sprite->y = entry->button->sprite->y;
 						btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
 
 						entry->sourceButton = btn;
+					}
+				}
+			}
+
+			{ /// Category buttons
+				const char *usedCategoryNames[CATEGORIES_MAX] = {};
+				int usedCategoryNamesNum = 0;
+
+				for (int i = 0; i < writer->urlModsNum; i++) {
+					ModEntry *entry = &writer->urlMods[i];
+
+					{ /// Check reuse
+						bool beenUsed = false;
+						for (int j = 0; j < usedCategoryNamesNum; j++)
+							if (streq(entry->category, usedCategoryNames[j]))
+								beenUsed = true;
+
+						if (beenUsed) continue;
+						usedCategoryNames[usedCategoryNamesNum++] = entry->category;
+					}
+
+					{ /// Category button
+						Button *btn = createButton(entry->category, writer->categoryBg->width, 64);
+						writer->categoryBg->addChild(btn->sprite);
+						btn->sprite->y = (btn->sprite->getHeight() + 5) * writer->categoryButtonsNum;
+
+						writer->categoryButtons[writer->categoryButtonsNum++] = btn;
 					}
 				}
 			}
@@ -340,7 +395,7 @@ namespace Writer {
 
 			{ /// Mod source text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->getWidth()*0.5, writer->bg->getHeight());
+				spr->setupEmpty(writer->bg->width*0.5, writer->bg->height);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("");
@@ -355,7 +410,7 @@ namespace Writer {
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->getWidth(), writer->bg->getHeight()*0.75);
+				spr->setupEmpty(writer->bg->width, writer->bg->height*0.75);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
@@ -589,7 +644,7 @@ namespace Writer {
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
 			// spr->setupRect(width, height, 0x444444);
-			spr->setup9Slice("ui/dialog/basicDialog", width + 10, height + 10, 15, 15, 30, 30);
+			spr->setup9Slice("ui/dialog/basicDialog", width, height, 15, 15, 30, 30);
 
 			btn->sprite = spr;
 		}
@@ -733,7 +788,7 @@ namespace Writer {
 
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(writer->bg->getWidth()*0.5, writer->bg->getHeight()*0.5);
+			spr->setupEmpty(writer->bg->width*0.5, writer->bg->height*0.5);
 			writer->bg->addChild(spr);
 
 			msg->sprite = spr;
@@ -742,10 +797,10 @@ namespace Writer {
 		{ /// Type specific
 			if (type == MSG_INFO) {
 				msg->sprite->setText(buffer);
-				msg->sprite->y = writer->bg->getHeight();
+				msg->sprite->y = writer->bg->height;
 			} else if (type == MSG_WARNING) {
 				msg->sprite->setText(buffer);
-				msg->sprite->y = writer->bg->getHeight();
+				msg->sprite->y = writer->bg->height;
 			} else if (type == MSG_ERROR) {
 				msg->sprite->setText("<ed38>%s</ed38>", buffer);
 				msg->sprite->gravitate(0.5, 0.9);
