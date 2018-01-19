@@ -13,6 +13,7 @@ namespace Writer {
 #define MSG_MAX 64
 #define IMAGES_MAX 128
 #define CATEGORIES_MAX 8
+#define ENTRY_LIST_MAX 16
 
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
@@ -65,8 +66,12 @@ namespace Writer {
 	struct Button;
 	struct Msg;
 	struct Image;
+	struct ModEntry;
 
 	void changeState(GameState newState);
+	void enableEntry(ModEntry *entry);
+	void disableEntry(ModEntry *entry);
+	void disableAllEntries();
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
 	void loadMod(char *serialData);
@@ -107,6 +112,7 @@ namespace Writer {
 	};
 
 	struct ModEntry {
+		bool enabled;
 		char name[MOD_NAME_MAX];
 		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
@@ -166,6 +172,9 @@ namespace Writer {
 
 		ModEntry urlMods[MOD_ENTRIES_MAX];
 		int urlModsNum;
+
+		ModEntry *currentEntries[ENTRY_LIST_MAX];
+		int currentEntriesNum;
 
 		Msg msgs[MSG_MAX];
 
@@ -283,6 +292,9 @@ namespace Writer {
 
 	void changeState(GameState newState) {
 		if (newState == STATE_MENU) {
+			writer->currentEntriesNum = 0;
+			writer->categoryButtonsNum = 0;
+
 			{ /// Title
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
@@ -328,33 +340,7 @@ namespace Writer {
 			{ /// Browser buttons
 				for (int i = 0; i < writer->urlModsNum; i++) {
 					ModEntry *entry = &writer->urlMods[i];
-
-					{ /// Play button
-						Button *btn = createButton(entry->name, writer->browserBg->width*0.50, 64);
-						writer->browserBg->addChild(btn->sprite);
-						btn->sprite->y = (btn->sprite->getHeight() + 5) * i;
-
-						entry->button = btn;
-					}
-
-					{ /// Peak button
-						Button *btn = createButton("peek source", writer->browserBg->width*0.20, 64);
-						writer->browserBg->addChild(btn->sprite);
-						btn->sprite->gravitate(1, 0);
-						btn->sprite->y = entry->button->sprite->y;
-
-						entry->peakButton = btn;
-					}
-
-					{ /// Source button
-						Button *btn = createButton("view source", writer->browserBg->width*0.20, 64);
-						writer->browserBg->addChild(btn->sprite);
-						btn->sprite->gravitate(1, 0);
-						btn->sprite->y = entry->button->sprite->y;
-						btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
-
-						entry->sourceButton = btn;
-					}
+					enableEntry(entry);
 				}
 			}
 
@@ -437,16 +423,16 @@ namespace Writer {
 		}
 
 		if (writer->state == STATE_MENU) {
-			for (int i = 0; i < writer->urlModsNum; i++)
-				if (writer->urlMods[i].button) {
-					destroyButton(writer->urlMods[i].button);
-					destroyButton(writer->urlMods[i].sourceButton);
-					destroyButton(writer->urlMods[i].peakButton);
-				}
+			disableAllEntries();
+
+			for (int i = 0; i < writer->categoryButtonsNum; i++) {
+				destroyButton(writer->categoryButtons[i]);
+			}
 
 			writer->title->destroy();
 			writer->browserBg->destroy();
 			writer->modSourceText->destroy();
+			writer->categoryBg->destroy();
 			destroyButton(writer->loadButton);
 		}
 
@@ -478,6 +464,8 @@ namespace Writer {
 
 			for (int i = 0; i < writer->urlModsNum; i++) {
 				ModEntry *entry = &writer->urlMods[i];
+				if (!entry->enabled) continue;
+
 				if (entry->button->sprite->justPressed) {
 					writer->currentMod = entry;
 					platformLoadFromUrl(entry->url, urlModLoaded);
@@ -521,6 +509,53 @@ namespace Writer {
 					if (spr->alpha <= 0) destroyMsg(msg);
 				}
 			}
+		}
+	}
+
+	void disableEntry(ModEntry *entry) {
+		if (!entry->enabled) return;
+
+		destroyButton(entry->button);
+		destroyButton(entry->sourceButton);
+		destroyButton(entry->peakButton);
+	}
+
+	void disableAllEntries() {
+		for (int i = 0; i < writer->currentEntriesNum; i++) {
+			ModEntry *entry = writer->currentEntries[i];
+			disableEntry(entry);
+		}
+	}
+
+	void enableEntry(ModEntry *entry) {
+		entry->enabled = true;
+		writer->currentEntries[writer->currentEntriesNum++] = entry;
+
+		{ /// Play button
+			Button *btn = createButton(entry->name, writer->browserBg->width*0.50, 64);
+			writer->browserBg->addChild(btn->sprite);
+			btn->sprite->y = (btn->sprite->getHeight() + 5) * (writer->currentEntriesNum-1);
+
+			entry->button = btn;
+		}
+
+		{ /// Peak button
+			Button *btn = createButton("peek source", writer->browserBg->width*0.20, 64);
+			writer->browserBg->addChild(btn->sprite);
+			btn->sprite->gravitate(1, 0);
+			btn->sprite->y = entry->button->sprite->y;
+
+			entry->peakButton = btn;
+		}
+
+		{ /// Source button
+			Button *btn = createButton("view source", writer->browserBg->width*0.20, 64);
+			writer->browserBg->addChild(btn->sprite);
+			btn->sprite->gravitate(1, 0);
+			btn->sprite->y = entry->button->sprite->y;
+			btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
+
+			entry->sourceButton = btn;
 		}
 	}
 
