@@ -72,6 +72,7 @@ namespace Writer {
 	void enableEntry(ModEntry *entry);
 	void disableEntry(ModEntry *entry);
 	void disableAllEntries();
+	void enableCategory(const char *category);
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
 	void loadMod(char *serialData);
@@ -372,7 +373,7 @@ namespace Writer {
 			}
 
 			{ /// Load button
-				Button *btn = createButton("Load", 256, 64);
+				Button *btn = createButton("Load your own", 256, 32);
 				writer->bg->addChild(btn->sprite);
 				btn->sprite->gravitate(0.5, 0.95);
 
@@ -391,6 +392,7 @@ namespace Writer {
 				writer->modSourceText = spr;
 			}
 
+			enableCategory("Uncategorized");
 		}
 
 		if (newState == STATE_MOD) {
@@ -462,8 +464,15 @@ namespace Writer {
 #endif
 			}
 
-			for (int i = 0; i < writer->urlModsNum; i++) {
-				ModEntry *entry = &writer->urlMods[i];
+			for (int i = 0; i < writer->categoryButtonsNum; i++) {
+				Button *btn = writer->categoryButtons[i];
+				if (btn->sprite->justPressed) {
+					enableCategory(btn->tf->rawText);
+				}
+			}
+
+			for (int i = 0; i < writer->currentEntriesNum; i++) {
+				ModEntry *entry = writer->currentEntries[i];
 				if (!entry->enabled) continue;
 
 				if (entry->button->sprite->justPressed) {
@@ -512,6 +521,15 @@ namespace Writer {
 		}
 	}
 
+	void enableCategory(const char *category) {
+		disableAllEntries();
+
+		for (int i = 0; i < writer->urlModsNum; i++) {
+			ModEntry *entry = &writer->urlMods[i];
+			if (streq(entry->category, category)) enableEntry(entry);
+		}
+	}
+
 	void disableEntry(ModEntry *entry) {
 		if (!entry->enabled) return;
 
@@ -525,6 +543,8 @@ namespace Writer {
 			ModEntry *entry = writer->currentEntries[i];
 			disableEntry(entry);
 		}
+
+		writer->currentEntriesNum = 0;
 	}
 
 	void enableEntry(ModEntry *entry) {
@@ -532,7 +552,9 @@ namespace Writer {
 		writer->currentEntries[writer->currentEntriesNum++] = entry;
 
 		{ /// Play button
-			Button *btn = createButton(entry->name, writer->browserBg->width*0.50, 64);
+			char buf[LARGE_STR];
+			sprintf(buf, "%s by %s", entry->name, entry->author);
+			Button *btn = createButton(buf, writer->browserBg->width*0.50, 64);
 			writer->browserBg->addChild(btn->sprite);
 			btn->sprite->y = (btn->sprite->getHeight() + 5) * (writer->currentEntriesNum-1);
 
