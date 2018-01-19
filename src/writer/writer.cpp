@@ -104,6 +104,7 @@ namespace Writer {
 	void js_scaleImage(CScriptVar *v, void *userdata);
 	void js_rotateImage(CScriptVar *v, void *userdata);
 	void js_tintImage(CScriptVar *v, void *userdata);
+	void js_exitMod(CScriptVar *v, void *userdata);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -215,6 +216,7 @@ namespace Writer {
 			jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
 			jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
 			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
+			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -319,24 +321,25 @@ namespace Writer {
 				writer->subtitle = spr;
 			}
 
-			{ /// Browser bg
-				MintSprite *spr = createMintSprite();
-				spr->setupRect(writer->bg->width*0.5, writer->bg->height*0.70, 0x111111);
-				writer->bg->addChild(spr);
-				spr->gravitate(0.3, 0.3);
-
-				writer->browserBg = spr;
-			}
-
 			{ /// Category bg
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->bg->width*0.1, writer->bg->height*0.5, 0x111111);
 				writer->bg->addChild(spr);
 				spr->gravitate(0.01, 0.3);
-				spr->y = writer->browserBg->y;
 
 				writer->categoryBg = spr;
 			}
+
+			{ /// Browser bg
+				MintSprite *spr = createMintSprite();
+				spr->setupRect(writer->bg->width*0.5, writer->bg->height*0.70, 0x111111);
+				writer->bg->addChild(spr);
+				spr->x = writer->categoryBg->x + writer->categoryBg->getWidth() + 10;
+				spr->y = writer->categoryBg->y;
+
+				writer->browserBg = spr;
+			}
+
 
 			{ /// Browser buttons
 				for (int i = 0; i < writer->urlModsNum; i++) {
@@ -386,7 +389,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("");
-				spr->x = writer->browserBg->x + writer->browserBg->getWidth() + 50;
+				spr->x = writer->browserBg->x + writer->browserBg->getWidth() + 10;
 				spr->y = writer->browserBg->y;
 
 				writer->modSourceText = spr;
@@ -767,9 +770,10 @@ namespace Writer {
 						line[lineEnd-lineStart] = '\0';
 						// printf("Gonna eval: %s\n", line);
 						std::string resultString = jsInterp->evaluate(line);
+						if (writer->state != STATE_MOD) return;
 						if (printResult) {
-						if (streq(resultString.c_str(), "undefined")) append("`");
-						else append(resultString.c_str());
+							if (streq(resultString.c_str(), "undefined")) append("`");
+							else append(resultString.c_str());
 						}
 					}
 
@@ -1088,6 +1092,10 @@ namespace Writer {
 		}
 
 		img->sprite->tint = tint;
+	}
+
+	void js_exitMod(CScriptVar *v, void *userdata) {
+		changeState(STATE_MENU);
 	}
 
 	void js_centerImage(CScriptVar *v, void *userdata) {
