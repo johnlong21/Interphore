@@ -781,7 +781,8 @@ namespace Writer {
 							else jsInterp->execute(line);
 						} catch (CScriptException *e) {
 							msg(e->text.c_str(), MSG_ERROR);
-							resultString = "undefined";
+							resultString = e->text.c_str();
+							printResult = true;
 						}
 						if (writer->state != STATE_MOD) return;
 						if (printResult) {
