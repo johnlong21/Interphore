@@ -764,12 +764,20 @@ namespace Writer {
 
 						lineStart = lineEnd+1;
 						lineEnd = strstr(lineStart, "`");
-						if (!lineEnd) assert(0); // @incomplete need other percent error
+						if (!lineEnd) assert(0); // @incomplete need other backtick error
 
 						strncpy(line, lineStart, lineEnd-lineStart);
 						line[lineEnd-lineStart] = '\0';
 						// printf("Gonna eval: %s\n", line);
-						std::string resultString = jsInterp->evaluate(line);
+
+						std::string resultString;
+						try {
+							if (printResult) resultString = jsInterp->evaluate(line);
+							else jsInterp->execute(line);
+						} catch (CScriptException *e) {
+							msg(e->text.c_str(), MSG_ERROR);
+							resultString = "undefined";
+						}
 						if (writer->state != STATE_MOD) return;
 						if (printResult) {
 							if (streq(resultString.c_str(), "undefined")) append("`");
