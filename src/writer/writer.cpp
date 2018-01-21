@@ -280,6 +280,11 @@ namespace Writer {
 				"Morphious86",
 				"https://pastebin.com/raw/0MBv7bpK",
 				"Tests"
+			}, {
+				"Port 1",
+				"Fallowwing",
+				"https://pastebin.com/raw/0MBv7bpK",
+				"Internal"
 			}
 		};
 
@@ -359,6 +364,12 @@ namespace Writer {
 
 				for (int i = 0; i < writer->urlModsNum; i++) {
 					ModEntry *entry = &writer->urlMods[i];
+
+			if (streq(entry->category, "Internal")) {
+#if !defined(SEMI_INTERNAL)
+				continue;
+#endif
+			}
 
 					{ /// Check reuse
 						bool beenUsed = false;
