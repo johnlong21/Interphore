@@ -287,10 +287,10 @@ namespace Writer {
 				"https://pastebin.com/raw/0MBv7bpK",
 				"Tests"
 			}, {
-				"Gryphon Fight Port",
-				"---",
+				"Gryphon Fight",
+				"Cade",
 				"https://www.dropbox.com/s/xh0pcb6lypm8av6/Gryphon%20Fight.txt?dl=1",
-				"Internal"
+				"Ports"
 			}
 		};
 
