@@ -78,7 +78,7 @@ namespace Writer {
 	void loadMod(char *serialData);
 	Button *createButton(const char *text, int width=256, int height=128);
 	void destroyButton(Button *btn);
-	void gotoPassage(const char *passageName);
+	void gotoPassage(const char *passageName, bool skipClear=false);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
 	void addImage(const char *name, const char *path);
@@ -96,6 +96,7 @@ namespace Writer {
 	void js_submitPassage(CScriptVar *v, void *userdata);
 	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
+	void js_jumpToPassage(CScriptVar *v, void *userdata);
 	void js_addImage(CScriptVar *v, void *userdata);
 	void js_removeImage(CScriptVar *v, void *userdata);
 	void js_centerImage(CScriptVar *v, void *userdata);
@@ -193,13 +194,17 @@ namespace Writer {
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
 			registerFunctions(jsInterp);
+			registerMathFunctions(jsInterp);
 
-			jsInterp->evaluateComplex(
+			jsInterp->execute(
 				"CENTER = \"CENTER\";\n"
 				"TOP = \"TOP\";\n"
 				"BOTTOM = \"BOTTOM\";\n"
 				"LEFT = \"LEFT\";\n"
 				"RIGHT = \"RIGHT\";\n"
+				"function rndInt(min, max) {\n"
+				"	return Math.round(min + Math.rand() * (max - min))\n"
+				"}\n"
 			);
 
 			jsInterp->addNative("function print(text)", &js_print, 0);
@@ -208,6 +213,7 @@ namespace Writer {
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
+			jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
 			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
 			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
@@ -281,9 +287,9 @@ namespace Writer {
 				"https://pastebin.com/raw/0MBv7bpK",
 				"Tests"
 			}, {
-				"Port 1",
-				"Fallowwing",
-				"https://pastebin.com/raw/0MBv7bpK",
+				"Gryphon Fight Port",
+				"---",
+				"https://www.dropbox.com/s/xh0pcb6lypm8av6/Gryphon%20Fight.txt?dl=1",
 				"Internal"
 			}
 		};
@@ -411,7 +417,7 @@ namespace Writer {
 				writer->modSourceText = spr;
 			}
 
-			enableCategory("Uncategorized");
+			enableCategory("Story");
 		}
 
 		if (newState == STATE_MOD) {
@@ -747,8 +753,8 @@ namespace Writer {
 		writer->choicesNum = 0;
 	}
 
-	void gotoPassage(const char *passageName) {
-		clear();
+	void gotoPassage(const char *passageName, bool skipClear) {
+		if (!skipClear) clear();
 
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
@@ -788,8 +794,11 @@ namespace Writer {
 
 						std::string resultString;
 						try {
-							if (printResult) resultString = jsInterp->evaluate(line);
-							else jsInterp->execute(line);
+							if (printResult) {
+								resultString = jsInterp->evaluate(line);
+							} else {
+								jsInterp->execute(line);
+							}
 						} catch (CScriptException *e) {
 							msg(e->text.c_str(), MSG_ERROR);
 							resultString = e->text.c_str();
@@ -1044,6 +1053,11 @@ namespace Writer {
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		gotoPassage(arg1);
+	}
+
+	void js_jumpToPassage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("text")->getString().c_str();
+		gotoPassage(arg1, true);
 	}
 
 	void js_addImage(CScriptVar *v, void *userdata) {
