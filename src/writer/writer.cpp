@@ -203,7 +203,7 @@ namespace Writer {
 				"LEFT = \"LEFT\";\n"
 				"RIGHT = \"RIGHT\";\n"
 				"function rndInt(min, max) {\n"
-				"	return Math.round(min + Math.rand() * (max - min))\n"
+				"	return Math.randInt(min, max);\n"
 				"}\n"
 			);
 
