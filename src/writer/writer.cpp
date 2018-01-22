@@ -233,77 +233,79 @@ namespace Writer {
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
 
-		struct ModEntryDef {
-			const char *name;
-			const char *author;
-			const char *url;
-			const char *category;
-		};
+		{ /// Setup mod repo
+			struct ModEntryDef {
+				const char *name;
+				const char *author;
+				const char *url;
+				const char *category;
+			};
 
-		ModEntryDef defs[] = {
-			{
-				"False Moon",
-				"Kittery",
-				"https://pastebin.com/raw/72bbnRK5",
-				"Story"
-			}, {
-				"Origin Story",
-				"Kittery",
-				"https://pastebin.com/raw/T5rZ9ue6",
-				"Story"
-			}, {
-				"Waking up",
-				"Kittery",
-				"https://pastebin.com/raw/XNbdjHGA",
-				"Story"
-			}, {
-				"Sexy Time",
-				"Kittery",
-				"https://pastebin.com/raw/s9mat6wK",
-				"Story"
-			}, {
-				"Basic mod",
-				"Fallowwing",
-				"https://pastebin.com/raw/zuGa9n8A",
-				"Examples"
-			}, {
-				"Variables",
-				"Fallowwing",
-				"https://pastebin.com/raw/SydjvVez",
-				"Examples"
-			}, {
-				"Image example",
-				"Fallowwing",
-				"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1",
-				"Examples"
-			}, {
-				"TestMod2",
-				"Kittery",
-				"https://pastebin.com/raw/FTHQxiWy",
-				"Tests"
-			}, {
-				"Morphious86's Test",
-				"Morphious86",
-				"https://pastebin.com/raw/0MBv7bpK",
-				"Tests"
-			}, {
-				"Gryphon Fight",
-				"Cade",
-				"https://www.dropbox.com/s/xh0pcb6lypm8av6/Gryphon%20Fight.txt?dl=1",
-				"Ports"
+			ModEntryDef defs[] = {
+				{
+					"False Moon",
+					"Kittery",
+					"https://pastebin.com/raw/72bbnRK5",
+					"Story"
+				}, {
+					"Origin Story",
+					"Kittery",
+					"https://pastebin.com/raw/T5rZ9ue6",
+					"Story"
+				}, {
+					"Waking up",
+					"Kittery",
+					"https://pastebin.com/raw/XNbdjHGA",
+					"Story"
+				}, {
+					"Sexy Time",
+					"Kittery",
+					"https://pastebin.com/raw/s9mat6wK",
+					"Story"
+				}, {
+					"Basic mod",
+					"Fallowwing",
+					"https://pastebin.com/raw/zuGa9n8A",
+					"Examples"
+				}, {
+					"Variables",
+					"Fallowwing",
+					"https://pastebin.com/raw/SydjvVez",
+					"Examples"
+				}, {
+					"Image example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1",
+					"Examples"
+				}, {
+					"TestMod2",
+					"Kittery",
+					"https://pastebin.com/raw/FTHQxiWy",
+					"Tests"
+				}, {
+					"Morphious86's Test",
+					"Morphious86",
+					"https://pastebin.com/raw/0MBv7bpK",
+					"Tests"
+				}, {
+					"Gryphon Fight",
+					"Cade",
+					"https://www.dropbox.com/s/xh0pcb6lypm8av6/Gryphon%20Fight.txt?dl=1",
+					"Ports"
+				}
+			};
+
+			int defsNum = ArrayLength(defs);
+
+			for (int i = 0; i < defsNum; i++) {
+				ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
+				memset(entry, 0, sizeof(ModEntry));
+
+				strcpy(entry->name, defs[i].name);
+				strcpy(entry->author, defs[i].author);
+				strcpy(entry->url, defs[i].url);
+				strcpy(entry->category, defs[i].category);
 			}
-		};
-
-		int defsNum = ArrayLength(defs);
-
-		for (int i = 0; i < defsNum; i++) {
-			ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
-			memset(entry, 0, sizeof(ModEntry));
-
-			strcpy(entry->name, defs[i].name);
-			strcpy(entry->author, defs[i].author);
-			strcpy(entry->url, defs[i].url);
-			strcpy(entry->category, defs[i].category);
 		}
 
 		changeState(STATE_MENU);
