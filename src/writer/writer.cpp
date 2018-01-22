@@ -12,6 +12,7 @@ namespace Writer {
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 #define IMAGES_MAX 128
+#define AUDIOS_MAX 128
 #define CATEGORIES_MAX 8
 #define ENTRY_LIST_MAX 16
 
@@ -66,6 +67,7 @@ namespace Writer {
 	struct Button;
 	struct Msg;
 	struct Image;
+	struct Audio;
 	struct ModEntry;
 
 	void changeState(GameState newState);
@@ -81,7 +83,7 @@ namespace Writer {
 	void gotoPassage(const char *passageName, bool skipClear=false);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
-	void addImage(const char *name, const char *path);
+	void addImage(const char *path, const char *name);
 	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
 	Image *getImage(const char *name);
@@ -95,6 +97,7 @@ namespace Writer {
 	void js_addChoice(CScriptVar *v, void *userdata);
 	void js_submitPassage(CScriptVar *v, void *userdata);
 	void js_submitImage(CScriptVar *v, void *userdata);
+	void js_submitAudio(CScriptVar *v, void *userdata);
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void js_jumpToPassage(CScriptVar *v, void *userdata);
 	void js_addImage(CScriptVar *v, void *userdata);
@@ -105,6 +108,7 @@ namespace Writer {
 	void js_scaleImage(CScriptVar *v, void *userdata);
 	void js_rotateImage(CScriptVar *v, void *userdata);
 	void js_tintImage(CScriptVar *v, void *userdata);
+	void js_playAudio(CScriptVar *v, void *userdata);
 	void js_exitMod(CScriptVar *v, void *userdata);
 
 	struct Passage {
@@ -145,6 +149,12 @@ namespace Writer {
 		MintSprite *sprite;
 	};
 
+	struct Audio {
+		bool exists;
+		char *name;
+		Channel *channel;
+	};
+
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
@@ -182,6 +192,7 @@ namespace Writer {
 		Msg msgs[MSG_MAX];
 
 		Image images[IMAGES_MAX];
+		Audio audios[AUDIOS_MAX];
 	};
 
 	WriterStruct *writer;
@@ -212,9 +223,10 @@ namespace Writer {
 			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
 			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
 			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
+			jsInterp->addNative("function submitAudio(text)", &js_submitAudio, 0);
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
-			jsInterp->addNative("function addImage(name, path)", &js_addImage, 0);
+			jsInterp->addNative("function addImage(path, name)", &js_addImage, 0);
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
 			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
@@ -222,6 +234,7 @@ namespace Writer {
 			jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
 			jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
 			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
+			jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
 			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
@@ -276,6 +289,11 @@ namespace Writer {
 					"Image example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1",
+					"Examples"
+				}, {
+					"Audio example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/hrfodb9brym4105/Audio%20Test.txt?dl=1",
 					"Examples"
 				}, {
 					"TestMod2",
@@ -641,6 +659,7 @@ namespace Writer {
 		const char *lineStart = inputData;
 		bool inPassage = false;
 		bool inImages = false;
+		bool inAudio = false;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, "\n");
 			if (!lineEnd) {
@@ -659,8 +678,14 @@ namespace Writer {
 				inImages = true;
 				strcat(realData, "__image = \"\";");
 			} else if (strstr(line, "END_IMAGES")) {
-				strcat(realData, "submitImage(__image);");
 				inImages = false;
+				strcat(realData, "submitImage(__image);");
+			} else if (strstr(line, "START_AUDIO")) {
+				inAudio = true;
+				strcat(realData, "__audio = \"\";");
+			} else if (strstr(line, "END_AUDIO")) {
+				inAudio = false;
+				strcat(realData, "submitAudio(__audio);");
 			} else if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
 				strcat(realData, "__passage = \"\";");
@@ -674,6 +699,9 @@ namespace Writer {
 				} else if (inImages) {
 					strcat(realData, "submitImage(__image);");
 					strcat(realData, "__image = \"\";");
+				} else if (inAudio) {
+					strcat(realData, "submitAudio(__audio);");
+					strcat(realData, "__audio = \"\";");
 				}
 			} else if (inPassage) {
 				strcat(realData, "__passage += \"");
@@ -684,6 +712,10 @@ namespace Writer {
 				strcat(realData, "\\n\";");
 			} else if (inImages) {
 				strcat(realData, "__image += \"");
+				strcat(realData, line);
+				strcat(realData, "\n\";");
+			} else if (inAudio) {
+				strcat(realData, "__audio += \"");
 				strcat(realData, line);
 				strcat(realData, "\n\";");
 			} else {
@@ -905,7 +937,7 @@ namespace Writer {
 		}
 	}
 
-	void addImage(const char *name, const char *path) {
+	void addImage(const char *path, const char *name) {
 		int slot;
 		for (slot = 0; slot < IMAGES_MAX; slot++)
 			if (!writer->images[slot].exists)
@@ -919,10 +951,7 @@ namespace Writer {
 		Image *img = &writer->images[slot];
 		img->exists = true;
 		img->name = stringClone(name);
-		printf("Creating sprite from %s\n", path);
 		img->sprite = createMintSprite(path);
-		// img->sprite = createMintSprite();
-		// img->sprite->setupRect(128, 128, 0x00FF00);
 		writer->bg->addChild(img->sprite);
 	}
 
@@ -1052,6 +1081,27 @@ namespace Writer {
 		addAsset(imageName, data, dataLen);
 	}
 
+	void js_submitAudio(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("text")->getString().c_str();
+		// printf("Got image: %s\n", arg1);
+
+		char audioName[PATH_LIMIT];
+		strcpy(audioName, "modPath/");
+
+		const char *newline = strstr(arg1, "\n");
+		strncat(audioName, arg1, newline-arg1);
+		strcat(audioName, ".ogg");
+		// printf("Audio name: %s\n", audioName);
+
+		char *b64Data = tempBytes;
+		strcpy(b64Data, newline+1);
+		b64Data[strlen(b64Data)-1] = '\0';
+
+		size_t dataLen;
+		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
+		addAsset(audioName, data, dataLen);
+	}
+
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("text")->getString().c_str();
 		gotoPassage(arg1);
@@ -1063,8 +1113,8 @@ namespace Writer {
 	}
 
 	void js_addImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("name")->getString().c_str();
-		const char *arg2 = v->getParameter("path")->getString().c_str();
+		const char *arg1 = v->getParameter("path")->getString().c_str();
+		const char *arg2 = v->getParameter("name")->getString().c_str();
 		addImage(arg1, arg2);
 	}
 
@@ -1133,6 +1183,12 @@ namespace Writer {
 		}
 
 		img->sprite->tint = tint;
+	}
+
+	void js_playAudio(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("path")->getString().c_str();
+		const char *arg2 = v->getParameter("name")->getString().c_str();
+		playSound(arg1, arg2);
 	}
 
 	void js_exitMod(CScriptVar *v, void *userdata) {
