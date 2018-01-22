@@ -250,48 +250,43 @@ namespace Writer {
 				{
 					"False Moon",
 					"Kittery",
-					"https://pastebin.com/raw/72bbnRK5",
+					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
 					"Story"
 				}, {
 					"Origin Story",
 					"Kittery",
-					"https://pastebin.com/raw/T5rZ9ue6",
+					"https://www.dropbox.com/s/2hrse6oyzxcfe64/Origin%20Story.txt?dl=1",
 					"Story"
 				}, {
 					"Waking up",
 					"Kittery",
-					"https://pastebin.com/raw/XNbdjHGA",
+					"https://www.dropbox.com/s/5aa2isiqii5w0q2/Waking%20up.txt?dl=1",
 					"Story"
 				}, {
 					"Sexy Time",
 					"Kittery",
-					"https://pastebin.com/raw/s9mat6wK",
+					"https://www.dropbox.com/s/xse6y2hp6eve4jp/Sexy%20time.txt?dl=1",
 					"Story"
 				}, {
 					"Basic mod",
 					"Fallowwing",
-					"https://pastebin.com/raw/zuGa9n8A",
+					"https://www.dropbox.com/s/ci9yidufa7zl69c/Basic%20Mod.txt?dl=1",
 					"Examples"
 				}, {
 					"Variables",
 					"Fallowwing",
-					"https://pastebin.com/raw/SydjvVez",
+					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
 					"Examples"
 				}, {
 					"Image example",
 					"Fallowwing",
-					"https://www.dropbox.com/s/spxl6wtgjiyac0f/Images%20Test.txt?dl=1",
+					"https://www.dropbox.com/s/d38cai15jsyseif/Images%20Test.txt?dl=1",
 					"Examples"
 				}, {
 					"Audio example",
 					"Fallowwing",
-					"https://www.dropbox.com/s/hrfodb9brym4105/Audio%20Test.txt?dl=1",
+					"https://www.dropbox.com/s/mkboihcsw38y077/Audio%20Test.txt?dl=1",
 					"Examples"
-				}, {
-					"TestMod2",
-					"Kittery",
-					"https://pastebin.com/raw/FTHQxiWy",
-					"Tests"
 				}, {
 					"Morphious86's Test",
 					"Morphious86",
@@ -300,7 +295,7 @@ namespace Writer {
 				}, {
 					"Gryphon Fight",
 					"Cade",
-					"https://www.dropbox.com/s/xh0pcb6lypm8av6/Gryphon%20Fight.txt?dl=1",
+					"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
 					"Ports"
 				}
 			};
