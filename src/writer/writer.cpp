@@ -12,7 +12,6 @@ namespace Writer {
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 #define IMAGES_MAX 128
-#define AUDIOS_MAX 128
 #define CATEGORIES_MAX 8
 #define ENTRY_LIST_MAX 16
 
@@ -149,12 +148,6 @@ namespace Writer {
 		MintSprite *sprite;
 	};
 
-	struct Audio {
-		bool exists;
-		char *name;
-		Channel *channel;
-	};
-
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
@@ -192,7 +185,6 @@ namespace Writer {
 		Msg msgs[MSG_MAX];
 
 		Image images[IMAGES_MAX];
-		Audio audios[AUDIOS_MAX];
 	};
 
 	WriterStruct *writer;
