@@ -197,6 +197,10 @@ namespace Writer {
 		printf("Init\n");
 		exists = true;
 
+		getTextureAsset("Espresso-Dolce_22")->level = 3;
+		getTextureAsset("Espresso-Dolce_30")->level = 3;
+		getTextureAsset("Espresso-Dolce_38")->level = 3;
+
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
 			registerFunctions(jsInterp);
@@ -643,7 +647,8 @@ namespace Writer {
 
 		char *realData = tempBytes;
 		tempBytes[0] = '\0';
-		strcat(realData, "var __passage = \"\";\n\n");
+		char *realDataEnd = tempBytes;
+		realDataEnd = fastStrcat(realDataEnd, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
 		int inputLen = 0;
@@ -664,59 +669,68 @@ namespace Writer {
 
 			char *line = tempBytes2;
 			line[0] = '\0';
-			strncpy(line, lineStart, lineEnd-lineStart);
+			memcpy(line, lineStart, lineEnd-lineStart);
 			line[lineEnd-lineStart] = '\0';
 			// printf("Line: %s\n", line);
 			// dumpHex(line, strlen(line));
 
 			if (strstr(line, "START_IMAGES")) {
 				inImages = true;
-				strcat(realData, "__image = \"\";");
+				realDataEnd = fastStrcat(realDataEnd, "__image = \"\";");
 			} else if (strstr(line, "END_IMAGES")) {
 				inImages = false;
-				strcat(realData, "submitImage(__image);");
+				realDataEnd = fastStrcat(realDataEnd, "submitImage(__image);");
 			} else if (strstr(line, "START_AUDIO")) {
 				inAudio = true;
-				strcat(realData, "__audio = \"\";");
+				realDataEnd = fastStrcat(realDataEnd, "__audio = \"\";");
 			} else if (strstr(line, "END_AUDIO")) {
 				inAudio = false;
-				strcat(realData, "submitAudio(__audio);");
+				realDataEnd = fastStrcat(realDataEnd, "submitAudio(__audio);");
 			} else if (strstr(line, "START_PASSAGES")) {
 				inPassage = true;
-				strcat(realData, "__passage = \"\";");
+				realDataEnd = fastStrcat(realDataEnd, "__passage = \"\";");
 			} else if (strstr(line, "END_PASSAGES")) {
-				strcat(realData, "submitPassage(__passage);");
+				realDataEnd = fastStrcat(realDataEnd, "submitPassage(__passage);");
 				inPassage = false;
 			} else if (strstr(line, "---")) {
 				if (inPassage) {
-					strcat(realData, "submitPassage(__passage);");
-					strcat(realData, "__passage = \"\";");
+					realDataEnd = fastStrcat(realDataEnd, "submitPassage(__passage);");
+					realDataEnd = fastStrcat(realDataEnd, "__passage = \"\";");
 				} else if (inImages) {
-					strcat(realData, "submitImage(__image);");
-					strcat(realData, "__image = \"\";");
+					realDataEnd = fastStrcat(realDataEnd, "submitImage(__image);");
+					realDataEnd = fastStrcat(realDataEnd, "__image = \"\";");
 				} else if (inAudio) {
-					strcat(realData, "submitAudio(__audio);");
-					strcat(realData, "__audio = \"\";");
+					realDataEnd = fastStrcat(realDataEnd, "submitAudio(__audio);");
+					realDataEnd = fastStrcat(realDataEnd, "__audio = \"\";");
 				}
 			} else if (inPassage) {
-				strcat(realData, "__passage += \"");
-				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
-					if (line[lineIndex] == '"') strcat(realData, "\\\"");
-					else strncat(realData, &line[lineIndex], 1);
+				realDataEnd = fastStrcat(realDataEnd, "__passage += \"");
+
+				if (strstr(line, "\"")) {
+					for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
+						if (line[lineIndex] == '"') {
+							realDataEnd = fastStrcat(realDataEnd, "\\\"");
+						} else {
+							*realDataEnd = line[lineIndex];
+							realDataEnd++;
+						}
+					}
+				} else {
+					realDataEnd = fastStrcat(realDataEnd, line);
 				}
-				strcat(realData, "\\n\";");
+				realDataEnd = fastStrcat(realDataEnd, "\\n\";");
 			} else if (inImages) {
-				strcat(realData, "__image += \"");
-				strcat(realData, line);
-				strcat(realData, "\n\";");
+				realDataEnd = fastStrcat(realDataEnd, "__image += \"");
+				realDataEnd = fastStrcat(realDataEnd, line);
+				realDataEnd = fastStrcat(realDataEnd, "\n\";");
 			} else if (inAudio) {
-				strcat(realData, "__audio += \"");
-				strcat(realData, line);
-				strcat(realData, "\n\";");
+				realDataEnd = fastStrcat(realDataEnd, "__audio += \"");
+				realDataEnd = fastStrcat(realDataEnd, line);
+				realDataEnd = fastStrcat(realDataEnd, "\n\";");
 			} else {
-				strcat(realData, line);
+				realDataEnd = fastStrcat(realDataEnd, line);
 			}
-			strcat(realData, "\n");
+			realDataEnd = fastStrcat(realDataEnd, "\n");
 
 			lineStart = lineEnd+1;
 		}
