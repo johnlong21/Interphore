@@ -1,5 +1,4 @@
 #include "writer.h"
-#include "desktop.cpp"
 
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 128
@@ -191,8 +190,19 @@ namespace Writer {
 		Image images[IMAGES_MAX];
 	};
 
+	CTinyJS *jsInterp;
 	WriterStruct *writer;
+}
 
+//
+//
+//         HEADER END
+//
+//
+
+#include "desktop.cpp"
+
+namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
 		exists = true;
