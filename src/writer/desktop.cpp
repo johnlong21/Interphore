@@ -5,17 +5,21 @@
 namespace WriterDesktop {
 	bool exists = false;
 
+	struct DesktopProgram;
+
 	void js_addDesktopIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
 	void updateDesktop();
 	void startProgram(const char *programName);
+	void exitProgram(DesktopProgram *program);
 
 	struct DesktopProgram {
 		bool exists;
 		int index;
 		MintSprite *bg;
 		MintSprite *titleBar;
+		MintSprite *exitButton;
 		char programName[MED_STR];
 	};
 
@@ -128,6 +132,12 @@ namespace WriterDesktop {
 		ForEach (DesktopProgram *program, desktop->programs) {
 			if (!program->exists) continue;
 
+			if (canClickPrograms && program->exitButton->justPressed) {
+				canClickPrograms = false;
+				canClickIcons = false;
+				exitProgram(program);
+			}
+
 			if (canClickPrograms && program->titleBar->justPressed) {
 				canClickIcons = false;
 				canClickPrograms = false;
@@ -214,5 +224,19 @@ namespace WriterDesktop {
 
 			program->bg = spr;
 		}
+
+		{ /// Exit button
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(20, 20, 0x770000);
+			program->titleBar->addChild(spr);
+			spr->gravitate(1, 0);
+
+			program->exitButton = spr;
+		}
+	}
+
+	void exitProgram(DesktopProgram *program) {
+		program->exists = false;
+		program->titleBar->destroy();
 	}
 }
