@@ -10,6 +10,7 @@ namespace WriterDesktop {
 	void js_addDesktopIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
+	void js_setImageWindow(CScriptVar *v, void *userdata);
 	void updateDesktop();
 	void startProgram(const char *programName);
 	void exitProgram(DesktopProgram *program);
@@ -52,6 +53,7 @@ namespace WriterDesktop {
 		writer = Writer::writer;
 		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg, programName)", &js_addDesktopIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
+		Writer::jsInterp->addNative("function setImageWindow(imageName, programName)", &js_setImageWindow, 0);
 		Writer::clear();
 	}
 
@@ -134,6 +136,34 @@ namespace WriterDesktop {
 
 			icon->tf = spr;
 		}
+	}
+
+	void js_setImageWindow(CScriptVar *v, void *userdata) {
+		const char *imageName = v->getParameter("imageName")->getString().c_str();
+		const char *programName = v->getParameter("programName")->getString().c_str();
+
+		using namespace Writer;
+		Image *img = getImage(imageName);
+
+		if (!img) {
+			msg("Can't set the window of %s because it doesn't exist", MSG_ERROR, imageName);
+			return;
+		}
+
+		if (img->sprite->parent) {
+			img->sprite->parent->removeChild(img->sprite);
+		}
+
+		ForEach (DesktopProgram *program, desktop->programs) {
+			if (!program->exists) continue;
+
+			if (streq(program->programName, programName)) {
+				program->bg->addChild(img->sprite);
+				return;
+			}
+		}
+
+		msg("Couldn't find program named %s", MSG_ERROR, programName);
 	}
 
 	void updateDesktop() {
@@ -252,6 +282,10 @@ namespace WriterDesktop {
 
 			program->exitButton = spr;
 		}
+
+		char buf[MED_STR];
+		sprintf(buf, "onProgramStart(\"%s\");", program->programName);
+		Writer::jsInterp->execute(buf);
 	}
 
 	void exitProgram(DesktopProgram *program) {
