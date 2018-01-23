@@ -1,10 +1,22 @@
+#define DESKTOP_ICONS_MAX 16
+#define DESKTOP_ICONS_MAX_COLS 5
+
 namespace WriterDesktop {
 	void js_addDesktopIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
 
+	struct DesktopIcon {
+		bool exists;
+		int index;
+		MintSprite *sprite;
+		MintSprite *tf;
+	};
+
 	struct DesktopStruct {
 		MintSprite *bg;
+		DesktopIcon icons[DESKTOP_ICONS_MAX];
+		int iconsNum;
 	};
 
 	DesktopStruct *desktop;
@@ -16,6 +28,7 @@ namespace WriterDesktop {
 		writer = Writer::writer;
 		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg, window)", &js_addDesktopIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
+		Writer::clear();
 	}
 
 	void js_createDesktop(CScriptVar *v, void *userdata) {
@@ -34,5 +47,49 @@ namespace WriterDesktop {
 		const char *iconImg = v->getParameter("iconImg")->getString().c_str();
 		const char *window = v->getParameter("window")->getString().c_str();
 		printf("Would of created %s %s %s\n", iconText, iconImg, window);
+
+		DesktopIcon *icon = NULL;
+
+		ForEach (DesktopIcon *curIcon, desktop->icons) {
+			if (!curIcon->exists) {
+				icon = curIcon;
+				break;
+			}
+		}
+
+		if (!icon) {
+			Writer::msg("Failed to create icon", Writer::MSG_ERROR);
+			return;
+		}
+
+		icon->exists = true;
+		icon->index = desktop->iconsNum++;
+
+		{ /// Icon image
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(64, 64, 0xFF0000);
+			desktop->bg->addChild(spr);
+
+			icon->sprite = spr;
+		}
+
+		{ /// Position icon
+			int xIndex = icon->index % DESKTOP_ICONS_MAX_COLS;
+			int yIndex = icon->index / DESKTOP_ICONS_MAX_COLS;
+
+			icon->sprite->gravitate(xIndex * (1/DESKTOP_ICONS_MAX), yIndex * (1/DESKTOP_ICONS_MAX));
+		}
+
+
+		{ /// Icon text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(128, 64);
+			icon->sprite->addChild(spr);
+			spr->setText(iconText);
+			spr->gravitate(0.5, 0);
+			spr->y = spr->parent->height + 5;
+
+			icon->tf = spr;
+		}
 	}
 }
