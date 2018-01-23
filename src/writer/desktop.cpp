@@ -33,6 +33,7 @@ namespace WriterDesktop {
 
 	struct DesktopStruct {
 		MintSprite *bg;
+		MintSprite *sleepButton;
 		DesktopIcon icons[DESKTOP_ICONS_MAX];
 		int iconsNum;
 
@@ -65,6 +66,15 @@ namespace WriterDesktop {
 			spr->gravitate(0.5, 0.5);
 
 			desktop->bg = spr;
+		}
+
+		{ /// Sleep button
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(64, 64, 0x333388);
+			writer->bg->addChild(spr);
+			spr->gravitate(0.95, 0.95);
+
+			desktop->sleepButton = spr;
 		}
 	}
 
@@ -172,6 +182,7 @@ namespace WriterDesktop {
 			if (!program->exists) continue;
 
 			if (canClickPrograms && program->bg->hovering) {
+				/// Program interaction goes here
 				canClickIcons = false;
 			}
 		}
