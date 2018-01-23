@@ -144,11 +144,14 @@ namespace WriterDesktop {
 			DesktopProgram *prog = desktop->draggedProgram;
 			prog->bg->alpha = 0.5;
 
+			//@cleanup Can this be simplified?
 			Point mPoint;
 			mPoint.setTo(engine->mouseX, engine->mouseY);
-			matrixMultiplyPoint(&prog->titleBar->parentTransform, &mPoint);
-			prog->bg->x = mPoint.x - prog->titleBar->holdPivot.x;
-			// prog->bg->y = engine->mouseY - prog->titleBar->holdPivot.y;
+			Matrix inv = prog->titleBar->parentTransform;
+			matrixInvert(&inv);
+			matrixMultiplyPoint(&inv, &mPoint);
+			prog->titleBar->x = mPoint.x - prog->titleBar->holdPivot.x;
+			prog->titleBar->y = mPoint.y - prog->titleBar->holdPivot.y;
 
 			canClickIcons = false;
 			canClickPrograms = false;
@@ -192,23 +195,24 @@ namespace WriterDesktop {
 		program->index = desktop->programsNum++;
 		strcpy(program->programName, programName);
 
-		{ /// Program background
+		{ /// Tile bar
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(512, 512, 0x333333);
+			spr->setupRect(512, 20, 0x777777);
 			desktop->bg->addChild(spr);
 			spr->gravitate(0.25, 0.25);
 			spr->x += program->index * 20;
 			spr->y += program->index * 20;
 
-			program->bg = spr;
+			program->titleBar = spr;
 		}
 
-		{ /// Tile bar
+		{ /// Program background
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(program->bg->width, 20, 0x777777);
-			program->bg->addChild(spr);
+			spr->setupRect(program->titleBar->width, 512, 0x333333);
+			program->titleBar->addChild(spr);
+			spr->y += program->titleBar->height;
 
-			program->titleBar = spr;
+			program->bg = spr;
 		}
 	}
 }
