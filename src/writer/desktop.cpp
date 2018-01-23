@@ -34,6 +34,8 @@ namespace WriterDesktop {
 
 		DesktopProgram programs[DESKTOP_PROGRAMS_MAX];
 		int programsNum;
+
+		DesktopProgram *draggedProgram;
 	};
 
 	DesktopStruct *desktop;
@@ -118,15 +120,48 @@ namespace WriterDesktop {
 	}
 
 	void updateDesktop() {
-		bool canClick = true;
+		bool canClickIcons = true;
+		bool canClickPrograms = true;
 
+		/// Figure out if dragging needs to happen
+		ForEach (DesktopProgram *program, desktop->programs) {
+			if (!program->exists) continue;
 
+			if (canClickPrograms && program->titleBar->justPressed) {
+				canClickIcons = false;
+				canClickPrograms = false;
+				desktop->draggedProgram = program;
+			}
+		}
+		if (desktop->draggedProgram && !desktop->draggedProgram->titleBar->holding) {
+			desktop->draggedProgram->bg->alpha = 1;
+			desktop->draggedProgram = NULL;
+		}
+
+		/// Do actual dragging
+		if (desktop->draggedProgram) {
+			DesktopProgram *prog = desktop->draggedProgram;
+			prog->bg->alpha = 0.5;
+
+			canClickIcons = false;
+			canClickPrograms = false;
+		}
+
+		/// Update the programs
+		ForEach (DesktopProgram *program, desktop->programs) {
+			if (!program->exists) continue;
+
+			if (canClickPrograms && program->bg->hovering) {
+				canClickIcons = false;
+			}
+		}
+
+		/// Update the icons
 		ForEach (DesktopIcon *icon, desktop->icons) {
 			if (!icon->exists) continue;
 
-			if (canClick && icon->sprite->justReleased) {
+			if (canClickIcons && icon->sprite->justReleased) {
 				startProgram(icon->programName);
-				canClick = false;
 			}
 		}
 	}
