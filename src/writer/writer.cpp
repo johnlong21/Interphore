@@ -312,6 +312,11 @@ namespace Writer {
 					"Morphious86",
 					"https://pastebin.com/raw/0MBv7bpK",
 					"Tests"
+				}, {
+					"Cade's Test",
+					"Cade",
+					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
+					"Tests"
 				}
 			};
 
