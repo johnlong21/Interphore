@@ -226,7 +226,7 @@ namespace WriterDesktop {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(512, 20, 0x777777);
 			desktop->bg->addChild(spr);
-			spr->gravitate(0.25, 0.25);
+			spr->gravitate(0.5, 0.05);
 			spr->x += program->index * 20;
 			spr->y += program->index * 20;
 
