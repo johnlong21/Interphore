@@ -142,6 +142,8 @@ namespace WriterDesktop {
 		if (desktop->draggedProgram) {
 			DesktopProgram *prog = desktop->draggedProgram;
 			prog->bg->alpha = 0.5;
+			prog->bg->x = engine->mouseX - prog->titleBar->holdPivot.x;
+			prog->bg->y = engine->mouseY - prog->titleBar->holdPivot.y;
 
 			canClickIcons = false;
 			canClickPrograms = false;
