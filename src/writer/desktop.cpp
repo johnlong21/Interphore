@@ -189,6 +189,12 @@ namespace WriterDesktop {
 	void startProgram(const char *programName) {
 		DesktopProgram *program = NULL;
 
+		if (streq(programName, "none")) return;
+
+		ForEach (DesktopProgram *curProgram, desktop->programs) {
+			if (curProgram->exists && streq(curProgram->programName, programName)) return;
+		}
+
 		ForEach (DesktopProgram *curProgram, desktop->programs) {
 			if (!curProgram->exists) {
 				program = curProgram;
