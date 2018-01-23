@@ -903,8 +903,7 @@ namespace Writer {
 			}
 		}
 
-		printf("Failed to find passage %s\n", passageName);
-		exit(1);
+		msg("Failed to find passage %s\n", MSG_ERROR, passageName);
 	}
 
 	void append(const char *text) {
@@ -941,6 +940,7 @@ namespace Writer {
 
 		assert(slot < MSG_MAX);
 		Msg *msg = &writer->msgs[slot];
+		memset(msg, 0, sizeof(Msg));
 		msg->exists = true;
 		msg->type = type;
 
