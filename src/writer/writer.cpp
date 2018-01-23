@@ -1,8 +1,5 @@
-// TODO:
-// Button symbols
-
-namespace Writer {
 #include "writer.h"
+#include "desktop.cpp"
 
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 128
@@ -18,6 +15,7 @@ namespace Writer {
 #define CATEGORIES_MAX 8
 #define ENTRY_LIST_MAX 16
 
+namespace Writer {
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
 	const char *BOTTOM = "BOTTOM";
@@ -113,6 +111,7 @@ namespace Writer {
 	void js_tintImage(CScriptVar *v, void *userdata);
 	void js_playAudio(CScriptVar *v, void *userdata);
 	void js_exitMod(CScriptVar *v, void *userdata);
+	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -193,7 +192,6 @@ namespace Writer {
 	};
 
 	WriterStruct *writer;
-	CTinyJS *jsInterp;
 
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
@@ -238,6 +236,7 @@ namespace Writer {
 			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
 			jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
 			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
+			jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -317,6 +316,11 @@ namespace Writer {
 					"Cade",
 					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
 					"Tests"
+				}, {
+					"Desktop Test",
+					"Fallowwing",
+					"https://www.dropbox.com/s/aselaeb3htueck3/Desktop%20Test.phore?dl=1",
+					"Tests"
 				}
 			};
 
@@ -335,6 +339,11 @@ namespace Writer {
 
 		changeState(STATE_MENU);
 
+		char autoRunMod[MED_STR] = {};
+#ifdef AUTO_RUN
+		strcpy(autoRunMod, SEMI_STRINGIFY(AUTO_RUN));
+#endif
+
 #ifdef SEMI_FLASH
 		const char *modNamePrefix = "modName=";
 
@@ -342,16 +351,31 @@ namespace Writer {
 		char *modNamePos = strstr(curUrl, modNamePrefix);
 		if (modNamePos) {
 			modNamePos += strlen(modNamePrefix);
-				for (int i = 0; i < writer->urlModsNum; i++) {
-					ModEntry *entry = &writer->urlMods[i];
-					if (streq(modNamePos, entry->name)) {
-						platformLoadFromUrl(entry->url, urlModLoaded);
-						break;
-					}
-				}
+			strcpy(autoRunMod, modNamePos);
 		}
 		free(curUrl);
 #endif
+
+		for (int i = 0; i < strlen(autoRunMod); i++)
+			if (autoRunMod[i] == '-')
+				autoRunMod[i] = ' ';
+
+
+		bool found = true;
+		if (autoRunMod[0] != '\0') {
+			found = false;
+			for (int i = 0; i < writer->urlModsNum; i++) {
+				ModEntry *entry = &writer->urlMods[i];
+				if (streq(autoRunMod, entry->name)) {
+					found = true;
+					writer->currentMod = entry;
+					platformLoadFromUrl(entry->url, urlModLoaded);
+					break;
+				}
+			}
+		}
+		
+		if (!found) msg("Failed to autorun mod named %s", MSG_ERROR, autoRunMod);
 	}
 
 	void changeState(GameState newState) {
