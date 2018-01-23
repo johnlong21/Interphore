@@ -563,6 +563,8 @@ namespace Writer {
 	void updateWriter() {
 		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
+		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
+
 		if (writer->state == STATE_MENU) {
 			if (writer->loadButton->sprite->justPressed) {
 #ifdef SEMI_WIN32
