@@ -329,6 +329,24 @@ namespace Writer {
 		}
 
 		changeState(STATE_MENU);
+
+#ifdef SEMI_FLASH
+		const char *modNamePrefix = "modName=";
+
+		char *curUrl = flashGetUrl();
+		char *modNamePos = strstr(curUrl, modNamePrefix);
+		if (modNamePos) {
+			modNamePos += strlen(modNamePrefix);
+				for (int i = 0; i < writer->urlModsNum; i++) {
+					ModEntry *entry = &writer->urlMods[i];
+					if (streq(modNamePos, entry->name)) {
+						platformLoadFromUrl(entry->url, urlModLoaded);
+						break;
+					}
+				}
+		}
+		free(curUrl);
+#endif
 	}
 
 	void changeState(GameState newState) {
