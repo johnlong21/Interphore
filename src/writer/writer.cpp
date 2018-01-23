@@ -103,6 +103,7 @@ namespace Writer {
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void js_jumpToPassage(CScriptVar *v, void *userdata);
 	void js_addImage(CScriptVar *v, void *userdata);
+	void js_permanentImage(CScriptVar *v, void *userdata);
 	void js_removeImage(CScriptVar *v, void *userdata);
 	void js_centerImage(CScriptVar *v, void *userdata);
 	void js_alignImage(CScriptVar *v, void *userdata);
@@ -147,6 +148,7 @@ namespace Writer {
 
 	struct Image {
 		bool exists;
+		bool permanent;
 		char *name;
 		MintSprite *sprite;
 	};
@@ -226,6 +228,7 @@ namespace Writer {
 			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
 			jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
 			jsInterp->addNative("function addImage(path, name)", &js_addImage, 0);
+			jsInterp->addNative("function permanentImage(name)", &js_permanentImage, 0);
 			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
 			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
@@ -490,6 +493,10 @@ namespace Writer {
 			writer->mainText->destroy();
 			destroyButton(writer->exitButton);
 			destroyButton(writer->refreshButton);
+
+			for (int i = 0; i < IMAGES_MAX; i++) {
+				if (writer->images[i].exists) removeImage(&writer->images[i]);
+			}
 		}
 
 		writer->state = newState;
@@ -646,9 +653,9 @@ namespace Writer {
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
 		char *realData = tempBytes;
-		tempBytes[0] = '\0';
-		char *realDataEnd = tempBytes;
-		realDataEnd = fastStrcat(realDataEnd, "var __passage = \"\";\n\n");
+		memset(tempBytes, 0, Megabytes(2));
+		realData[0] = '\0';
+		char *realDataEnd = fastStrcat(realData, "var __passage = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
 		int inputLen = 0;
@@ -671,7 +678,6 @@ namespace Writer {
 			line[0] = '\0';
 			memcpy(line, lineStart, lineEnd-lineStart);
 			line[lineEnd-lineStart] = '\0';
-			// printf("Line: %s\n", line);
 			// dumpHex(line, strlen(line));
 
 			if (strstr(line, "START_IMAGES")) {
@@ -789,7 +795,11 @@ namespace Writer {
 	}
 
 	void clear() {
-		for (int i = 0; i < IMAGES_MAX; i++) removeImage(&writer->images[i]);
+		for (int i = 0; i < IMAGES_MAX; i++) {
+			if (writer->images[i].exists && !writer->images[i].permanent) {
+				removeImage(&writer->images[i]);
+			}
+		}
 
 		writer->mainText->setText("");
 		for (int i = 0; i < writer->choicesNum; i++) destroyButton(writer->choices[i]);
@@ -977,7 +987,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Image named %s doesn't exist", MSG_ERROR, name);
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -993,12 +1003,20 @@ namespace Writer {
 
 	void removeImage(const char *name) {
 		Image *img = getImage(name);
-		if (!img) return;
+
+		if (!img || !img->exists) {
+			msg("Can't remove image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
 		removeImage(img);
 	}
 
 	void removeImage(Image *img) {
-		if (!img->exists) return;
+		if (!img || !img->exists) {
+			msg("Can't remove image because it doesn't exist or is NULL", MSG_ERROR);
+			return;
+		}
 
 		img->exists = false;
 		img->sprite->destroy();
@@ -1130,6 +1148,18 @@ namespace Writer {
 	void js_removeImage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("name")->getString().c_str();
 		removeImage(arg1);
+	}
+
+	void js_permanentImage(CScriptVar *v, void *userdata) {
+		const char *arg1 = v->getParameter("name")->getString().c_str();
+		Image *img = getImage(arg1);
+
+		if (!img) {
+			msg("Image named %s cannot be made permanent because it doesn't exist", MSG_ERROR, arg1);
+			return;
+		}
+
+		img->permanent = true;
 	}
 
 	void js_alignImage(CScriptVar *v, void *userdata) {
