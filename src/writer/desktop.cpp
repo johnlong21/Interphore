@@ -46,7 +46,6 @@ namespace WriterDesktop {
 		const char *iconText = v->getParameter("iconText")->getString().c_str();
 		const char *iconImg = v->getParameter("iconImg")->getString().c_str();
 		const char *window = v->getParameter("window")->getString().c_str();
-		printf("Would of created %s %s %s\n", iconText, iconImg, window);
 
 		DesktopIcon *icon = NULL;
 
@@ -67,7 +66,11 @@ namespace WriterDesktop {
 
 		{ /// Icon image
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(64, 64, 0xFF0000);
+			if (streq(iconImg, "none")) {
+				spr->setupRect(64, 64, 0xFF0000);
+			} else {
+				spr->setupAnimated(iconImg);
+			}
 			desktop->bg->addChild(spr);
 
 			icon->sprite = spr;
@@ -76,8 +79,10 @@ namespace WriterDesktop {
 		{ /// Position icon
 			int xIndex = icon->index % DESKTOP_ICONS_MAX_COLS;
 			int yIndex = icon->index / DESKTOP_ICONS_MAX_COLS;
+			int desktopEdgePad = 40;
 
-			icon->sprite->gravitate(xIndex * (1/DESKTOP_ICONS_MAX), yIndex * (1/DESKTOP_ICONS_MAX));
+			icon->sprite->x = xIndex * (icon->sprite->width * 3) + desktopEdgePad;
+			icon->sprite->y = yIndex * (icon->sprite->height * 3) + desktopEdgePad;
 		}
 
 
