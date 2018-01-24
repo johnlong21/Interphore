@@ -342,5 +342,11 @@ namespace WriterDesktop {
 	void exitProgram(DesktopProgram *program) {
 		program->exists = false;
 		program->titleBar->destroy();
+
+		using namespace Writer;
+		ForEach (Image **img, program->images) {
+			if (!*img) continue;
+			removeImage(*img);
+		}
 	}
 }
