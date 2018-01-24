@@ -61,8 +61,8 @@ namespace WriterDesktop {
 
 	void js_createDesktop(CScriptVar *v, void *userdata) {
 		exists = true;
-		Writer::destroyButton(writer->exitButton);
-		Writer::destroyButton(writer->refreshButton);
+		// Writer::destroyButton(writer->exitButton);
+		// Writer::destroyButton(writer->refreshButton);
 
 		{ /// Desktop bg
 			MintSprite *spr = createMintSprite();
