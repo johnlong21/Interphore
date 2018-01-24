@@ -177,13 +177,15 @@ namespace WriterDesktop {
 			if (!program->exists) continue;
 
 			{ /// Figure out scrolling while I'm here
-				if (keyIsJustPressed('=')) program->scrollAmount += 0.1;
-				if (keyIsJustPressed('-')) program->scrollAmount -= 0.1;
-				program->scrollAmount = Clamp(program->scrollAmount, 0, 1);
+				if (canClickPrograms && program->bg->hovering) {
+					if (keyIsJustPressed(KEY_UP) || platformMouseWheel < 0) program->scrollAmount += 0.1;
+					if (keyIsJustPressed(KEY_DOWN) || platformMouseWheel > 0) program->scrollAmount -= 0.1;
+					program->scrollAmount = Clamp(program->scrollAmount, 0, 1);
 
-				float maxScroll = program->bg->height - program->content->getCombinedHeight();
+					float maxScroll = program->bg->height - program->content->getCombinedHeight();
 
-				program->content->y = program->scrollAmount*maxScroll;
+					program->content->y = program->scrollAmount*maxScroll;
+				}
 			}
 
 			if (canClickPrograms && program->exitButton->justPressed) {
