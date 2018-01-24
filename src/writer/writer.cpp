@@ -1239,7 +1239,8 @@ namespace Writer {
 			return;
 		}
 
-		img->sprite->gravitate(x, y);
+		img->sprite->x += img->sprite->getWidth() * x;
+		img->sprite->y += img->sprite->getHeight() * y;
 	}
 
 	void js_scaleImage(CScriptVar *v, void *userdata) {
