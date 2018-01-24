@@ -18,7 +18,9 @@ namespace WriterDesktop {
 	struct DesktopProgram {
 		bool exists;
 		int index;
+		float scrollAmount;
 		MintSprite *bg;
+		MintSprite *content;
 		MintSprite *titleBar;
 		MintSprite *exitButton;
 		char programName[MED_STR];
@@ -158,7 +160,7 @@ namespace WriterDesktop {
 			if (!program->exists) continue;
 
 			if (streq(program->programName, programName)) {
-				program->bg->addChild(img->sprite);
+				program->content->addChild(img->sprite);
 				return;
 			}
 		}
@@ -173,6 +175,16 @@ namespace WriterDesktop {
 		/// Figure out if dragging needs to happen
 		ForEach (DesktopProgram *program, desktop->programs) {
 			if (!program->exists) continue;
+
+			{ /// Figure out scrolling while I'm here
+				if (keyIsJustPressed('=')) program->scrollAmount += 0.1;
+				if (keyIsJustPressed('-')) program->scrollAmount -= 0.1;
+				program->scrollAmount = Clamp(program->scrollAmount, 0, 1);
+
+				float maxScroll = program->bg->height - program->content->getCombinedHeight();
+
+				program->content->y = program->scrollAmount*maxScroll;
+			}
 
 			if (canClickPrograms && program->exitButton->justPressed) {
 				canClickPrograms = false;
@@ -272,6 +284,15 @@ namespace WriterDesktop {
 			spr->y += program->titleBar->height;
 
 			program->bg = spr;
+		}
+
+		{ /// Program content
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(1, 1, 0x000000);
+			program->titleBar->addChild(spr);
+			spr->y += program->titleBar->height;
+
+			program->content = spr;
 		}
 
 		{ /// Exit button
