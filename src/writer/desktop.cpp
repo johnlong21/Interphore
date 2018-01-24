@@ -1,6 +1,7 @@
 #define DESKTOP_ICONS_MAX 16
 #define DESKTOP_ICONS_MAX_COLS 5
 #define DESKTOP_PROGRAMS_MAX 4
+#define DESKTOP_PROGRAM_IMAGES_MAX 16
 
 namespace WriterDesktop {
 	bool exists = false;
@@ -23,6 +24,7 @@ namespace WriterDesktop {
 		MintSprite *content;
 		MintSprite *titleBar;
 		MintSprite *exitButton;
+		Writer::Image *images[DESKTOP_PROGRAM_IMAGES_MAX];
 		char programName[MED_STR];
 	};
 
@@ -103,6 +105,7 @@ namespace WriterDesktop {
 			return;
 		}
 
+		memset(icon, 0, sizeof(DesktopIcon));
 		icon->exists = true;
 		icon->index = desktop->iconsNum++;
 		strcpy(icon->programName, programName);
@@ -160,7 +163,15 @@ namespace WriterDesktop {
 			if (!program->exists) continue;
 
 			if (streq(program->programName, programName)) {
-				program->content->addChild(img->sprite);
+				for (int i = 0; i < DESKTOP_PROGRAM_IMAGES_MAX; i++) {
+					if (!program->images[i]) {
+						program->images[i] = img;
+						program->content->addChild(img->sprite);
+						return;
+					}
+				}
+
+				msg("Can't put image %s in program because there are too many images", MSG_ERROR, imageName);
 				return;
 			}
 		}
@@ -227,6 +238,22 @@ namespace WriterDesktop {
 		ForEach (DesktopProgram *program, desktop->programs) {
 			if (!program->exists) continue;
 
+			using namespace Writer;
+
+			ForEach (Image **img, program->images) {
+				if (!*img) continue;
+				MintSprite *spr = (*img)->sprite;
+				Rect startRect;
+				startRect.x = program->bg->x;
+				startRect.y = program->bg->y;
+				startRect.width = program->bg->width;
+				startRect.height = program->bg->height;
+
+				program->bg->localToGlobal(&startRect);
+				spr->clipRect.setTo(startRect.x, startRect.y, startRect.width, startRect.height);
+			}
+
+
 			if (canClickPrograms && program->bg->hovering) {
 				/// Program interaction goes here
 				canClickIcons = false;
@@ -264,6 +291,7 @@ namespace WriterDesktop {
 			return;
 		}
 
+		memset(program, 0, sizeof(DesktopProgram));
 		program->exists = true;
 		program->index = desktop->programsNum++;
 		strcpy(program->programName, programName);
