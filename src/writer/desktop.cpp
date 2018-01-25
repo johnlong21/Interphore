@@ -8,10 +8,10 @@ namespace WriterDesktop {
 
 	struct DesktopProgram;
 
-	void js_addDesktopIcon(CScriptVar *v, void *userdata);
+	void js_addIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
-	void js_setImageWindow(CScriptVar *v, void *userdata);
+	void js_attachImageToProgram(CScriptVar *v, void *userdata);
 	void js_startProgram(CScriptVar *v, void *userdata);
 	void updateDesktop();
 	void startProgram(const char *programName, float width, float height);
@@ -55,9 +55,9 @@ namespace WriterDesktop {
 
 		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
 		writer = Writer::writer;
-		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg)", &js_addDesktopIcon, 0);
+		Writer::jsInterp->addNative("function addIcon(iconText, iconImg)", &js_addIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
-		Writer::jsInterp->addNative("function setImageWindow(imageName, programName)", &js_setImageWindow, 0);
+		Writer::jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
 		Writer::jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
 		Writer::clear();
 	}
@@ -87,7 +87,7 @@ namespace WriterDesktop {
 		}
 	}
 
-	void js_addDesktopIcon(CScriptVar *v, void *userdata) {
+	void js_addIcon(CScriptVar *v, void *userdata) {
 		const char *iconText = v->getParameter("iconText")->getString().c_str();
 		const char *iconImg = v->getParameter("iconImg")->getString().c_str();
 
@@ -142,7 +142,7 @@ namespace WriterDesktop {
 		}
 	}
 
-	void js_setImageWindow(CScriptVar *v, void *userdata) {
+	void js_attachImageToProgram(CScriptVar *v, void *userdata) {
 		const char *imageName = v->getParameter("imageName")->getString().c_str();
 		const char *programName = v->getParameter("programName")->getString().c_str();
 
