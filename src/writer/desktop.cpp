@@ -12,6 +12,7 @@ namespace WriterDesktop {
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
 	void js_setImageWindow(CScriptVar *v, void *userdata);
+	void js_startProgram(CScriptVar *v, void *userdata);
 	void updateDesktop();
 	void startProgram(const char *programName);
 	void exitProgram(DesktopProgram *program);
@@ -33,7 +34,6 @@ namespace WriterDesktop {
 		int index;
 		MintSprite *sprite;
 		MintSprite *tf;
-		char programName[MED_STR];
 	};
 
 	struct DesktopStruct {
@@ -55,9 +55,10 @@ namespace WriterDesktop {
 
 		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
 		writer = Writer::writer;
-		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg, programName)", &js_addDesktopIcon, 0);
+		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg)", &js_addDesktopIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
 		Writer::jsInterp->addNative("function setImageWindow(imageName, programName)", &js_setImageWindow, 0);
+		Writer::jsInterp->addNative("function startProgram(programName)", &js_startProgram, 0);
 		Writer::clear();
 	}
 
@@ -89,7 +90,6 @@ namespace WriterDesktop {
 	void js_addDesktopIcon(CScriptVar *v, void *userdata) {
 		const char *iconText = v->getParameter("iconText")->getString().c_str();
 		const char *iconImg = v->getParameter("iconImg")->getString().c_str();
-		const char *programName = v->getParameter("programName")->getString().c_str();
 
 		DesktopIcon *icon = NULL;
 
@@ -108,7 +108,6 @@ namespace WriterDesktop {
 		memset(icon, 0, sizeof(DesktopIcon));
 		icon->exists = true;
 		icon->index = desktop->iconsNum++;
-		strcpy(icon->programName, programName);
 
 		{ /// Icon image
 			MintSprite *spr = createMintSprite();
@@ -177,6 +176,10 @@ namespace WriterDesktop {
 		}
 
 		msg("Couldn't find program named %s", MSG_ERROR, programName);
+	}
+
+	void js_startProgram(CScriptVar *v, void *userdata) {
+		startProgram(v->getParameter("programName")->getString().c_str());
 	}
 
 	void updateDesktop() {
@@ -265,7 +268,9 @@ namespace WriterDesktop {
 			if (!icon->exists) continue;
 
 			if (canClickIcons && icon->sprite->justReleased) {
-				startProgram(icon->programName);
+				char buf[MED_STR];
+				sprintf(buf, "onIconClick(\"%s\");", icon->tf->rawText);
+				Writer::jsInterp->execute(buf);
 			}
 		}
 	}
