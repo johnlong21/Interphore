@@ -46,6 +46,8 @@ namespace WriterDesktop {
 		int programsNum;
 
 		DesktopProgram *draggedProgram;
+
+		bool desktopStarted;
 	};
 
 	DesktopStruct *desktop;
@@ -183,6 +185,12 @@ namespace WriterDesktop {
 	}
 
 	void updateDesktop() {
+		if (!desktop->desktopStarted) {
+			Writer::jsInterp->execute("onDesktopStart();");
+			desktop->desktopStarted = true;
+		}
+
+		//@cleanup Make this more of a state machine?
 		bool canClickIcons = true;
 		bool canClickPrograms = true;
 
