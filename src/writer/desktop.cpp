@@ -14,7 +14,7 @@ namespace WriterDesktop {
 	void js_setImageWindow(CScriptVar *v, void *userdata);
 	void js_startProgram(CScriptVar *v, void *userdata);
 	void updateDesktop();
-	void startProgram(const char *programName);
+	void startProgram(const char *programName, float width, float height);
 	void exitProgram(DesktopProgram *program);
 
 	struct DesktopProgram {
@@ -58,7 +58,7 @@ namespace WriterDesktop {
 		Writer::jsInterp->addNative("function addDesktopIcon(iconText, iconImg)", &js_addDesktopIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
 		Writer::jsInterp->addNative("function setImageWindow(imageName, programName)", &js_setImageWindow, 0);
-		Writer::jsInterp->addNative("function startProgram(programName)", &js_startProgram, 0);
+		Writer::jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
 		Writer::clear();
 	}
 
@@ -179,7 +179,7 @@ namespace WriterDesktop {
 	}
 
 	void js_startProgram(CScriptVar *v, void *userdata) {
-		startProgram(v->getParameter("programName")->getString().c_str());
+		startProgram(v->getParameter("programName")->getString().c_str(), v->getParameter("width")->getDouble(), v->getParameter("height")->getDouble());
 	}
 
 	void updateDesktop() {
@@ -275,7 +275,7 @@ namespace WriterDesktop {
 		}
 	}
 
-	void startProgram(const char *programName) {
+	void startProgram(const char *programName, float width, float height) {
 		DesktopProgram *program = NULL;
 
 		if (streq(programName, "none")) return;
@@ -303,7 +303,7 @@ namespace WriterDesktop {
 
 		{ /// Tile bar
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(512, 20, 0x777777);
+			spr->setupRect(width*engine->width, 20, 0x777777);
 			desktop->bg->addChild(spr);
 			spr->gravitate(0.5, 0.05);
 			spr->x += program->index * 20;
@@ -314,7 +314,7 @@ namespace WriterDesktop {
 
 		{ /// Program background
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(program->titleBar->width, 512, 0x333333);
+			spr->setupRect(program->titleBar->width, height*engine->height, 0x333333);
 			program->titleBar->addChild(spr);
 			spr->y += program->titleBar->height;
 
