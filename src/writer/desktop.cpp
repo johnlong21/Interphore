@@ -7,13 +7,22 @@ namespace WriterDesktop {
 	bool exists = false;
 
 	struct DesktopProgram;
+	struct DesktopIcon;
 
 	void js_addIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
 	void js_createDesktop(CScriptVar *v, void *userdata);
 	void js_attachImageToProgram(CScriptVar *v, void *userdata);
 	void js_startProgram(CScriptVar *v, void *userdata);
+
+	void createDesktop();
+	void destroyDesktop();
 	void updateDesktop();
+
+	void addIcon(const char *iconName, const char *iconImg);
+	void removeIcon(const char *iconName);
+	void removeIcon(DesktopIcon *icon);
+
 	void startProgram(const char *programName, float width, float height);
 	void exitProgram(DesktopProgram *program);
 
@@ -32,6 +41,7 @@ namespace WriterDesktop {
 	struct DesktopIcon {
 		bool exists;
 		int index;
+		char name[SHORT_STR];
 		MintSprite *sprite;
 		MintSprite *tf;
 	};
@@ -54,8 +64,6 @@ namespace WriterDesktop {
 	Writer::WriterStruct *writer;
 
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata) {
-
-		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
 		writer = Writer::writer;
 		Writer::jsInterp->addNative("function addIcon(iconText, iconImg)", &js_addIcon, 0);
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
@@ -64,7 +72,9 @@ namespace WriterDesktop {
 		Writer::clear();
 	}
 
-	void js_createDesktop(CScriptVar *v, void *userdata) {
+	void createDesktop() {
+		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
+
 		exists = true;
 		// Writer::destroyButton(writer->exitButton);
 		// Writer::destroyButton(writer->refreshButton);
@@ -89,59 +99,27 @@ namespace WriterDesktop {
 		}
 	}
 
+	void destroyDesktop() {
+		exists = false;
+
+		ForEach (DesktopIcon *icon, desktop->icons) {
+			if (icon->exists) removeIcon(icon);
+		}
+
+		ForEach (DesktopProgram *program, desktop->programs) {
+			if (program->exists) exitProgram(program);
+		}
+
+		desktop->bg->destroy();
+		free(desktop);
+	}
+
+	void js_createDesktop(CScriptVar *v, void *userdata) {
+		createDesktop();
+	}
+
 	void js_addIcon(CScriptVar *v, void *userdata) {
-		const char *iconText = v->getParameter("iconText")->getString().c_str();
-		const char *iconImg = v->getParameter("iconImg")->getString().c_str();
-
-		DesktopIcon *icon = NULL;
-
-		ForEach (DesktopIcon *curIcon, desktop->icons) {
-			if (!curIcon->exists) {
-				icon = curIcon;
-				break;
-			}
-		}
-
-		if (!icon) {
-			Writer::msg("Failed to create icon", Writer::MSG_ERROR);
-			return;
-		}
-
-		memset(icon, 0, sizeof(DesktopIcon));
-		icon->exists = true;
-		icon->index = desktop->iconsNum++;
-
-		{ /// Icon image
-			MintSprite *spr = createMintSprite();
-			if (streq(iconImg, "none")) {
-				spr->setupRect(64, 64, 0xFF0000);
-			} else {
-				spr->setupAnimated(iconImg);
-			}
-			desktop->bg->addChild(spr);
-
-			icon->sprite = spr;
-		}
-
-		{ /// Position icon
-			int xIndex = icon->index % DESKTOP_ICONS_MAX_COLS;
-			int yIndex = icon->index / DESKTOP_ICONS_MAX_COLS;
-			int desktopEdgePad = 40;
-
-			icon->sprite->x = xIndex * (icon->sprite->width * 3) + desktopEdgePad;
-			icon->sprite->y = yIndex * (icon->sprite->height * 3) + desktopEdgePad;
-		}
-
-		{ /// Icon text
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(128, 64);
-			icon->sprite->addChild(spr);
-			spr->setText(iconText);
-			spr->gravitate(0.5, 0);
-			spr->y = spr->parent->height + 5;
-
-			icon->tf = spr;
-		}
+		addIcon(v->getParameter("iconText")->getString().c_str(), v->getParameter("iconImg")->getString().c_str());
 	}
 
 	void js_attachImageToProgram(CScriptVar *v, void *userdata) {
@@ -277,10 +255,74 @@ namespace WriterDesktop {
 
 			if (canClickIcons && icon->sprite->justReleased) {
 				char buf[MED_STR];
-				sprintf(buf, "onIconClick(\"%s\");", icon->tf->rawText);
+				sprintf(buf, "onIconClick(\"%s\");", icon->name);
 				Writer::jsInterp->execute(buf);
 			}
 		}
+	}
+
+	void addIcon(const char *iconName, const char *iconImg) {
+		DesktopIcon *icon = NULL;
+
+		ForEach (DesktopIcon *curIcon, desktop->icons) {
+			if (!curIcon->exists) {
+				icon = curIcon;
+				break;
+			}
+		}
+
+		if (!icon) {
+			Writer::msg("Failed to create icon", Writer::MSG_ERROR);
+			return;
+		}
+
+		memset(icon, 0, sizeof(DesktopIcon));
+		icon->exists = true;
+		icon->index = desktop->iconsNum++;
+		strcpy(icon->name, iconName);
+
+		{ /// Icon image
+			MintSprite *spr = createMintSprite();
+			if (streq(iconImg, "none")) spr->setupRect(64, 64, 0xFF0000);
+			else spr->setupAnimated(iconImg);
+			desktop->bg->addChild(spr);
+
+			icon->sprite = spr;
+		}
+
+		{ /// Position icon
+			int xIndex = icon->index % DESKTOP_ICONS_MAX_COLS;
+			int yIndex = icon->index / DESKTOP_ICONS_MAX_COLS;
+			int desktopEdgePad = 40;
+
+			icon->sprite->x = xIndex * (icon->sprite->width * 3) + desktopEdgePad;
+			icon->sprite->y = yIndex * (icon->sprite->height * 3) + desktopEdgePad;
+		}
+
+		{ /// Icon text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(128, 64);
+			icon->sprite->addChild(spr);
+			spr->setText(icon->name);
+			spr->gravitate(0.5, 0);
+			spr->y = spr->parent->height + 5;
+
+			icon->tf = spr;
+		}
+	}
+
+	void removeIcon(const char *iconName) {
+		ForEach (DesktopIcon *icon, desktop->icons) {
+			if (icon->exists && streq(icon->name, iconName)) {
+				removeIcon(icon);
+				break;
+			}
+		}
+	}
+
+	void removeIcon(DesktopIcon *icon) {
+		icon->exists = false;
+		icon->sprite->destroy();
 	}
 
 	void startProgram(const char *programName, float width, float height) {

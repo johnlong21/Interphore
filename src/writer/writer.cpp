@@ -544,6 +544,7 @@ namespace Writer {
 
 		if (writer->state == STATE_MOD) {
 			clear();
+			if (WriterDesktop::exists) WriterDesktop::destroyDesktop();
 			for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
 			writer->passagesNum = 0;
 
