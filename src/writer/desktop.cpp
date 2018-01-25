@@ -92,7 +92,7 @@ namespace WriterDesktop {
 		{ /// Sleep button
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(64, 64, 0x333388);
-			writer->bg->addChild(spr);
+			desktop->bg->addChild(spr);
 			spr->gravitate(0.95, 0.95);
 
 			desktop->sleepButton = spr;
