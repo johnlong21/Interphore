@@ -398,7 +398,7 @@ namespace Writer {
 				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
-				spr->setText("Writer");
+				spr->setText("Interphore");
 				spr->gravitate(0.01, 0.005);
 
 				writer->title = spr;
