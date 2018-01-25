@@ -74,6 +74,7 @@ namespace Writer {
 	void disableEntry(ModEntry *entry);
 	void disableAllEntries();
 	void enableCategory(const char *category);
+	void loadModEntry(ModEntry *entry);
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
 	void loadMod(char *serialData);
@@ -378,8 +379,7 @@ namespace Writer {
 				ModEntry *entry = &writer->urlMods[i];
 				if (streq(autoRunMod, entry->name)) {
 					found = true;
-					writer->currentMod = entry;
-					platformLoadFromUrl(entry->url, urlModLoaded);
+					loadModEntry(entry);
 					break;
 				}
 			}
@@ -496,7 +496,12 @@ namespace Writer {
 				writer->modSourceText = spr;
 			}
 
-			enableCategory("Story");
+			if (writer->currentMod) {
+				enableCategory(writer->currentMod->category);
+				writer->currentMod = NULL;
+			} else {
+				enableCategory("Story");
+			}
 		}
 
 		if (newState == STATE_MOD) {
@@ -587,8 +592,7 @@ namespace Writer {
 				if (!entry->enabled) continue;
 
 				if (entry->button->sprite->justPressed) {
-					writer->currentMod = entry;
-					platformLoadFromUrl(entry->url, urlModLoaded);
+					loadModEntry(entry);
 				}
 
 				if (entry->peakButton->sprite->justPressed) platformLoadFromUrl(entry->url, urlModSourceLoaded);
@@ -607,7 +611,7 @@ namespace Writer {
 
 			if (writer->refreshButton->sprite->justPressed) {
 				changeState(STATE_MENU);
-				platformLoadFromUrl(writer->currentMod->url, urlModLoaded);
+				loadModEntry(writer->currentMod);
 			}
 		}
 
@@ -630,6 +634,11 @@ namespace Writer {
 				}
 			}
 		}
+	}
+
+	void loadModEntry(ModEntry *entry) {
+		writer->currentMod = entry;
+		platformLoadFromUrl(entry->url, urlModLoaded);
 	}
 
 	void enableCategory(const char *category) {
