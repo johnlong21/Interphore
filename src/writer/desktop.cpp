@@ -14,6 +14,7 @@ namespace WriterDesktop {
 	void js_createDesktop(CScriptVar *v, void *userdata);
 	void js_attachImageToProgram(CScriptVar *v, void *userdata);
 	void js_startProgram(CScriptVar *v, void *userdata);
+	void js_addBookmarkBar(CScriptVar *v, void *userdata);
 
 	void createDesktop();
 	void destroyDesktop();
@@ -35,7 +36,8 @@ namespace WriterDesktop {
 		MintSprite *titleBar;
 		MintSprite *exitButton;
 		Writer::Image *images[DESKTOP_PROGRAM_IMAGES_MAX];
-		char programName[MED_STR];
+		char programName[SHORT_STR];
+		char state[MED_STR];
 	};
 
 	struct DesktopIcon {
@@ -69,6 +71,7 @@ namespace WriterDesktop {
 		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
 		Writer::jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
 		Writer::jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
+		Writer::jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
 		Writer::clear();
 	}
 
@@ -325,6 +328,16 @@ namespace WriterDesktop {
 		icon->sprite->destroy();
 	}
 
+	DesktopProgram *getProgram(const char *programName) {
+		ForEach (DesktopProgram *programIter, desktop->programs) {
+			if (programIter->exists && streq(programIter->programName, programName)) {
+				return programIter;
+			}
+		}
+
+		return NULL;
+	}
+
 	void startProgram(const char *programName, float width, float height) {
 		DesktopProgram *program = NULL;
 
@@ -404,4 +417,16 @@ namespace WriterDesktop {
 			removeImage(*img);
 		}
 	}
+
+	void js_addBookmarkBar(CScriptVar *v, void *userdata) {
+		const char *programName = v->getParameter("programName")->getString().c_str();
+		using namespace Writer;
+
+		DesktopProgram *prog = getProgram(programName);
+		if (!prog) {
+			msg("Can't add a bookmakr bar on %s because it doesn't exist", MSG_ERROR, programName);
+			return;
+		}
+	}
+
 }
