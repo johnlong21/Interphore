@@ -2,12 +2,14 @@
 #define DESKTOP_ICONS_MAX_COLS 5
 #define DESKTOP_PROGRAMS_MAX 4
 #define DESKTOP_PROGRAM_IMAGES_MAX 16
+#define DESKTOP_EVENTS_MAX 64
 
 namespace WriterDesktop {
 	bool exists = false;
 
 	struct DesktopProgram;
 	struct DesktopIcon;
+	struct DesktopEvent;
 
 	void js_addIcon(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
@@ -27,6 +29,15 @@ namespace WriterDesktop {
 
 	void startProgram(const char *programName, float width, float height);
 	void exitProgram(DesktopProgram *program);
+
+	void pushDesktopEvent(DesktopEvent *newEvent);
+
+	struct DesktopEvent {
+		bool exists;
+		bool started;
+		char type[SHORT_STR];
+		char text[MED_STR];
+	};
 
 	struct DesktopProgram {
 		bool exists;
@@ -50,8 +61,11 @@ namespace WriterDesktop {
 	};
 
 	struct DesktopStruct {
+		bool desktopStarted;
+
 		MintSprite *bg;
 		MintSprite *sleepButton;
+
 		DesktopIcon icons[DESKTOP_ICONS_MAX];
 		int iconsNum;
 
@@ -60,7 +74,11 @@ namespace WriterDesktop {
 
 		DesktopProgram *draggedProgram;
 
-		bool desktopStarted;
+		MintSprite *dialogTf;
+
+		DesktopEvent events[DESKTOP_EVENTS_MAX];
+		int eventsNum;
+		int currentEventIndex;
 	};
 
 	DesktopStruct *desktop;
@@ -101,6 +119,16 @@ namespace WriterDesktop {
 			spr->gravitate(0.95, 0.95);
 
 			desktop->sleepButton = spr;
+		}
+
+		{ /// Dialog text
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width*0.8, engine->height*0.25);
+			strcpy(spr->defaultFont, "Espresso-Dolce_38");
+			desktop->bg->addChild(spr);
+			spr->gravitate(0.5, 0.99);
+
+			desktop->dialogTf = spr;
 		}
 	}
 
@@ -176,6 +204,14 @@ namespace WriterDesktop {
 		//@cleanup Make this more of a state machine?
 		bool canClickIcons = true;
 		bool canClickPrograms = true;
+
+		if (desktop->eventsNum > 0) {
+			DesktopEvent *evt = &desktop->events[desktop->currentEventIndex];
+
+			if (!evt->started) {
+				evt->started = true;
+			}
+		}
 
 		/// Figure out if dragging needs to happen
 		ForEach (DesktopProgram *program, desktop->programs) {
@@ -421,6 +457,17 @@ namespace WriterDesktop {
 		}
 	}
 
+	void pushDesktopEvent(DesktopEvent *newEvent) {
+		using namespace Writer;
+
+		if (strlen(newEvent->type) == 0) {
+			msg("Need event type", MSG_ERROR);
+			return;
+		}
+
+		desktop->events[desktop->eventsNum++] = *newEvent;
+	}
+
 	void js_addBookmarkBar(CScriptVar *v, void *userdata) {
 		const char *programName = v->getParameter("programName")->getString().c_str();
 		using namespace Writer;
@@ -438,22 +485,10 @@ namespace WriterDesktop {
 		CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
 		CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
 
-		if (!eventTypeVar) {
-			msg("Need event type", MSG_ERROR);
-			return;
-		}
-
-		const char *eventType = eventTypeVar->var->getString().c_str();
-
-		if (streq(eventType, "dialog")) {
-			if (!textVar) {
-				msg("Need dialog text", MSG_ERROR);
-				return;
-			}
-
-			const char *text = textVar->var->getString().c_str();
-			printf("Would add dialog event with text %s\n", text);
-		}
+		DesktopEvent evt = {};
+		if (eventTypeVar) strcpy(evt.type, eventTypeVar->var->getString().c_str());
+		if (textVar) strcpy(evt.text, textVar->var->getString().c_str());
+		pushDesktopEvent(&evt);
 	}
 
 }
