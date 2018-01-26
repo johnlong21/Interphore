@@ -239,7 +239,7 @@ namespace WriterDesktop {
 					desktop->dialogTf->setText("");
 				}
 
-				if (desktop->eventsNum <= desktop->currentEventIndex) {
+				if (desktop->eventsNum <= desktop->currentEventIndex+1) {
 					desktop->eventsNum = 0;
 					desktop->currentEventIndex = 0;
 				} else {
