@@ -74,6 +74,7 @@ namespace Writer {
 	void disableEntry(ModEntry *entry);
 	void disableAllEntries();
 	void enableCategory(const char *category);
+	void execJs(const char *js, ...);
 	void loadModEntry(ModEntry *entry);
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
@@ -713,6 +714,22 @@ namespace Writer {
 		}
 	}
 
+	void execJs(const char *js, ...) {
+		static char buffer[SERIAL_SIZE];
+		{ /// Parse format
+			va_list argptr;
+			va_start(argptr, js);
+			vsprintf(buffer, js, argptr);
+			va_end(argptr);
+		}
+
+		try {
+			jsInterp->execute(buffer);
+		} catch (CScriptException *e) {
+			msg(e->text.c_str(), MSG_ERROR);
+		}
+	}
+
 	void loadMod(char *serialData) {
 		for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
 		writer->passagesNum = 0;
@@ -815,11 +832,7 @@ namespace Writer {
 
 		free(inputData);
 
-		try {
-			jsInterp->execute(realData);
-		} catch (CScriptException *e) {
-			msg(e->text.c_str(), MSG_ERROR);
-		}
+		execJs(realData);
 	}
 
 	void destroyButton(Button *btn) {

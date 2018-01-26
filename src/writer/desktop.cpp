@@ -15,6 +15,7 @@ namespace WriterDesktop {
 	void js_attachImageToProgram(CScriptVar *v, void *userdata);
 	void js_startProgram(CScriptVar *v, void *userdata);
 	void js_addBookmarkBar(CScriptVar *v, void *userdata);
+	void js_pushDesktopEvent(CScriptVar *v, void *userdata);
 
 	void createDesktop();
 	void destroyDesktop();
@@ -72,6 +73,7 @@ namespace WriterDesktop {
 		Writer::jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
 		Writer::jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
 		Writer::jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
+		Writer::jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
 		Writer::clear();
 	}
 
@@ -167,7 +169,7 @@ namespace WriterDesktop {
 
 	void updateDesktop() {
 		if (!desktop->desktopStarted) {
-			Writer::jsInterp->execute("onDesktopStart();");
+			Writer::execJs("onDesktopStart();");
 			desktop->desktopStarted = true;
 		}
 
@@ -249,6 +251,11 @@ namespace WriterDesktop {
 			if (canClickPrograms && program->bg->hovering) {
 				/// Program interaction goes here
 				canClickIcons = false;
+				if (program->bg->justReleased) {
+					// char buf[LARGE_STR];
+					// sprintf(buf, "onProgramInteract(\"%s\", \"%s\", \"%s\", \"%s\");", program->programName, "none", "none", "none");
+					// Writer::jsInterp->execute(buf);
+				}
 			}
 		}
 
@@ -257,9 +264,7 @@ namespace WriterDesktop {
 			if (!icon->exists) continue;
 
 			if (canClickIcons && icon->sprite->justReleased) {
-				char buf[MED_STR];
-				sprintf(buf, "onIconClick(\"%s\");", icon->name);
-				Writer::jsInterp->execute(buf);
+				Writer::execJs("onIconClick(\"%s\");", icon->name);
 			}
 		}
 	}
@@ -402,9 +407,7 @@ namespace WriterDesktop {
 			program->exitButton = spr;
 		}
 
-		char buf[MED_STR];
-		sprintf(buf, "onProgramStart(\"%s\");", program->programName);
-		Writer::jsInterp->execute(buf);
+		Writer::execJs("onProgramStart(\"%s\");", program->programName);
 	}
 
 	void exitProgram(DesktopProgram *program) {
@@ -427,6 +430,12 @@ namespace WriterDesktop {
 			msg("Can't add a bookmakr bar on %s because it doesn't exist", MSG_ERROR, programName);
 			return;
 		}
+	}
+
+	void js_pushDesktopEvent(CScriptVar *v, void *userdata) {
+		// const char *programName = v->getParameter("programName")->getString().c_str();
+		int childNum = v->getParameter("event")->getChildren();
+		printf("Children: %d\n", childNum);
 	}
 
 }
