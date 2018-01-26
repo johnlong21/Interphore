@@ -126,7 +126,6 @@ namespace WriterDesktop {
 			spr->setupEmpty(engine->width*0.8, engine->height*0.25);
 			strcpy(spr->defaultFont, "Espresso-Dolce_38");
 			desktop->bg->addChild(spr);
-			spr->gravitate(0.5, 0.99);
 
 			desktop->dialogTf = spr;
 		}
@@ -206,10 +205,30 @@ namespace WriterDesktop {
 		bool canClickPrograms = true;
 
 		if (desktop->eventsNum > 0) {
+			canClickIcons = false;
+			canClickPrograms = false;
+
 			DesktopEvent *evt = &desktop->events[desktop->currentEventIndex];
 
 			if (!evt->started) {
 				evt->started = true;
+				if (streq(evt->type, "dialog")) {
+					desktop->dialogTf->setText(evt->text);
+					desktop->dialogTf->gravitate(0.5, 0.99);
+				}
+			}
+
+			if (engine->leftMouseJustReleased) {
+				if (streq(evt->type, "dialog")) {
+					desktop->dialogTf->setText("");
+				}
+
+				if (desktop->eventsNum <= desktop->currentEventIndex) {
+					desktop->eventsNum = 0;
+					desktop->currentEventIndex = 0;
+				} else {
+					desktop->currentEventIndex++;
+				}
 			}
 		}
 
