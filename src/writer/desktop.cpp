@@ -433,9 +433,27 @@ namespace WriterDesktop {
 	}
 
 	void js_pushDesktopEvent(CScriptVar *v, void *userdata) {
-		// const char *programName = v->getParameter("programName")->getString().c_str();
-		int childNum = v->getParameter("event")->getChildren();
-		printf("Children: %d\n", childNum);
+		using namespace Writer;
+
+		CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
+		CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
+
+		if (!eventTypeVar) {
+			msg("Need event type", MSG_ERROR);
+			return;
+		}
+
+		const char *eventType = eventTypeVar->var->getString().c_str();
+
+		if (streq(eventType, "dialog")) {
+			if (!textVar) {
+				msg("Need dialog text", MSG_ERROR);
+				return;
+			}
+
+			const char *text = textVar->var->getString().c_str();
+			printf("Would add dialog event with text %s\n", text);
+		}
 	}
 
 }
