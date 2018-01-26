@@ -62,6 +62,7 @@ namespace WriterDesktop {
 
 	struct DesktopStruct {
 		bool desktopStarted;
+		bool shuttingDown;
 
 		MintSprite *bg;
 		MintSprite *sleepButton;
@@ -108,6 +109,7 @@ namespace WriterDesktop {
 			spr->setupRect(writer->bg->width*0.95, writer->bg->height*0.95, 0x222222);
 			writer->bg->addChild(spr);
 			spr->gravitate(0.5, 0.5);
+			spr->alpha = 0;
 
 			desktop->bg = spr;
 		}
@@ -204,6 +206,20 @@ namespace WriterDesktop {
 		bool canClickIcons = true;
 		bool canClickPrograms = true;
 
+		if (desktop->shuttingDown) {
+			canClickIcons = false;
+			canClickPrograms = false;
+			desktop->bg->alpha -= 0.05;
+
+			if (desktop->bg->alpha <= 0) {
+				destroyDesktop();
+				createDesktop();
+				return;
+			}
+		}
+
+		if (!desktop->shuttingDown && desktop->bg->alpha < 1) desktop->bg->alpha += 0.05;
+
 		if (desktop->eventsNum > 0) {
 			canClickIcons = false;
 			canClickPrograms = false;
@@ -230,6 +246,10 @@ namespace WriterDesktop {
 					desktop->currentEventIndex++;
 				}
 			}
+		}
+
+		if (canClickIcons && desktop->sleepButton->justReleased) {
+			desktop->shuttingDown = true;
 		}
 
 		/// Figure out if dragging needs to happen
