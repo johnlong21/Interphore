@@ -3,6 +3,7 @@
 #define DESKTOP_PROGRAMS_MAX 4
 #define DESKTOP_PROGRAM_IMAGES_MAX 16
 #define DESKTOP_EVENTS_MAX 64
+#define DESKTOP_CHOICES_MAX 8
 
 namespace WriterDesktop {
 	bool exists = false;
@@ -18,6 +19,7 @@ namespace WriterDesktop {
 	void js_startProgram(CScriptVar *v, void *userdata);
 	void js_addBookmarkBar(CScriptVar *v, void *userdata);
 	void js_pushDesktopEvent(CScriptVar *v, void *userdata);
+	void js_pushChoiceEvent(CScriptVar *v, void *userdata);
 
 	void createDesktop();
 	void destroyDesktop();
@@ -32,11 +34,18 @@ namespace WriterDesktop {
 
 	void pushDesktopEvent(DesktopEvent *newEvent);
 
+	struct DesktopChoice {
+		MintSprite *tf;
+		MintSprite *bg;
+	};
+
 	struct DesktopEvent {
 		bool exists;
 		bool started;
 		char type[SHORT_STR];
 		char text[MED_STR];
+		char choices[DESKTOP_CHOICES_MAX][MED_STR];
+		int choicesNum;
 	};
 
 	struct DesktopProgram {
@@ -77,26 +86,31 @@ namespace WriterDesktop {
 
 		MintSprite *dialogTf;
 
+		DesktopChoice choices[DESKTOP_CHOICES_MAX];
+		int choicesNum;
+
 		DesktopEvent events[DESKTOP_EVENTS_MAX];
 		int eventsNum;
 		int currentEventIndex;
 	};
 
 	DesktopStruct *desktop;
-	Writer::WriterStruct *writer;
 
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata) {
-		writer = Writer::writer;
-		Writer::jsInterp->addNative("function addIcon(iconText, iconImg)", &js_addIcon, 0);
-		Writer::jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
-		Writer::jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
-		Writer::jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
-		Writer::jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
-		Writer::jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
-		Writer::clear();
+		using namespace Writer;
+		jsInterp->addNative("function addIcon(iconText, iconImg)", &js_addIcon, 0);
+		jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
+		jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
+		jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
+		jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
+		jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
+		jsInterp->addNative("function pushChoiceEvent(text, choices)", &js_pushChoiceEvent, 0);
+		execJs("STARTED = \"STARTED\";");
+		clear();
 	}
 
 	void createDesktop() {
+		using namespace Writer;
 		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
 
 		exists = true;
@@ -228,15 +242,67 @@ namespace WriterDesktop {
 
 			if (!evt->started) {
 				evt->started = true;
+				//
+				/// Event startup
+				//
 				if (streq(evt->type, "dialog")) {
 					desktop->dialogTf->setText(evt->text);
 					desktop->dialogTf->gravitate(0.5, 0.99);
+				} else if (streq(evt->type, "choice")) {
+					desktop->dialogTf->setText(evt->text);
+					desktop->dialogTf->gravitate(0.5, 0.99);
+
+					for (int i = 0; i < evt->choicesNum; i++) {
+						DesktopChoice *curChoice = &desktop->choices[desktop->choicesNum++];
+
+						{ /// Dialog background
+							MintSprite *spr = createMintSprite();
+							spr->setupRect(128, 64, 0x222244);
+							desktop->bg->addChild(spr);
+							spr->y += i * 100;
+
+							curChoice->bg = spr;
+						}
+
+						{ /// Dialog text
+							MintSprite *spr = createMintSprite();
+							spr->setupEmpty(curChoice->bg->getWidth(), curChoice->bg->getHeight());
+							curChoice->bg->addChild(spr);
+							spr->setText(evt->choices[i]);
+							spr->gravitate(0.5, 0.5);
+
+							curChoice->tf = spr;
+						}
+
+					}
+				}
+			}
+
+			//
+			/// Event update
+			//
+			if (streq(evt->type, "choice")) {
+				for (int i = 0; i < evt->choicesNum; i++) {
+					MintSprite *choiceBg = desktop->choices[i].bg;
+					choiceBg->gravitate(0.5, 0.5);
+
+					choiceBg->x += sin((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
+					choiceBg->y += cos((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
 				}
 			}
 
 			if (engine->leftMouseJustReleased) {
+				//
+				/// Event shutdown
+				//
 				if (streq(evt->type, "dialog")) {
 					desktop->dialogTf->setText("");
+				} else if (streq(evt->type, "choice")) {
+					desktop->dialogTf->setText("");
+					for (int i = 0; i < evt->choicesNum; i++) {
+						desktop->choices[i].bg->destroy();
+						desktop->choicesNum = 0;
+					}
 				}
 
 				if (desktop->eventsNum <= desktop->currentEventIndex+1) {
@@ -482,7 +548,7 @@ namespace WriterDesktop {
 			program->exitButton = spr;
 		}
 
-		Writer::execJs("onProgramStart(\"%s\");", program->programName);
+		Writer::execJs("onProgramInteract(\"%s\", \"%s\", \"%s\", \"%s\");", program->programName, "none", "STARTED", "none");
 	}
 
 	void exitProgram(DesktopProgram *program) {
@@ -523,6 +589,7 @@ namespace WriterDesktop {
 
 		CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
 		CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
+		CScriptVarLink *choicesVar = v->getParameter("event")->findChild("choices");
 
 		DesktopEvent evt = {};
 		if (eventTypeVar) strcpy(evt.type, eventTypeVar->var->getString().c_str());
@@ -530,4 +597,20 @@ namespace WriterDesktop {
 		pushDesktopEvent(&evt);
 	}
 
+	void js_pushChoiceEvent(CScriptVar *v, void *userdata) {
+		using namespace Writer;
+		const char *text = v->getParameter("text")->getString().c_str();
+
+		CScriptVar *choicesArr = v->getParameter("choices");
+
+		DesktopEvent evt = {};
+		strcpy(evt.type, "choice");
+		strcpy(evt.text, text);
+		evt.choicesNum = choicesArr->getArrayLength();
+		for (int i = 0; i < evt.choicesNum; i++) {
+			strcpy(evt.choices[i], choicesArr->getArrayIndex(i)->getString().c_str());
+		}
+
+		pushDesktopEvent(&evt);
+	}
 }
