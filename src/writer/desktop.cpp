@@ -108,8 +108,9 @@ namespace WriterDesktop {
 		jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
 		jsInterp->addNative("function pushChoiceEvent(text, choices)", &js_pushChoiceEvent, 0);
 		execJs(""
-			"STARTED = \"STARTED\";"
+			"PROGRAM_STARTED = \"PROGRAM_STARTED\";"
 			"CHOICE = \"CHOICE\";"
+			"IMAGE_CLICK = \"IMAGE_CLICK\";"
 			);
 		clear();
 	}
@@ -311,7 +312,7 @@ namespace WriterDesktop {
 				if (streq(evt->type, "dialog")) {
 					desktop->dialogTf->setText("");
 				} else if (streq(evt->type, "choice")) {
-					Writer::execJs("onEvent({type: \"CHOICE\", chosenIndex: %d});", evt->chosenIndex);
+					Writer::execJs("onEvent({type: \"CHOICE\", chosenIndex: %d, chosenText: \"%s\"});", evt->chosenIndex, desktop->choices[evt->chosenIndex].tf->rawText);
 
 					desktop->dialogTf->setText("");
 					for (int i = 0; i < evt->choicesNum; i++) {
@@ -405,8 +406,15 @@ namespace WriterDesktop {
 
 
 			if (canClickPrograms && program->bg->hovering) {
-				/// Program interaction goes here
 				canClickIcons = false;
+				ForEach (Image **imgPtr, program->images) {
+					Image *img = *imgPtr;
+					if (!img) continue;
+
+					if (img->sprite->justReleased) {
+						Writer::execJs("onEvent({type: \"IMAGE_CLICK\", imageName: \"%s\"});", img->name);
+					}
+				}
 				if (program->bg->justReleased) {
 					// char buf[LARGE_STR];
 					// sprintf(buf, "onProgramInteract(\"%s\", \"%s\", \"%s\", \"%s\");", program->programName, "none", "none", "none");
@@ -563,7 +571,7 @@ namespace WriterDesktop {
 			program->exitButton = spr;
 		}
 
-		Writer::execJs("onProgramInteract(\"%s\", \"%s\", \"%s\", \"%s\");", program->programName, "none", "STARTED", "none");
+		Writer::execJs("onEvent({type: \"PROGRAM_STARTED\", programName: \"%s\"});", program->programName);
 	}
 
 	void exitProgram(DesktopProgram *program) {

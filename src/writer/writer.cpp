@@ -107,6 +107,7 @@ namespace Writer {
 	void js_centerImage(CScriptVar *v, void *userdata);
 	void js_alignImage(CScriptVar *v, void *userdata);
 	void js_moveImage(CScriptVar *v, void *userdata);
+	void js_moveImagePx(CScriptVar *v, void *userdata);
 	void js_scaleImage(CScriptVar *v, void *userdata);
 	void js_rotateImage(CScriptVar *v, void *userdata);
 	void js_tintImage(CScriptVar *v, void *userdata);
@@ -243,6 +244,7 @@ namespace Writer {
 			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
 			jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
+			jsInterp->addNative("function moveImagePx(name, x, y)", &js_moveImagePx, 0);
 			jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
 			jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
 			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
@@ -1269,6 +1271,22 @@ namespace Writer {
 
 		img->sprite->x += img->sprite->getWidth() * x;
 		img->sprite->y += img->sprite->getHeight() * y;
+	}
+
+	void js_moveImagePx(CScriptVar *v, void *userdata) {
+		const char *name = v->getParameter("name")->getString().c_str();
+		double x = v->getParameter("x")->getDouble();
+		double y = v->getParameter("y")->getDouble();
+
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Image named %s cannot be moved because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->x = x;
+		img->sprite->y = y;
 	}
 
 	void js_scaleImage(CScriptVar *v, void *userdata) {
