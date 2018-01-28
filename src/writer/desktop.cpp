@@ -42,10 +42,12 @@ namespace WriterDesktop {
 	struct DesktopEvent {
 		bool exists;
 		bool started;
+		bool done;
 		char type[SHORT_STR];
 		char text[MED_STR];
 		char choices[DESKTOP_CHOICES_MAX][MED_STR];
 		int choicesNum;
+		int chosenIndex;
 	};
 
 	struct DesktopProgram {
@@ -105,7 +107,10 @@ namespace WriterDesktop {
 		jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
 		jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
 		jsInterp->addNative("function pushChoiceEvent(text, choices)", &js_pushChoiceEvent, 0);
-		execJs("STARTED = \"STARTED\";");
+		execJs(""
+			"STARTED = \"STARTED\";"
+			"CHOICE = \"CHOICE\";"
+			);
 		clear();
 	}
 
@@ -281,23 +286,33 @@ namespace WriterDesktop {
 			//
 			/// Event update
 			//
-			if (streq(evt->type, "choice")) {
+			if (streq(evt->type, "dialog")) {
+				if (engine->leftMouseJustReleased) evt->done = true;
+			} else if (streq(evt->type, "choice")) {
 				for (int i = 0; i < evt->choicesNum; i++) {
 					MintSprite *choiceBg = desktop->choices[i].bg;
 					choiceBg->gravitate(0.5, 0.5);
 
 					choiceBg->x += sin((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
 					choiceBg->y += cos((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
+
+					if (choiceBg->justReleased) {
+						evt->chosenIndex = i;
+						evt->done = true;
+						break;
+					}
 				}
 			}
 
-			if (engine->leftMouseJustReleased) {
-				//
-				/// Event shutdown
-				//
+			//
+			/// Event shutdown
+			//
+			if (evt->done) {
 				if (streq(evt->type, "dialog")) {
 					desktop->dialogTf->setText("");
 				} else if (streq(evt->type, "choice")) {
+					Writer::execJs("onEvent({type: \"CHOICE\", chosenIndex: %d});", evt->chosenIndex);
+
 					desktop->dialogTf->setText("");
 					for (int i = 0; i < evt->choicesNum; i++) {
 						desktop->choices[i].bg->destroy();
