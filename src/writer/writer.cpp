@@ -11,6 +11,7 @@
 #define MOD_ENTRIES_MAX 16
 #define MSG_MAX 64
 #define IMAGES_MAX 128
+#define ASSETS_MAX 128
 #define CATEGORIES_MAX 8
 #define ENTRY_LIST_MAX 16
 
@@ -191,6 +192,8 @@ namespace Writer {
 		Msg msgs[MSG_MAX];
 
 		Image images[IMAGES_MAX];
+
+		Asset *loadedAssets[ASSETS_MAX];
 	};
 
 	CTinyJS *jsInterp;
@@ -568,6 +571,14 @@ namespace Writer {
 			for (int i = 0; i < IMAGES_MAX; i++) {
 				if (writer->images[i].exists) removeImage(&writer->images[i]);
 			}
+
+			for (int i = 0; i < ASSETS_MAX; i++) {
+				if (writer->loadedAssets[i]) {
+					free(writer->loadedAssets[i]->data);
+					writer->loadedAssets[i]->exists = false;
+					writer->loadedAssets[i] = NULL;
+				}
+			}
 		}
 
 		writer->state = newState;
@@ -838,6 +849,7 @@ namespace Writer {
 		// exit(1);
 
 		free(inputData);
+		free(serialData);
 
 		execJs(realData);
 	}
@@ -1195,6 +1207,13 @@ namespace Writer {
 		size_t dataLen;
 		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
 		addAsset(imageName, data, dataLen);
+
+		for (int i = 0; i < ASSETS_MAX; i++) {
+			if (!writer->loadedAssets[i]) {
+				writer->loadedAssets[i] = getAsset(imageName);
+				break;
+			}
+		}
 	}
 
 	void js_submitAudio(CScriptVar *v, void *userdata) {
@@ -1349,5 +1368,7 @@ namespace Writer {
 		if (writer->state != STATE_NULL) changeState(STATE_NULL);
 		writer->bg->destroy();
 		exists = false;
+		delete jsInterp;
+		free(writer);
 	}
 }
