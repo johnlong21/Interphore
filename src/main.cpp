@@ -19,6 +19,7 @@
 
 void updateMain();
 void initMain();
+void exitMain();
 extern "C" void entryPoint();
 
 #ifdef SEMI_WIN32
@@ -37,6 +38,8 @@ void entryPoint() {
 }
 
 void initMain() {
+	engine->exitCallback = exitMain;
+
 	MintSprite *spr = createMintSprite();
 	spr->setupRect(engine->width, engine->height, 0x000000);
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
@@ -45,4 +48,8 @@ void initMain() {
 
 void updateMain() {
 	Writer::updateWriter();
+}
+
+void exitMain() {
+	Writer::deinitWriter();
 }
