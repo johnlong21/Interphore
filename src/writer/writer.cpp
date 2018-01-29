@@ -531,8 +531,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/exit.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
-				spr->gravitate(1, 0);
-				spr->y = 50;
+				spr->alignInner(DIR8_UP_RIGHT, 0, 50);
 
 				writer->exitButton = spr;
 			}
