@@ -170,8 +170,8 @@ namespace Writer {
 		Button *categoryButtons[CATEGORIES_MAX];
 		int categoryButtonsNum;
 
-		Button *exitButton;
-		Button *refreshButton;
+		MintSprite *exitButton;
+		MintSprite *refreshButton;
 		MintSprite *modSourceText;
 
 		Button *loadButton;
@@ -528,19 +528,23 @@ namespace Writer {
 			}
 
 			{ /// Exit button
-				Button *btn = createButton("X", 50, 50);
-				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0.1);
+				MintSprite *spr = createMintSprite("writer/exit.png");
+				writer->bg->addChild(spr);
+				spr->scale(2, 2);
+				spr->gravitate(1, 0);
+				spr->y = 50;
 
-				writer->exitButton = btn;
+				writer->exitButton = spr;
 			}
 
 			{ /// Refresh button
-				Button *btn = createButton("R", 50, 50);
-				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(1, 0.2);
+				MintSprite *spr = createMintSprite("writer/restart.png");
+				writer->bg->addChild(spr);
+				spr->scale(2, 2);
+				spr->gravitate(1, 0);
+				spr->y = writer->exitButton->y + writer->exitButton->getHeight() + 10;
 
-				writer->refreshButton = btn;
+				writer->refreshButton = spr;
 			}
 		}
 
@@ -565,8 +569,8 @@ namespace Writer {
 			writer->passagesNum = 0;
 
 			writer->mainText->destroy();
-			destroyButton(writer->exitButton);
-			destroyButton(writer->refreshButton);
+			writer->exitButton->destroy();
+			writer->refreshButton->destroy();
 
 			for (int i = 0; i < IMAGES_MAX; i++) {
 				if (writer->images[i].exists) removeImage(&writer->images[i]);
@@ -626,9 +630,9 @@ namespace Writer {
 				}
 			}
 
-			if (writer->exitButton->sprite->justPressed) changeState(STATE_MENU);
+			if (writer->exitButton->justPressed) changeState(STATE_MENU);
 
-			if (writer->refreshButton->sprite->justPressed) {
+			if (writer->refreshButton->justPressed) {
 				changeState(STATE_MENU);
 				loadModEntry(writer->currentMod);
 			}
