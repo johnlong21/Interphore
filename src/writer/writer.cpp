@@ -731,6 +731,7 @@ namespace Writer {
 	void urlModLoaded(char *serialData) {
 		if (serialData) {
 			loadMod(serialData);
+			free(serialData);
 		} else {
 			msg("Failed to load.", MSG_ERROR);
 		}
@@ -853,7 +854,6 @@ namespace Writer {
 		// exit(1);
 
 		free(inputData);
-		free(serialData);
 
 		execJs(realData);
 	}
