@@ -410,7 +410,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Interphore");
-				spr->gravitate(0.01, 0.005);
+				spr->alignInside(DIR8_UP_LEFT, 10, 10);
 
 				writer->title = spr;
 			}
@@ -418,11 +418,11 @@ namespace Writer {
 			{ /// Subtitle
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
-				writer->title->addChild(spr);
+				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 
 				spr->setText("A story tool");
-				spr->y += spr->getHeight() + 5;
+				spr->alignOutside(writer->title, DIR8_DOWN, 0, 5);
 
 				writer->subtitle = spr;
 			}
@@ -431,7 +431,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->bg->width*0.1, writer->bg->height*0.5, 0x111111);
 				writer->bg->addChild(spr);
-				spr->gravitate(0.01, 0.3);
+				spr->alignInside(DIR8_LEFT, 20, 0);
 
 				writer->categoryBg = spr;
 			}
@@ -440,8 +440,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->bg->width*0.5, writer->bg->height*0.70, 0x111111);
 				writer->bg->addChild(spr);
-				spr->x = writer->categoryBg->x + writer->categoryBg->getWidth() + 10;
-				spr->y = writer->categoryBg->y;
+				spr->alignOutside(writer->categoryBg, DIR8_RIGHT, 20, 0);
 
 				writer->browserBg = spr;
 			}
@@ -490,7 +489,7 @@ namespace Writer {
 			{ /// Load button
 				Button *btn = createButton("Load your own", 256, 32);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->gravitate(0.5, 0.95);
+				btn->sprite->alignInside(DIR8_DOWN, 0, 10);
 
 				writer->loadButton = btn;
 			}
@@ -531,7 +530,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/exit.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
-				spr->alignInner(DIR8_UP_RIGHT, 0, 50);
+				spr->alignInside(DIR8_UP_RIGHT, 0, 50);
 
 				writer->exitButton = spr;
 			}
@@ -540,8 +539,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/restart.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
-				spr->gravitate(1, 0);
-				spr->y = writer->exitButton->y + writer->exitButton->getHeight() + 10;
+				spr->alignOutside(writer->exitButton, DIR8_DOWN, 0, 10);
 
 				writer->refreshButton = spr;
 			}
@@ -555,6 +553,7 @@ namespace Writer {
 			}
 
 			writer->title->destroy();
+			writer->subtitle->destroy();
 			writer->browserBg->destroy();
 			writer->modSourceText->destroy();
 			writer->categoryBg->destroy();
@@ -690,6 +689,9 @@ namespace Writer {
 	}
 
 	void enableEntry(ModEntry *entry) {
+		ModEntry *lastEntry = NULL;
+		if (writer->currentEntriesNum > 0) lastEntry = writer->currentEntries[writer->currentEntriesNum-1];
+
 		entry->enabled = true;
 		writer->currentEntries[writer->currentEntriesNum++] = entry;
 
@@ -697,8 +699,14 @@ namespace Writer {
 			char buf[LARGE_STR];
 			sprintf(buf, "%s by %s", entry->name, entry->author);
 			Button *btn = createButton(buf, writer->browserBg->width*0.50, 64);
-			writer->browserBg->addChild(btn->sprite);
-			btn->sprite->y = (btn->sprite->getHeight() + 5) * (writer->currentEntriesNum-1);
+			// if (!lastEntry) {
+			// 	writer->bg->addChild(btn->sprite);
+			// 	btn->sprite->alignInside(writer->browserBg, DIR8_UP_LEFT);
+			// } else {
+				writer->browserBg->addChild(btn->sprite);
+				btn->sprite->y = (btn->sprite->getHeight() + 5) * (writer->currentEntriesNum-1);
+			// }
+			// btn->sprite->alignInside(writer->browserBg, DIR8_LEFT);
 
 			entry->button = btn;
 		}
@@ -707,6 +715,7 @@ namespace Writer {
 			Button *btn = createButton("peek source", writer->browserBg->width*0.20, 64);
 			writer->browserBg->addChild(btn->sprite);
 			btn->sprite->gravitate(1, 0);
+			// btn->sprite->alignInside(writer->browserBg, DIR8_RIGHT);
 			btn->sprite->y = entry->button->sprite->y;
 
 			entry->peakButton = btn;
