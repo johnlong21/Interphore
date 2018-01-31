@@ -128,7 +128,7 @@ namespace WriterDesktop {
 			// spr->setupRect(writer->bg->width, writer->bg->height, 0x222222);
 			spr->setupRect(writer->bg->width*0.95, writer->bg->height*0.95, 0x222222);
 			writer->bg->addChild(spr);
-			spr->gravitate(0.5, 0.5);
+			spr->alignInside(DIR8_CENTER);
 			spr->alpha = 0;
 
 			desktop->bg = spr;
@@ -138,7 +138,7 @@ namespace WriterDesktop {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(64, 64, 0x333388);
 			desktop->bg->addChild(spr);
-			spr->gravitate(0.95, 0.95);
+			spr->alignInside(DIR8_DOWN_RIGHT, 5, 5);
 
 			desktop->sleepButton = spr;
 		}
@@ -253,10 +253,10 @@ namespace WriterDesktop {
 				//
 				if (streq(evt->type, "dialog")) {
 					desktop->dialogTf->setText(evt->text);
-					desktop->dialogTf->gravitate(0.5, 0.99);
+					desktop->dialogTf->alignInside(DIR8_DOWN, 0, 5);
 				} else if (streq(evt->type, "choice")) {
 					desktop->dialogTf->setText(evt->text);
-					desktop->dialogTf->gravitate(0.5, 0.99);
+					desktop->dialogTf->alignInside(DIR8_DOWN, 0, 5);
 
 					for (int i = 0; i < evt->choicesNum; i++) {
 						DesktopChoice *curChoice = &desktop->choices[desktop->choicesNum++];
@@ -275,7 +275,7 @@ namespace WriterDesktop {
 							spr->setupEmpty(curChoice->bg->getWidth(), curChoice->bg->getHeight());
 							curChoice->bg->addChild(spr);
 							spr->setText(evt->choices[i]);
-							spr->gravitate(0.5, 0.5);
+							spr->alignInside(DIR8_CENTER);
 
 							curChoice->tf = spr;
 						}
@@ -292,7 +292,7 @@ namespace WriterDesktop {
 			} else if (streq(evt->type, "choice")) {
 				for (int i = 0; i < evt->choicesNum; i++) {
 					MintSprite *choiceBg = desktop->choices[i].bg;
-					choiceBg->gravitate(0.5, 0.5);
+					choiceBg->alignInside(DIR8_CENTER);
 
 					choiceBg->x += sin((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
 					choiceBg->y += cos((engine->time*(M_PI*0.25) + ((float)(i+1)/(evt->choicesNum))*(M_PI*2))) * 64;
@@ -476,7 +476,7 @@ namespace WriterDesktop {
 			spr->setupEmpty(128, 64);
 			icon->sprite->addChild(spr);
 			spr->setText(icon->name);
-			spr->gravitate(0.5, 0);
+			spr->alignInside(DIR8_UP);
 			spr->y = spr->parent->height + 5;
 
 			icon->tf = spr;
@@ -537,9 +537,9 @@ namespace WriterDesktop {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(width*engine->width, 20, 0x777777);
 			desktop->bg->addChild(spr);
-			spr->gravitate(0.5, 0.05);
-			spr->x += program->index * 20;
-			spr->y += program->index * 20;
+			spr->alignInside(DIR8_UP, 0, 5);
+			spr->x += (program->index % 10) * 20;
+			spr->y += (program->index % 10) * 20;
 
 			program->titleBar = spr;
 		}
@@ -566,7 +566,7 @@ namespace WriterDesktop {
 			MintSprite *spr = createMintSprite();
 			spr->setupRect(20, 20, 0x770000);
 			program->titleBar->addChild(spr);
-			spr->gravitate(1, 0);
+			spr->alignInside(DIR8_UP_RIGHT);
 
 			program->exitButton = spr;
 		}

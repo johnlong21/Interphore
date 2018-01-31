@@ -689,8 +689,8 @@ namespace Writer {
 	}
 
 	void enableEntry(ModEntry *entry) {
-		ModEntry *lastEntry = NULL;
-		if (writer->currentEntriesNum > 0) lastEntry = writer->currentEntries[writer->currentEntriesNum-1];
+		ModEntry *prevEntry = NULL;
+		if (writer->currentEntriesNum > 0) prevEntry = writer->currentEntries[writer->currentEntriesNum-1];
 
 		entry->enabled = true;
 		writer->currentEntries[writer->currentEntriesNum++] = entry;
@@ -699,14 +699,10 @@ namespace Writer {
 			char buf[LARGE_STR];
 			sprintf(buf, "%s by %s", entry->name, entry->author);
 			Button *btn = createButton(buf, writer->browserBg->width*0.50, 64);
-			// if (!lastEntry) {
-			// 	writer->bg->addChild(btn->sprite);
-			// 	btn->sprite->alignInside(writer->browserBg, DIR8_UP_LEFT);
-			// } else {
-				writer->browserBg->addChild(btn->sprite);
-				btn->sprite->y = (btn->sprite->getHeight() + 5) * (writer->currentEntriesNum-1);
-			// }
-			// btn->sprite->alignInside(writer->browserBg, DIR8_LEFT);
+			writer->browserBg->addChild(btn->sprite);
+
+			if (!prevEntry) btn->sprite->alignInside(DIR8_UP_LEFT);
+			else btn->sprite->alignOutside(prevEntry->button->sprite, DIR8_DOWN, 0, 5);
 
 			entry->button = btn;
 		}
@@ -714,9 +710,9 @@ namespace Writer {
 		{ /// Peak button
 			Button *btn = createButton("peek source", writer->browserBg->width*0.20, 64);
 			writer->browserBg->addChild(btn->sprite);
-			btn->sprite->gravitate(1, 0);
-			// btn->sprite->alignInside(writer->browserBg, DIR8_RIGHT);
-			btn->sprite->y = entry->button->sprite->y;
+
+			if (!prevEntry) btn->sprite->alignInside(DIR8_UP_RIGHT);
+			else btn->sprite->alignOutside(prevEntry->peakButton->sprite, DIR8_DOWN, 0, 5);
 
 			entry->peakButton = btn;
 		}
@@ -724,9 +720,8 @@ namespace Writer {
 		{ /// Source button
 			Button *btn = createButton("view source", writer->browserBg->width*0.20, 64);
 			writer->browserBg->addChild(btn->sprite);
-			btn->sprite->gravitate(1, 0);
-			btn->sprite->y = entry->button->sprite->y;
-			btn->sprite->x -= entry->peakButton->sprite->getWidth() + 5;
+
+			btn->sprite->alignOutside(entry->peakButton->sprite, DIR8_LEFT, 5, 5);
 
 			entry->sourceButton = btn;
 		}
@@ -899,7 +894,7 @@ namespace Writer {
 			strcpy(spr->defaultFont, "OpenSans-Regular_20");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
-			spr->gravitate(0.5, 0.5);
+			spr->alignInside(DIR8_CENTER);
 
 			btn->tf = spr;
 		}
@@ -1012,11 +1007,15 @@ namespace Writer {
 			return;
 		}
 
+		Button *prevBtn = NULL;
+		if (writer->choicesNum > 0) prevBtn = writer->choices[writer->choicesNum-1];
+
 		Button *btn = createButton(text);
 		if (!btn) return;
 		writer->bg->addChild(btn->sprite);
-		btn->sprite->gravitate(0, 1);
-		btn->sprite->x = (btn->sprite->width+5) * writer->choicesNum;
+
+		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
+		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
 		strcpy(btn->destPassageName, dest);
 		writer->choices[writer->choicesNum++] = btn;
@@ -1064,7 +1063,7 @@ namespace Writer {
 				msg->sprite->y = writer->bg->height;
 			} else if (type == MSG_ERROR) {
 				msg->sprite->setText("<ed38>%s</ed38>", buffer);
-				msg->sprite->gravitate(0.5, 0.9);
+				msg->sprite->alignInside(DIR8_DOWN, 0, 100);
 			}
 		}
 	}
@@ -1084,6 +1083,7 @@ namespace Writer {
 		img->exists = true;
 		img->name = stringClone(name);
 		img->sprite = createMintSprite(path);
+		// img->sprite->centerPivot = true;
 		writer->bg->addChild(img->sprite);
 	}
 
@@ -1104,14 +1104,14 @@ namespace Writer {
 			return;
 		}
 
-		Point grav = {};
-		if (streq(gravity, CENTER)) grav.setTo(0.5, 0.5);
-		if (streq(gravity, TOP)) grav.setTo(0.5, 0);
-		if (streq(gravity, BOTTOM)) grav.setTo(0.5, 1);
-		if (streq(gravity, LEFT)) grav.setTo(0, 0.5);
-		if (streq(gravity, RIGHT)) grav.setTo(1, 0.5);
+		Dir8 dir = {};
+		if (streq(gravity, CENTER)) dir = DIR8_CENTER;
+		if (streq(gravity, TOP)) dir = DIR8_UP;
+		if (streq(gravity, BOTTOM)) dir = DIR8_DOWN;
+		if (streq(gravity, LEFT)) dir = DIR8_LEFT;
+		if (streq(gravity, RIGHT)) dir = DIR8_RIGHT;
 
-		img->sprite->gravitate(grav.x, grav.y);
+		img->sprite->alignInside(dir);
 	}
 
 	void removeImage(const char *name) {
