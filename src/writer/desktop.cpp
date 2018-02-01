@@ -395,8 +395,8 @@ namespace WriterDesktop {
 				if (!*img) continue;
 				MintSprite *spr = (*img)->sprite;
 				Rect startRect;
-				startRect.x = program->bg->x;
-				startRect.y = program->bg->y;
+				startRect.x = 0;
+				startRect.y = 0;
 				startRect.width = program->bg->width;
 				startRect.height = program->bg->height;
 
