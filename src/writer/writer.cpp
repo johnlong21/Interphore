@@ -1104,7 +1104,7 @@ namespace Writer {
 			return;
 		}
 
-		Dir8 dir = {};
+		Dir8 dir = DIR8_CENTER;
 		if (streq(gravity, CENTER)) dir = DIR8_CENTER;
 		if (streq(gravity, TOP)) dir = DIR8_UP;
 		if (streq(gravity, BOTTOM)) dir = DIR8_DOWN;
