@@ -375,7 +375,7 @@ namespace Writer {
 			modNamePos += strlen(modNamePrefix);
 			strcpy(autoRunMod, modNamePos);
 		}
-		free(curUrl);
+		Free(curUrl);
 #endif
 
 		for (int i = 0; i < strlen(autoRunMod); i++)
@@ -563,7 +563,7 @@ namespace Writer {
 		if (writer->state == STATE_MOD) {
 			clear();
 			if (WriterDesktop::exists) WriterDesktop::destroyDesktop();
-			for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
+			for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
 			writer->passagesNum = 0;
 
 			writer->mainText->destroy();
@@ -576,7 +576,7 @@ namespace Writer {
 
 			for (int i = 0; i < ASSETS_MAX; i++) {
 				if (writer->loadedAssets[i]) {
-					free(writer->loadedAssets[i]->data);
+					Free(writer->loadedAssets[i]->data);
 					writer->loadedAssets[i]->exists = false;
 					writer->loadedAssets[i] = NULL;
 				}
@@ -734,7 +734,7 @@ namespace Writer {
 	void urlModLoaded(char *serialData) {
 		if (serialData) {
 			loadMod(serialData);
-			free(serialData);
+			Free(serialData);
 		} else {
 			msg("Failed to load.", MSG_ERROR);
 		}
@@ -757,7 +757,7 @@ namespace Writer {
 	}
 
 	void loadMod(char *serialData) {
-		for (int i = 0; i < writer->passagesNum; i++) free(writer->passages[i]);
+		for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
 		writer->passagesNum = 0;
 
 		if (writer->state != STATE_MOD) changeState(STATE_MOD);
@@ -856,7 +856,7 @@ namespace Writer {
 		// printf("Gonna exec:\n%s\n", realData);
 		// exit(1);
 
-		free(inputData);
+		Free(inputData);
 
 		execJs(realData);
 	}
@@ -1133,7 +1133,7 @@ namespace Writer {
 
 		img->exists = false;
 		img->sprite->destroy();
-		free(img->name);
+		Free(img->name);
 	}
 
 	void js_print(CScriptVar *v, void *userdata) {
@@ -1381,6 +1381,6 @@ namespace Writer {
 		writer->bg->destroy();
 		exists = false;
 		delete jsInterp;
-		free(writer);
+		Free(writer);
 	}
 }

@@ -1,13 +1,3 @@
-/// Game
-/// Debugging
-// #define LOG_ASSET_ADD
-// #define LOG_ENGINE_UPDATE
-// #define LOG_ASSET_GET
-// #define LOG_ASSET_EVICT
-// #define LOG_SOUND_GEN
-// #define LOG_TEXTURE_GEN
-// #define LOG_TEXTURE_STREAM
-
 #ifndef STATIC_ASSETS
 #include "../bin/assetLib.cpp"
 #endif

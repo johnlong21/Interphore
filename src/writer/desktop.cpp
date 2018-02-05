@@ -165,7 +165,7 @@ namespace WriterDesktop {
 		}
 
 		desktop->bg->destroy();
-		free(desktop);
+		Free(desktop);
 	}
 
 	void js_createDesktop(CScriptVar *v, void *userdata) {
