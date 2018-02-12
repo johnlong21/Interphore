@@ -14,6 +14,7 @@
 #define ASSETS_MAX 128
 #define CATEGORIES_MAX 8
 #define ENTRY_LIST_MAX 16
+#define VERSION_STR_MAX 16
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -129,6 +130,7 @@ namespace Writer {
 		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
 		char category[CATEGORIES_NAME_MAX];
+		char version[VERSION_STR_MAX];
 		Button *button;
 		Button *peakButton;
 		Button *sourceButton;
@@ -270,6 +272,7 @@ namespace Writer {
 				const char *author;
 				const char *url;
 				const char *category;
+				const char *version;
 			};
 
 			ModEntryDef defs[] = {
@@ -277,72 +280,86 @@ namespace Writer {
 					"False Moon",
 					"Kittery",
 					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
-					"Story"
+					"Story",
+					"0.0.1"
 				}, {
 					"Origin Story",
 					"Kittery",
 					"https://www.dropbox.com/s/2hrse6oyzxcfe64/Origin%20Story.txt?dl=1",
-					"Story"
+					"Story",
+					"0.0.1"
 				}, {
 					"Waking up",
 					"Kittery",
 					"https://www.dropbox.com/s/5aa2isiqii5w0q2/Waking%20up.txt?dl=1",
-					"Story"
+					"Story",
+					"0.0.1"
 				}, {
 					"Sexy Time",
 					"Kittery",
 					"https://www.dropbox.com/s/xse6y2hp6eve4jp/Sexy%20time.txt?dl=1",
-					"Story"
+					"Story",
+					"0.0.1"
 				}, {
 					"Basic mod",
 					"Fallowwing",
 					"https://www.dropbox.com/s/ci9yidufa7zl69c/Basic%20Mod.txt?dl=1",
-					"Examples"
+					"Examples",
+					"0.0.1"
 				}, {
 					"Variables",
 					"Fallowwing",
 					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
-					"Examples"
+					"Examples",
+					"0.0.1"
 				}, {
 					"Image example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/d38cai15jsyseif/Images%20Test.txt?dl=1",
-					"Examples"
+					"Examples",
+					"0.0.1"
 				}, {
 					"Audio example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/mkboihcsw38y077/Audio%20Test.txt?dl=1",
-					"Examples"
+					"Examples",
+					"0.0.1"
 				}, {
 					"Gryphon Fight",
 					"Cade",
 					"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
-					"Ports"
+					"Ports",
+					"0.0.1"
 				}, {
 					"Brightforest Googirl",
 					"Silver",
 					"https://www.dropbox.com/s/xfwaqwd38krh04k/Silver%20Mod.txt?dl=1",
-					"Ports"
+					"Ports",
+					"0.0.1"
 				}, {
 					"Morphious86's Test",
 					"Morphious86",
 					"https://pastebin.com/raw/0MBv7bpK",
-					"Tests"
+					"Tests",
+					"0.0.1"
 				}, {
 					"Cade's Test",
 					"Cade",
 					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
-					"Tests"
+					"Tests",
+					"0.0.1"
 				}, {
 					"Desktop Test",
 					"Fallowwing",
 					"https://www.dropbox.com/s/aselaeb3htueck3/Desktop%20Test.phore?dl=1",
-					"Tests"
+					"Tests",
+					"0.0.1"
 				}, {
 					"Desktop Test Internal",
 					"Fallowwing",
 					"https://www.dropbox.com/s/o6rl3oo4n9g4teo/Desktop%20Test%20Fallow.phore?dl=1",
-					"Internal"
+					"Internal",
+					"0.0.1"
 				}
 			};
 
@@ -356,6 +373,7 @@ namespace Writer {
 				strcpy(entry->author, defs[i].author);
 				strcpy(entry->url, defs[i].url);
 				strcpy(entry->category, defs[i].category);
+				strcpy(entry->version, defs[i].version);
 			}
 		}
 
