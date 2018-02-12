@@ -16,6 +16,8 @@
 #define ENTRY_LIST_MAX 16
 #define VERSION_STR_MAX 16
 
+#define TOOLTIP_LAYER 1
+
 namespace Writer {
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
@@ -94,6 +96,8 @@ namespace Writer {
 	void removeImage(Image *img);
 	void alignImage(const char *name, const char *gravity=CENTER);
 	void clear();
+
+	void showTooltipCursor(const char *str);
 
 	void js_print(CScriptVar *v, void *userdata);
 	void js_append(CScriptVar *v, void *userdata);
@@ -196,6 +200,12 @@ namespace Writer {
 		Image images[IMAGES_MAX];
 
 		Asset *loadedAssets[ASSETS_MAX];
+
+		int lowestLayer;
+
+		bool tooltipShowing;
+		MintSprite *tooltipTf;
+		MintSprite *tooltipBg;
 	};
 
 	CTinyJS *jsInterp;
@@ -218,6 +228,13 @@ namespace Writer {
 		getTextureAsset("Espresso-Dolce_22")->level = 3;
 		getTextureAsset("Espresso-Dolce_30")->level = 3;
 		getTextureAsset("Espresso-Dolce_38")->level = 3;
+
+		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
+		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
+		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
+
+		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
+		writer->bg = bgSpr;
 
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
@@ -258,13 +275,6 @@ namespace Writer {
 			jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
-
-		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
-		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
-		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
-
-		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
-		writer->bg = bgSpr;
 
 		{ /// Setup mod repo
 			struct ModEntryDef {
@@ -379,42 +389,57 @@ namespace Writer {
 
 		changeState(STATE_MENU);
 
-		char autoRunMod[MED_STR] = {};
+		{ /// Tooltip
+			{ /// Tooltip tf
+				MintSprite *spr = createMintSprite();
+				spr->setupRect(512, 128, 0xFFFFFF);
+				spr->setText("Test tooltip");
+				spr->alpha = 0;
+				spr->layer = writer->lowestLayer + TOOLTIP_LAYER;
+				writer->bg->addChild(spr);
+
+				writer->tooltipTf = spr;
+			}
+		}
+
+		{ /// Autorun
+			char autoRunMod[MED_STR] = {};
 #ifdef AUTO_RUN
-		strcpy(autoRunMod, SEMI_STRINGIFY(AUTO_RUN));
+			strcpy(autoRunMod, SEMI_STRINGIFY(AUTO_RUN));
 #endif
 
 #ifdef SEMI_FLASH
-		const char *modNamePrefix = "modName=";
+			const char *modNamePrefix = "modName=";
 
-		char *curUrl = flashGetUrl();
-		char *modNamePos = strstr(curUrl, modNamePrefix);
-		if (modNamePos) {
-			modNamePos += strlen(modNamePrefix);
-			strcpy(autoRunMod, modNamePos);
-		}
-		Free(curUrl);
+			char *curUrl = flashGetUrl();
+			char *modNamePos = strstr(curUrl, modNamePrefix);
+			if (modNamePos) {
+				modNamePos += strlen(modNamePrefix);
+				strcpy(autoRunMod, modNamePos);
+			}
+			Free(curUrl);
 #endif
 
-		for (int i = 0; i < strlen(autoRunMod); i++)
-			if (autoRunMod[i] == '-')
-				autoRunMod[i] = ' ';
+			for (int i = 0; i < strlen(autoRunMod); i++)
+				if (autoRunMod[i] == '-')
+					autoRunMod[i] = ' ';
 
 
-		bool found = true;
-		if (autoRunMod[0] != '\0') {
-			found = false;
-			for (int i = 0; i < writer->urlModsNum; i++) {
-				ModEntry *entry = &writer->urlMods[i];
-				if (streq(autoRunMod, entry->name)) {
-					found = true;
-					loadModEntry(entry);
-					break;
+			bool found = true;
+			if (autoRunMod[0] != '\0') {
+				found = false;
+				for (int i = 0; i < writer->urlModsNum; i++) {
+					ModEntry *entry = &writer->urlMods[i];
+					if (streq(autoRunMod, entry->name)) {
+						found = true;
+						loadModEntry(entry);
+						break;
+					}
 				}
 			}
+
+			if (!found) msg("Failed to autorun mod named %s", MSG_ERROR, autoRunMod);
 		}
-		
-		if (!found) msg("Failed to autorun mod named %s", MSG_ERROR, autoRunMod);
 	}
 
 	void changeState(GameState newState) {
@@ -630,6 +655,12 @@ namespace Writer {
 				ModEntry *entry = writer->currentEntries[i];
 				if (!entry->enabled) continue;
 
+				if (entry->button->sprite->hovering) {
+					char buf[512];
+					sprintf(buf, "Version: %s", entry->version);
+					showTooltipCursor(buf);
+				}
+
 				if (entry->button->sprite->justPressed) {
 					loadModEntry(entry);
 				}
@@ -673,6 +704,14 @@ namespace Writer {
 				}
 			}
 		}
+
+		if (writer->tooltipShowing) {
+			writer->tooltipTf->alpha += 0.05;
+		} else {
+			writer->tooltipTf->alpha -= 0.05;
+		}
+
+		writer->tooltipShowing = false;
 	}
 
 	void loadModEntry(ModEntry *entry) {
@@ -1152,6 +1191,17 @@ namespace Writer {
 		img->exists = false;
 		img->sprite->destroy();
 		Free(img->name);
+	}
+
+	void showTooltipCursor(const char *str) {
+		if (!streq(writer->tooltipTf->rawText, str)) {
+			writer->tooltipTf->setText(str);
+		}
+
+		writer->tooltipTf->x = engine->mouseX;
+		writer->tooltipTf->y = engine->mouseY;
+
+		writer->tooltipShowing = true;
 	}
 
 	void js_print(CScriptVar *v, void *userdata) {
