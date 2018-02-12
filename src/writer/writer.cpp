@@ -16,7 +16,8 @@
 #define ENTRY_LIST_MAX 16
 #define VERSION_STR_MAX 16
 
-#define TOOLTIP_LAYER 1
+#define TOOLTIP_BG_LAYER 1
+#define TOOLTIP_TEXT_LAYER 2
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -315,37 +316,37 @@ namespace Writer {
 					"Fallowwing",
 					"https://www.dropbox.com/s/ci9yidufa7zl69c/Basic%20Mod.txt?dl=1",
 					"Examples",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Variables",
 					"Fallowwing",
 					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
 					"Examples",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Image example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/d38cai15jsyseif/Images%20Test.txt?dl=1",
 					"Examples",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Audio example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/mkboihcsw38y077/Audio%20Test.txt?dl=1",
 					"Examples",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Gryphon Fight",
 					"Cade",
 					"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
 					"Ports",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Brightforest Googirl",
 					"Silver",
 					"https://www.dropbox.com/s/xfwaqwd38krh04k/Silver%20Mod.txt?dl=1",
 					"Ports",
-					"0.0.1"
+					"1.0.0"
 				}, {
 					"Morphious86's Test",
 					"Morphious86",
@@ -363,7 +364,7 @@ namespace Writer {
 					"Fallowwing",
 					"https://www.dropbox.com/s/aselaeb3htueck3/Desktop%20Test.phore?dl=1",
 					"Tests",
-					"0.0.1"
+					"0.1.0"
 				}, {
 					"Desktop Test Internal",
 					"Fallowwing",
@@ -395,7 +396,7 @@ namespace Writer {
 				spr->setupRect(512, 128, 0xFFFFFF);
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
-				spr->layer = writer->lowestLayer + TOOLTIP_LAYER;
+				spr->layer = writer->lowestLayer + TOOLTIP_TEXT_LAYER;
 				writer->bg->addChild(spr);
 
 				writer->tooltipTf = spr;
@@ -1196,10 +1197,25 @@ namespace Writer {
 	void showTooltipCursor(const char *str) {
 		if (!streq(writer->tooltipTf->rawText, str)) {
 			writer->tooltipTf->setText(str);
+
+			if (writer->tooltipBg) {
+				writer->tooltipBg->destroy();
+				writer->tooltipBg = NULL;
+			}
+
+			{ /// Tooltip bg
+				MintSprite *spr = createMintSprite();
+				spr->setupRect(writer->tooltipTf->getFrameWidth(), writer->tooltipTf->getFrameHeight(), 0x111111);
+				spr->layer = writer->lowestLayer + TOOLTIP_BG_LAYER;
+				writer->tooltipTf->addChild(spr);
+
+				writer->tooltipBg = spr;
+			}
+
 		}
 
-		writer->tooltipTf->x = engine->mouseX;
-		writer->tooltipTf->y = engine->mouseY;
+		writer->tooltipTf->x = engine->mouseX + 10;
+		writer->tooltipTf->y = engine->mouseY + 10;
 
 		writer->tooltipShowing = true;
 	}
