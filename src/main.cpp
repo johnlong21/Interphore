@@ -30,8 +30,17 @@ void entryPoint() {
 void initMain() {
 	engine->exitCallback = exitMain;
 
+#if 1
+	MintSprite *bg = createMintSprite();
+	bg->setupRect(1, 1, 0x000000);
+	bg->scale(engine->width, engine->height);
+
+	MintSprite *spr = createMintSprite();
+	spr->setupContainer(engine->width, engine->height);
+#else
 	MintSprite *spr = createMintSprite();
 	spr->setupRect(engine->width, engine->height, 0x000000);
+#endif
 	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
 	Writer::initWriter(spr);
 }
