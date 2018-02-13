@@ -101,13 +101,17 @@ namespace Writer {
 	void showTooltipCursor(const char *str);
 
 	void js_print(CScriptVar *v, void *userdata);
+
 	void js_append(CScriptVar *v, void *userdata);
 	void js_addChoice(CScriptVar *v, void *userdata);
+
 	void js_submitPassage(CScriptVar *v, void *userdata);
 	void js_submitImage(CScriptVar *v, void *userdata);
 	void js_submitAudio(CScriptVar *v, void *userdata);
+
 	void js_gotoPassage(CScriptVar *v, void *userdata);
 	void js_jumpToPassage(CScriptVar *v, void *userdata);
+
 	void js_addImage(CScriptVar *v, void *userdata);
 	void js_permanentImage(CScriptVar *v, void *userdata);
 	void js_removeImage(CScriptVar *v, void *userdata);
@@ -118,9 +122,16 @@ namespace Writer {
 	void js_scaleImage(CScriptVar *v, void *userdata);
 	void js_rotateImage(CScriptVar *v, void *userdata);
 	void js_tintImage(CScriptVar *v, void *userdata);
+
 	void js_playAudio(CScriptVar *v, void *userdata);
+
 	void js_exitMod(CScriptVar *v, void *userdata);
 	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
+
+	void js_saveNumber(CScriptVar *v, void *userdata);
+	void js_saveText(CScriptVar *v, void *userdata);
+	void js_loadNumber(CScriptVar *v, void *userdata);
+	void js_loadText(CScriptVar *v, void *userdata);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -165,6 +176,7 @@ namespace Writer {
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
+		StringMap *saveData;
 
 		Button buttons[BUTTON_MAX];
 
@@ -236,6 +248,7 @@ namespace Writer {
 
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
+		writer->saveData = stringMapCreate();
 
 		{ /// Setup js interp
 			jsInterp = new CTinyJS();
@@ -274,6 +287,10 @@ namespace Writer {
 			jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
 			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
 			jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
+			jsInterp->addNative("function saveNumber(num)", &js_saveNumber, 0);
+			jsInterp->addNative("function saveText(text)", &js_saveText, 0);
+			jsInterp->addNative("function loadNumber(num)", &js_loadNumber, 0);
+			jsInterp->addNative("function loadText(text)", &js_loadText, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -1458,6 +1475,22 @@ namespace Writer {
 	void js_centerImage(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("name")->getString().c_str();
 		alignImage(arg1, CENTER);
+	}
+
+	void js_saveNumber(CScriptVar *v, void *userdata) {
+		const float num = v->getParameter("num")->getDouble();
+	}
+
+	void js_saveText(CScriptVar *v, void *userdata) {
+		const char *text = v->getParameter("text")->getString().c_str();
+	}
+
+	void js_loadNumber(CScriptVar *v, void *userdata) {
+		const float num = v->getParameter("num")->getDouble();
+	}
+
+	void js_loadText(CScriptVar *v, void *userdata) {
+		const char *text = v->getParameter("text")->getString().c_str();
 	}
 
 	void deinitWriter() {
