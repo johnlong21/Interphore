@@ -287,10 +287,10 @@ namespace Writer {
 			jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
 			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
 			jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
-			jsInterp->addNative("function saveNumber(num)", &js_saveNumber, 0);
-			jsInterp->addNative("function saveText(text)", &js_saveText, 0);
-			jsInterp->addNative("function loadNumber(num)", &js_loadNumber, 0);
-			jsInterp->addNative("function loadText(text)", &js_loadText, 0);
+			jsInterp->addNative("function saveNumber(key, num)", &js_saveNumber, 0);
+			jsInterp->addNative("function saveText(key, text)", &js_saveText, 0);
+			jsInterp->addNative("function loadNumber(key)", &js_loadNumber, 0);
+			jsInterp->addNative("function loadText(key)", &js_loadText, 0);
 			jsInterp->execute("print(\"JS engine init\");");
 		}
 
@@ -1478,19 +1478,35 @@ namespace Writer {
 	}
 
 	void js_saveNumber(CScriptVar *v, void *userdata) {
+		const char *key = v->getParameter("key")->getString().c_str();
 		const float num = v->getParameter("num")->getDouble();
+		writer->saveData->setFloat(key, num);
 	}
 
 	void js_saveText(CScriptVar *v, void *userdata) {
+		const char *key = v->getParameter("key")->getString().c_str();
 		const char *text = v->getParameter("text")->getString().c_str();
+		writer->saveData->setString(key, stringClone(text));
 	}
 
 	void js_loadNumber(CScriptVar *v, void *userdata) {
-		const float num = v->getParameter("num")->getDouble();
+		const char *key = v->getParameter("key")->getString().c_str();
+
+		float ret;
+		if (writer->saveData->isNull(key)) ret = 0;
+		else ret = writer->saveData->getFloat(key);
+
+		v->getReturnVar()->setDouble(ret);
 	}
 
 	void js_loadText(CScriptVar *v, void *userdata) {
-		const char *text = v->getParameter("text")->getString().c_str();
+		const char *key = v->getParameter("key")->getString().c_str();
+
+		const char *ret;
+		if (writer->saveData->isNull(key)) ret = 0;
+		else ret = writer->saveData->getString(key);
+
+		v->getReturnVar()->setString(ret);
 	}
 
 	void deinitWriter() {
