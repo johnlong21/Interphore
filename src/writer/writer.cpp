@@ -644,8 +644,9 @@ namespace Writer {
 		if (oldState == STATE_MOD) {
 			clear();
 			if (WriterDesktop::exists) WriterDesktop::destroyDesktop();
-			for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
-			writer->passagesNum = 0;
+			//@incomplete Should namespace the passage names off somehow? To prevent mods from overwriting each other's passages?
+			// for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
+			// writer->passagesNum = 0;
 
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
@@ -669,6 +670,7 @@ namespace Writer {
 		}
 
 		if (oldState == STATE_GRAPH) {
+			hideGraph();
 		}
 
 		writer->state = newState;
@@ -732,6 +734,10 @@ namespace Writer {
 				changeState(STATE_MENU);
 				loadModEntry(writer->currentMod);
 			}
+		}
+
+		if (writer->state == STATE_GRAPH) {
+			updateGraph();
 		}
 
 		{ /// Msgs
@@ -1324,7 +1330,18 @@ namespace Writer {
 			msg("Too many passages", MSG_ERROR);
 			return;
 		}
-		writer->passages[writer->passagesNum++] = passage;
+
+		bool addNew = true;
+
+		for (int i = 0; i < writer->passagesNum; i++) {
+			if (streq(writer->passages[i]->name, passage->name)) {
+				Free(writer->passages[i]);
+				writer->passages[i] = passage;
+				addNew = false;
+			}
+		}
+
+		if (addNew) writer->passages[writer->passagesNum++] = passage;
 	}
 
 	void js_submitImage(CScriptVar *v, void *userdata) {

@@ -8,6 +8,8 @@ namespace Writer {
 	void attachNode(const char *name1, const char *name2, Dir8 dir);
 
 	void showGraph();
+	void updateGraph();
+	void hideGraph();
 
 	void js_submitNode(CScriptVar *v, void *userdata);
 	void js_attachNode(CScriptVar *v, void *userdata);
@@ -65,6 +67,27 @@ namespace Writer {
 			Node *other = node->connectedTo;
 			if (other) {
 				node->sprite->alignOutside(other->sprite, node->connectedDir, 10, 10);
+			}
+		}
+	}
+
+	void hideGraph() {
+		for (int i = 0; i < graph->nodesNum; i++) {
+			Node *node = &graph->nodes[i];
+			if (node->sprite) {
+				node->sprite->destroy();
+				node->sprite = NULL;
+			}
+		}
+	}
+
+	void updateGraph() {
+		for (int i = 0; i < graph->nodesNum; i++) {
+			Node *node = &graph->nodes[i];
+
+			if (node->sprite && node->sprite->justPressed) {
+				changeState(STATE_MOD);
+				gotoPassage(node->passage);
 			}
 		}
 	}
