@@ -5,12 +5,12 @@ namespace Writer {
 
 	void initGraph();
 	void submitNode(const char *name, const char *passage);
-	void connectNodes(const char *name1, const char *name2, Dir8 dir);
+	void attachNode(const char *name1, const char *name2, Dir8 dir);
 
 	void showGraph();
 
 	void js_submitNode(CScriptVar *v, void *userdata);
-	void js_connectNodes(CScriptVar *v, void *userdata);
+	void js_attachNode(CScriptVar *v, void *userdata);
 
 	struct Node {
 		char name[NODE_NAME_MAX];
@@ -31,7 +31,7 @@ namespace Writer {
 	void initGraph() {
 		graph = (GraphStruct *)zalloc(sizeof(GraphStruct));
 		jsInterp->addNative("function submitNode(name, passage)", &js_submitNode, 0);
-		jsInterp->addNative("function connectNodes(name1, name2, dir)", &js_connectNodes, 0);
+		jsInterp->addNative("function attachNode(name1, name2, dir)", &js_attachNode, 0);
 	}
 
 	void submitNode(const char *name, const char *passage) {
@@ -64,17 +64,12 @@ namespace Writer {
 			Node *node = &graph->nodes[i];
 			Node *other = node->connectedTo;
 			if (other) {
-				Dir8 realDir = node->connectedDir;
-				if (node->connectedDir == DIR8_LEFT) realDir = DIR8_RIGHT;
-				if (node->connectedDir == DIR8_RIGHT) realDir = DIR8_LEFT;
-
-				printf("Connecting %s %s %d(%d)\n", node->name, other->name, node->connectedDir, realDir);
-				other->sprite->alignOutside(node->sprite, realDir, 10, 10);
+				node->sprite->alignOutside(other->sprite, node->connectedDir, 10, 10);
 			}
 		}
 	}
 
-	void connectNodes(const char *name1, const char *name2, Dir8 dir) {
+	void attachNode(const char *name1, const char *name2, Dir8 dir) {
 		Node *node1 = NULL;
 		Node *node2 = NULL;
 
@@ -99,7 +94,7 @@ namespace Writer {
 		submitNode(name, passage);
 	}
 
-	void js_connectNodes(CScriptVar *v, void *userdata) {
+	void js_attachNode(CScriptVar *v, void *userdata) {
 		const char *name1 = v->getParameter("name1")->getString().c_str();
 		const char *name2 = v->getParameter("name2")->getString().c_str();
 		const char *dir = v->getParameter("dir")->getString().c_str();
@@ -109,6 +104,6 @@ namespace Writer {
 		if (streq(dir, RIGHT)) newDir = DIR8_RIGHT;
 		if (streq(dir, TOP)) newDir = DIR8_UP;
 		if (streq(dir, BOTTOM)) newDir = DIR8_DOWN;
-		connectNodes(name1, name2, newDir);
+		attachNode(name1, name2, newDir);
 	}
 }
