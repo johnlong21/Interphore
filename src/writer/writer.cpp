@@ -194,6 +194,7 @@ namespace Writer {
 		MintSprite *modSourceText;
 
 		Button *loadButton;
+		Button *nodesButton;
 
 		MintSprite *mainText;
 		Button *choices[CHOICE_BUTTON_MAX];
@@ -560,9 +561,17 @@ namespace Writer {
 			{ /// Load button
 				Button *btn = createButton("Load your own", 256, 32);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->alignInside(DIR8_DOWN, 0, 10);
+				btn->sprite->alignInside(DIR8_DOWN_RIGHT, 0, 10);
 
 				writer->loadButton = btn;
+			}
+
+			{ /// Nodes button
+				Button *btn = createButton("See nodes", 256, 32);
+				writer->bg->addChild(btn->sprite);
+				btn->sprite->alignOutside(writer->loadButton->sprite, DIR8_LEFT, 10, 10);
+
+				writer->nodesButton = btn;
 			}
 
 			{ /// Mod source text
@@ -598,6 +607,7 @@ namespace Writer {
 			writer->modSourceText->destroy();
 			writer->categoryBg->destroy();
 			destroyButton(writer->loadButton);
+			destroyButton(writer->nodesButton);
 		}
 
 		if (newState == STATE_MOD) {
@@ -655,10 +665,10 @@ namespace Writer {
 		}
 
 		if (newState == STATE_GRAPH) {
+			showGraph();
 		}
 
 		if (oldState == STATE_GRAPH) {
-
 		}
 
 		writer->state = newState;
@@ -677,6 +687,10 @@ namespace Writer {
 #else
 				platformLoadFromDisk(loadMod);
 #endif
+			}
+
+			if (writer->nodesButton->sprite->justPressed) {
+				changeState(STATE_GRAPH);
 			}
 
 			for (int i = 0; i < writer->categoryButtonsNum; i++) {
