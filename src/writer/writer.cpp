@@ -66,7 +66,7 @@ namespace Writer {
 		"gotoPassage(\"Start\");\n"
 		;
 
-	enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD };
+	enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD, STATE_GRAPH };
 	enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 	struct Button;
 	struct Msg;
@@ -232,6 +232,7 @@ namespace Writer {
 //
 
 #include "desktop.cpp"
+#include "graph.cpp"
 
 namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
@@ -388,6 +389,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/o6rl3oo4n9g4teo/Desktop%20Test%20Fallow.phore?dl=1",
 					"Internal",
 					"0.0.1"
+				}, {
+					"Test Nodes",
+					"Fallowwing",
+					"https://www.dropbox.com/s/c15v66k0opzr5dt/Test%20Nodes.phore?dl=1",
+					"Internal",
+					"0.0.1"
 				}
 			};
 
@@ -405,6 +412,7 @@ namespace Writer {
 			}
 		}
 
+		initGraph();
 		changeState(STATE_MENU);
 
 		{ /// Tooltip
@@ -461,6 +469,8 @@ namespace Writer {
 	}
 
 	void changeState(GameState newState) {
+		GameState oldState = writer->state;
+
 		if (newState == STATE_MENU) {
 			writer->currentEntriesNum = 0;
 			writer->categoryButtonsNum = 0;
@@ -575,6 +585,21 @@ namespace Writer {
 			}
 		}
 
+		if (oldState == STATE_MENU) {
+			disableAllEntries();
+
+			for (int i = 0; i < writer->categoryButtonsNum; i++) {
+				destroyButton(writer->categoryButtons[i]);
+			}
+
+			writer->title->destroy();
+			writer->subtitle->destroy();
+			writer->browserBg->destroy();
+			writer->modSourceText->destroy();
+			writer->categoryBg->destroy();
+			destroyButton(writer->loadButton);
+		}
+
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
@@ -606,22 +631,7 @@ namespace Writer {
 			}
 		}
 
-		if (writer->state == STATE_MENU) {
-			disableAllEntries();
-
-			for (int i = 0; i < writer->categoryButtonsNum; i++) {
-				destroyButton(writer->categoryButtons[i]);
-			}
-
-			writer->title->destroy();
-			writer->subtitle->destroy();
-			writer->browserBg->destroy();
-			writer->modSourceText->destroy();
-			writer->categoryBg->destroy();
-			destroyButton(writer->loadButton);
-		}
-
-		if (writer->state == STATE_MOD) {
+		if (oldState == STATE_MOD) {
 			clear();
 			if (WriterDesktop::exists) WriterDesktop::destroyDesktop();
 			for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
@@ -642,6 +652,13 @@ namespace Writer {
 					writer->loadedAssets[i] = NULL;
 				}
 			}
+		}
+
+		if (newState == STATE_GRAPH) {
+		}
+
+		if (oldState == STATE_GRAPH) {
+
 		}
 
 		writer->state = newState;
