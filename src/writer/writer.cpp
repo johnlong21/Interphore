@@ -142,6 +142,7 @@ namespace Writer {
 
 	struct ModEntry {
 		bool enabled;
+		bool doneLoading;
 		char name[MOD_NAME_MAX];
 		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
@@ -220,6 +221,8 @@ namespace Writer {
 		bool tooltipShowing;
 		MintSprite *tooltipTf;
 		MintSprite *tooltipBg;
+
+		char *execWhenDoneLoading;
 	};
 
 	CTinyJS *jsInterp;
@@ -722,6 +725,11 @@ namespace Writer {
 		}
 
 		if (writer->state == STATE_MOD) {
+			if (writer->execWhenDoneLoading && writer->currentMod->doneLoading) {
+				execJs(writer->execWhenDoneLoading);
+				Free(writer->execWhenDoneLoading);
+				writer->execWhenDoneLoading = NULL;
+			}
 			for (int i = 0; i < writer->choicesNum; i++) {
 				if (writer->choices[i]->sprite->justPressed) {
 					gotoPassage(writer->choices[i]->destPassageName);
@@ -771,6 +779,7 @@ namespace Writer {
 
 	void loadModEntry(ModEntry *entry) {
 		writer->currentMod = entry;
+		writer->currentMod->doneLoading = false;
 		platformLoadFromUrl(entry->url, urlModLoaded);
 	}
 
@@ -876,8 +885,8 @@ namespace Writer {
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
-		char *realData = tempBytes;
-		memset(tempBytes, 0, Megabytes(2));
+		char *realData = (char *)zalloc(Megabytes(2));
+		memset(realData, 0, Megabytes(2));
 		realData[0] = '\0';
 		char *realDataEnd = fastStrcat(realData, "var __passage = \"\";\n\n");
 
@@ -970,7 +979,8 @@ namespace Writer {
 
 		Free(inputData);
 
-		execJs(realData);
+		writer->execWhenDoneLoading = realData;
+		writer->currentMod->doneLoading = true; //@incomplete Do streaming
 	}
 
 	void destroyButton(Button *btn) {
