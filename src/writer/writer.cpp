@@ -616,7 +616,7 @@ namespace Writer {
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->width, writer->bg->height*0.75);
+				spr->setupEmpty(writer->bg->width - 30, writer->bg->height*0.75); //@cleanup @note-fallow: - 30 magic number for right side text padding, needs to be based on writer->refreshButton->width or exitButton
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
@@ -696,12 +696,14 @@ namespace Writer {
 			}
 
 			if (writer->nodesButton->sprite->justPressed) {
+				playSound("audio/ui/oldChoiceClick");
 				changeState(STATE_GRAPH);
 			}
 
 			for (int i = 0; i < writer->categoryButtonsNum; i++) {
 				Button *btn = writer->categoryButtons[i];
 				if (btn->sprite->justPressed) {
+					playSound("audio/ui/choiceClick");
 					enableCategory(btn->tf->rawText);
 				}
 			}
@@ -717,11 +719,19 @@ namespace Writer {
 				}
 
 				if (entry->button->sprite->justPressed) {
+					playSound("audio/ui/choiceClick");
 					loadModEntry(entry);
 				}
 
-				if (entry->peakButton->sprite->justPressed) platformLoadFromUrl(entry->url, urlModSourceLoaded);
-				if (entry->sourceButton->sprite->justPressed) gotoUrl(entry->url);
+				if (entry->peakButton->sprite->justPressed) {
+					playSound("audio/ui/choiceClick");
+					platformLoadFromUrl(entry->url, urlModSourceLoaded);
+				}
+
+				if (entry->sourceButton->sprite->justPressed) {
+					playSound("audio/ui/choiceClick");
+					gotoUrl(entry->url);
+				}
 			}
 		}
 
@@ -733,13 +743,18 @@ namespace Writer {
 			}
 			for (int i = 0; i < writer->choicesNum; i++) {
 				if (writer->choices[i]->sprite->justPressed) {
+					playSound("audio/ui/choiceClick");
 					gotoPassage(writer->choices[i]->destPassageName);
 				}
 			}
 
-			if (writer->exitButton->justPressed) changeState(STATE_MENU);
+			if (writer->exitButton->justPressed) {
+				playSound("audio/ui/choiceClick");
+				changeState(STATE_MENU);
+			}
 
 			if (writer->refreshButton->justPressed) {
+				playSound("audio/ui/restart");
 				changeState(STATE_MENU);
 				loadModEntry(writer->currentMod);
 			}
