@@ -162,6 +162,7 @@ namespace Writer {
 
 	struct Button {
 		bool exists;
+		bool animating;
 		MintSprite *sprite;
 		MintSprite *tf;
 		char destPassageName[PASSAGE_NAME_MAX];
@@ -741,7 +742,15 @@ namespace Writer {
 				Free(writer->execWhenDoneLoading);
 				writer->execWhenDoneLoading = NULL;
 			}
+			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
+			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
+
 			for (int i = 0; i < writer->choicesNum; i++) {
+				if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
+				if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
+				if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
+				if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
+
 				if (writer->choices[i]->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
 					gotoPassage(writer->choices[i]->destPassageName);
@@ -1022,7 +1031,6 @@ namespace Writer {
 			MintSprite *spr = createMintSprite();
 			// spr->setupRect(width, height, 0x444444);
 			spr->setup9Slice("ui/dialog/basicDialog", width, height, 15, 15, 30, 30);
-
 			btn->sprite = spr;
 		}
 
@@ -1150,6 +1158,8 @@ namespace Writer {
 
 		Button *btn = createButton(text);
 		if (!btn) return;
+		btn->sprite->scaleX = 0;
+		btn->tf->scaleX = 0;
 		writer->bg->addChild(btn->sprite);
 
 		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
