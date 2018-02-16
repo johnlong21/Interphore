@@ -496,7 +496,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 
-				spr->setText("A story tool");
+				spr->setText("A Story Tool");
 				spr->alignOutside(writer->title, DIR8_DOWN, 0, 5);
 
 				writer->subtitle = spr;
@@ -621,6 +621,7 @@ namespace Writer {
 				strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				spr->setText("Mod load failed");
 				spr->y += 30;
+				spr->x += 30;
 
 				writer->mainText = spr;
 			}
@@ -629,7 +630,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/exit.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
-				spr->alignInside(DIR8_UP_RIGHT, 0, 50);
+				spr->alignInside(DIR8_UP_RIGHT, 10, 50);
 
 				writer->exitButton = spr;
 			}
@@ -638,7 +639,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/restart.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
-				spr->alignOutside(writer->exitButton, DIR8_DOWN, 0, 10);
+				spr->alignOutside(writer->exitButton, DIR8_DOWN, 10, 10);
 
 				writer->refreshButton = spr;
 			}
