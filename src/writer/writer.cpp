@@ -241,6 +241,10 @@ namespace Writer {
 
 namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
+
+		// duk_context *ctx = duk_create_heap_default();
+		// if (!ctx) { exit(1); }
+
 		printf("Init\n");
 		exists = true;
 
@@ -746,10 +750,10 @@ namespace Writer {
 			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
 			for (int i = 0; i < writer->choicesNum; i++) {
-				if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
-				if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
-				if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
-				if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
+				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
+				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
+				// if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
+				// if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
 
 				if (writer->choices[i]->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
@@ -1158,8 +1162,8 @@ namespace Writer {
 
 		Button *btn = createButton(text);
 		if (!btn) return;
-		btn->sprite->scaleX = 0;
-		btn->tf->scaleX = 0;
+		// btn->sprite->scaleX = 0;
+		// btn->tf->scaleX = 0;
 		writer->bg->addChild(btn->sprite);
 
 		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
