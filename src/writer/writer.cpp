@@ -240,8 +240,8 @@ namespace Writer {
 #include "desktop.cpp"
 #include "graph.cpp"
 
-void foo(int n) {
-	printf("N is: %d\n", n);
+void foo(char *str) {
+	printf("N is: %s\n", str);
 }
 
 void *my_dlsym(void *handle, const char *name) {
@@ -254,7 +254,7 @@ namespace Writer {
 
   mjs *mjs = mjs_create();
 		mjs_set_ffi_resolver(mjs, my_dlsym);
-  mjs_exec(mjs, "let f = ffi('void foo(int)'); f(1234)", NULL);
+  mjs_exec(mjs, "let f = ffi('void foo(char *)'); f(\"hello\")", NULL);
 
 		printf("Init\n");
 		exists = true;
