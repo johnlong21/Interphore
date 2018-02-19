@@ -1,4 +1,5 @@
 #include "writer.h"
+#include "mjs.h"
 
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 128
@@ -239,11 +240,21 @@ namespace Writer {
 #include "desktop.cpp"
 #include "graph.cpp"
 
+void foo(int n) {
+	printf("N is: %d\n", n);
+}
+
+void *my_dlsym(void *handle, const char *name) {
+  if (streq(name, "foo")) return (void *)foo;
+  return NULL;
+}
+
 namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
 
-		// duk_context *ctx = duk_create_heap_default();
-		// if (!ctx) { exit(1); }
+  mjs *mjs = mjs_create();
+		mjs_set_ffi_resolver(mjs, my_dlsym);
+  mjs_exec(mjs, "let f = ffi('void foo(int)'); f(1234)", NULL);
 
 		printf("Init\n");
 		exists = true;

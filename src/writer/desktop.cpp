@@ -613,7 +613,7 @@ namespace WriterDesktop {
 
 		CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
 		CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
-		CScriptVarLink *choicesVar = v->getParameter("event")->findChild("choices");
+		// CScriptVarLink *choicesVar = v->getParameter("event")->findChild("choices");
 
 		DesktopEvent evt = {};
 		if (eventTypeVar) strcpy(evt.type, eventTypeVar->var->getString().c_str());
