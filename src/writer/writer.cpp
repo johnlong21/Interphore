@@ -294,45 +294,7 @@ namespace Writer {
 				mjs = mjs_create();
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-				execJs(R"END(
-					var print = ffi("void print(char *);");
-					var submitPassage = ffi("void submitPassage(char *);");
-					var submitImage = ffi("void submitImage(char *);");
-					var exitMod = ffi("void exitMod();");
-
-					var gotoPassage_internal = ffi("void gotoPassage(char *, bool);");
-					function gotoPassage(passageName, clearScreen) {
-						if (!clearScreen) clearScreen = false;
-						gotoPassage_internal(passageName, clearScreen);
-					}
-
-					var append_internal = ffi("void append(char *);");
-					function append(data) { 
-						if (data) append_internal(JSON.stringify(data));
-					}
-
-					var addImage = ffi("void addImage(char *, char *);");
-
-					var alignImage_internal = ffi("void alignImage(char *, char *);");
-					function alignImage(imgName, dir) {
-						if (!dir) dir = CENTER;
-						alignImage_internal(imgName, dir);
-					}
-
-					var moveImage = ffi("void moveImage(char *, float, float);");
-					var scaleImage = ffi("void scaleImage(char *, float, float);");
-					var rotateImage = ffi("void rotateImage(char *, float);");
-					var tintImage = ffi("void tintImage(char *, int);");
-					// if (streq(name, "moveImagePx")) return (void *)moveImagePx;
-
-					var CENTER = "CENTER";
-					var TOP = "TOP";
-					var BOTTOM = "BOTTOM";
-					var LEFT = "LEFT";
-					var RIGHT = "RIGHT";
-
-					var data = {};
-				)END");
+				execJs((char *)getAsset("info/baseJs.phore")->data);
 			}
 
 			{ /// tinyJs
@@ -378,10 +340,6 @@ namespace Writer {
 				jsInterp->addNative("function loadText(key)", &js_loadText, 0);
 				jsInterp->execute("print(\"JS engine init\");");
 			}
-			execJs(R"END(
-				print("js interp inited");
-				// var = let;
-				)END");
 		}
 
 		{ /// Setup mod repo
