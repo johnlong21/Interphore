@@ -101,6 +101,9 @@ namespace Writer {
 
 	void showTooltipCursor(const char *str);
 
+	void submitPassage(const char *data);
+	void submitImage(const char *imgData);
+
 	void js_print(CScriptVar *v, void *userdata);
 
 	void js_append(CScriptVar *v, void *userdata);
@@ -133,6 +136,13 @@ namespace Writer {
 	void js_saveText(CScriptVar *v, void *userdata);
 	void js_loadNumber(CScriptVar *v, void *userdata);
 	void js_loadText(CScriptVar *v, void *userdata);
+
+	void print(char *str);
+	void scaleImage(const char *name, float scaleX, float scaleY);
+	void moveImage(const char *name, float xoff, float yoff);
+	void rotateImage(const char *name, float rotation);
+	void tintImage(const char *name, int tint);
+	void exitMod();
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -228,6 +238,7 @@ namespace Writer {
 	};
 
 	CTinyJS *jsInterp;
+	mjs *mjs;
 	WriterStruct *writer;
 }
 
@@ -240,22 +251,29 @@ namespace Writer {
 #include "desktop.cpp"
 #include "graph.cpp"
 
-void foo(char *str) {
-	printf("N is: %s\n", str);
-}
-
-void *my_dlsym(void *handle, const char *name) {
-  if (streq(name, "foo")) return (void *)foo;
-  return NULL;
-}
-
 namespace Writer {
+	void foo(char *str) {
+		printf("N is: %s\n", str);
+	}
+
+	void *mjsResolver(void *handle, const char *name) {
+		if (streq(name, "print")) return (void *)print;
+		if (streq(name, "submitPassage")) return (void *)submitPassage;
+		if (streq(name, "submitImage")) return (void *)submitImage;
+		if (streq(name, "gotoPassage")) return (void *)gotoPassage;
+		if (streq(name, "append")) return (void *)append;
+		if (streq(name, "exitMod")) return (void *)exitMod;
+		if (streq(name, "addImage")) return (void *)addImage;
+		if (streq(name, "alignImage")) return (void *)alignImage;
+		if (streq(name, "moveImage")) return (void *)moveImage;
+		// if (streq(name, "moveImagePx")) return (void *)moveImagePx;
+		if (streq(name, "scaleImage")) return (void *)scaleImage;
+		if (streq(name, "rotateImage")) return (void *)rotateImage;
+		if (streq(name, "tintImage")) return (void *)tintImage;
+		return NULL;
+	}
+
 	void initWriter(MintSprite *bgSpr) {
-
-  mjs *mjs = mjs_create();
-		mjs_set_ffi_resolver(mjs, my_dlsym);
-  mjs_exec(mjs, "let f = ffi('void foo(char *)'); f(\"hello\")", NULL);
-
 		printf("Init\n");
 		exists = true;
 
@@ -272,47 +290,98 @@ namespace Writer {
 		writer->saveData = stringMapCreate();
 
 		{ /// Setup js interp
-			jsInterp = new CTinyJS();
-			registerFunctions(jsInterp);
-			registerMathFunctions(jsInterp);
+			{ /// mjs
+				mjs = mjs_create();
+				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-			jsInterp->execute(
-				"CENTER = \"CENTER\";\n"
-				"TOP = \"TOP\";\n"
-				"BOTTOM = \"BOTTOM\";\n"
-				"LEFT = \"LEFT\";\n"
-				"RIGHT = \"RIGHT\";\n"
-				"function rndInt(min, max) {\n"
-				"	return Math.randInt(min, max);\n"
-				"}\n"
-			);
+				execJs(R"END(
+					var print = ffi("void print(char *);");
+					var submitPassage = ffi("void submitPassage(char *);");
+					var submitImage = ffi("void submitImage(char *);");
+					var exitMod = ffi("void exitMod();");
 
-			jsInterp->addNative("function print(text)", &js_print, 0);
-			jsInterp->addNative("function append(text)", &js_append, 0);
-			jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
-			jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
-			jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
-			jsInterp->addNative("function submitAudio(text)", &js_submitAudio, 0);
-			jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
-			jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
-			jsInterp->addNative("function addImage(path, name)", &js_addImage, 0);
-			jsInterp->addNative("function permanentImage(name)", &js_permanentImage, 0);
-			jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
-			jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
-			jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
-			jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
-			jsInterp->addNative("function moveImagePx(name, x, y)", &js_moveImagePx, 0);
-			jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
-			jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
-			jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
-			jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
-			jsInterp->addNative("function exitMod()", &js_exitMod, 0);
-			jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
-			jsInterp->addNative("function saveNumber(key, num)", &js_saveNumber, 0);
-			jsInterp->addNative("function saveText(key, text)", &js_saveText, 0);
-			jsInterp->addNative("function loadNumber(key)", &js_loadNumber, 0);
-			jsInterp->addNative("function loadText(key)", &js_loadText, 0);
-			jsInterp->execute("print(\"JS engine init\");");
+					var gotoPassage_internal = ffi("void gotoPassage(char *, bool);");
+					function gotoPassage(passageName, clearScreen) {
+						if (!clearScreen) clearScreen = false;
+						gotoPassage_internal(passageName, clearScreen);
+					}
+
+					var append_internal = ffi("void append(char *);");
+					function append(data) { 
+						if (data) append_internal(JSON.stringify(data));
+					}
+
+					var addImage = ffi("void addImage(char *, char *);");
+
+					var alignImage_internal = ffi("void alignImage(char *, char *);");
+					function alignImage(imgName, dir) {
+						if (!dir) dir = CENTER;
+						alignImage_internal(imgName, dir);
+					}
+
+					var moveImage = ffi("void moveImage(char *, float, float);");
+					var scaleImage = ffi("void scaleImage(char *, float, float);");
+					var rotateImage = ffi("void rotateImage(char *, float);");
+					var tintImage = ffi("void tintImage(char *, int);");
+					// if (streq(name, "moveImagePx")) return (void *)moveImagePx;
+
+					var CENTER = "CENTER";
+					var TOP = "TOP";
+					var BOTTOM = "BOTTOM";
+					var LEFT = "LEFT";
+					var RIGHT = "RIGHT";
+
+					var data = {};
+				)END");
+			}
+
+			{ /// tinyJs
+				jsInterp = new CTinyJS();
+				registerFunctions(jsInterp);
+				registerMathFunctions(jsInterp);
+
+				jsInterp->execute(
+					"CENTER = \"CENTER\";\n"
+					"TOP = \"TOP\";\n"
+					"BOTTOM = \"BOTTOM\";\n"
+					"LEFT = \"LEFT\";\n"
+					"RIGHT = \"RIGHT\";\n"
+					"function rndInt(min, max) {\n"
+					"	return Math.randInt(min, max);\n"
+					"}\n"
+				);
+
+				jsInterp->addNative("function print(text)", &js_print, 0);
+				jsInterp->addNative("function append(text)", &js_append, 0);
+				jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
+				jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
+				jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
+				jsInterp->addNative("function submitAudio(text)", &js_submitAudio, 0);
+				jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
+				jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
+				jsInterp->addNative("function addImage(path, name)", &js_addImage, 0);
+				jsInterp->addNative("function permanentImage(name)", &js_permanentImage, 0);
+				jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
+				jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
+				jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
+				jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
+				jsInterp->addNative("function moveImagePx(name, x, y)", &js_moveImagePx, 0);
+				jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
+				jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
+				jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
+				jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
+				jsInterp->addNative("function exitMod()", &js_exitMod, 0);
+				jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
+				jsInterp->addNative("function saveNumber(key, num)", &js_saveNumber, 0);
+				jsInterp->addNative("function saveText(key, text)", &js_saveText, 0);
+				jsInterp->addNative("function loadNumber(key)", &js_loadNumber, 0);
+				jsInterp->addNative("function loadText(key)", &js_loadText, 0);
+				jsInterp->execute("print(\"JS engine init\");");
+			}
+			execJs(R"END(
+				print("js interp inited");
+				// var = let;
+				)END");
 		}
 
 		{ /// Setup mod repo
@@ -551,11 +620,11 @@ namespace Writer {
 				for (int i = 0; i < writer->urlModsNum; i++) {
 					ModEntry *entry = &writer->urlMods[i];
 
-			if (streq(entry->category, "Internal")) {
+					if (streq(entry->category, "Internal")) {
 #if !defined(SEMI_INTERNAL)
-				continue;
+						continue;
 #endif
-			}
+					}
 
 					{ /// Check reuse
 						bool beenUsed = false;
@@ -910,10 +979,27 @@ namespace Writer {
 			va_end(argptr);
 		}
 
-		try {
-			jsInterp->execute(buffer);
-		} catch (CScriptException *e) {
-			msg(e->text.c_str(), MSG_ERROR);
+		char *nextVar;
+		char *curPos = buffer;
+		const char *replacement = "let ";
+		while ((nextVar = strstr(curPos, "var ")) != NULL) {
+			if (nextVar != buffer) {
+				char prevChar = *(nextVar-1);
+				if (isalpha(prevChar) || isdigit(prevChar)) {
+					curPos = nextVar + strlen(replacement);
+					continue;
+				}
+			}
+			strncpy(nextVar, replacement, strlen(replacement));
+			curPos = nextVar + strlen(replacement);
+		}
+
+		// printf("Interping:\n%s\n", buffer);
+		mjs_err_t err = mjs_exec(mjs, buffer, NULL);
+		if (err) {
+			const char *errStr = mjs_strerror(mjs, err);
+			printf("There was an error: %s\n", errStr);
+			exit(1);
 		}
 	}
 
@@ -929,6 +1015,8 @@ namespace Writer {
 		memset(realData, 0, Megabytes(2));
 		realData[0] = '\0';
 		char *realDataEnd = fastStrcat(realData, "var __passage = \"\";\n\n");
+		realDataEnd = fastStrcat(realDataEnd, "var __image = \"\";\n\n");
+		realDataEnd = fastStrcat(realDataEnd, "var __audio = \"\";\n\n");
 
 		int serialLen = strlen(serialData);
 		int inputLen = 0;
@@ -1117,9 +1205,13 @@ namespace Writer {
 						std::string resultString;
 						try {
 							if (printResult) {
-								resultString = jsInterp->evaluate(line);
+								prependStr(line, "append((");
+								if (line[strlen(line)-1] == ';') line[strlen(line)-1] = '\0';
+								strcat(line, "));");
+								// printf("Gonna really eval: %s\n", line);
+								execJs(line);
 							} else {
-								jsInterp->execute(line);
+								execJs(line);
 							}
 						} catch (CScriptException *e) {
 							msg(e->text.c_str(), MSG_ERROR);
@@ -1277,6 +1369,52 @@ namespace Writer {
 		img->sprite->alignInside(dir);
 	}
 
+	void tintImage(const char *name, int tint) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->tint = tint;
+	}
+
+	void rotateImage(const char *name, float rotation) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->rotation = rotation;
+	}
+
+	void moveImage(const char *name, float x, float y) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->x += img->sprite->getWidth() * x;
+		img->sprite->y += img->sprite->getHeight() * y;
+	}
+
+	void scaleImage(const char *name, float scaleX, float scaleY) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->scale(scaleX, scaleY);
+	}
+
+
 	void removeImage(const char *name) {
 		Image *img = getImage(name);
 
@@ -1342,13 +1480,15 @@ namespace Writer {
 	}
 
 	void js_submitPassage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
+		submitPassage(v->getParameter("text")->getString().c_str());
+	}
 
+	void submitPassage(const char *data) {
 		char delim[3];
-		if (strstr(arg1, "\r\n")) strcpy(delim, "\r\n");
+		if (strstr(data, "\r\n")) strcpy(delim, "\r\n");
 		else strcpy(delim, "\n\0");
 
-		const char *lineStart = arg1;
+		const char *lineStart = data;
 
 		Passage *passage = (Passage *)zalloc(sizeof(Passage));
 		for (int i = 0;; i++) {
@@ -1396,14 +1536,17 @@ namespace Writer {
 	}
 
 	void js_submitImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		// printf("Got image: %s\n", arg1);
+		submitImage(v->getParameter("text")->getString().c_str());
+	}
+
+	void submitImage(const char *imgData) {
+		// printf("Got image: %s\n", imgData);
 
 		char imageName[PATH_LIMIT];
 		strcpy(imageName, "modPath/");
 
-		const char *newline = strstr(arg1, "\n");
-		strncat(imageName, arg1, newline-arg1);
+		const char *newline = strstr(imgData, "\n");
+		strncat(imageName, imgData, newline-imgData);
 		strcat(imageName, ".png");
 		// printf("Image name: %s\n", imageName);
 
@@ -1606,6 +1749,14 @@ namespace Writer {
 		else ret = writer->saveData->getString(key);
 
 		v->getReturnVar()->setString(ret);
+	}
+
+	void print(char *str) {
+		printf("print: %s\n", str);
+	}
+
+	void exitMod() {
+		changeState(STATE_MENU);
 	}
 
 	void deinitWriter() {
