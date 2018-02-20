@@ -1108,6 +1108,18 @@ namespace Writer {
 		Free(inputData);
 
 		writer->execWhenDoneLoading = realData;
+		if (!writer->currentMod) {
+			ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
+			memset(entry, 0, sizeof(ModEntry));
+
+			strcpy(entry->name, "unnamed");
+			strcpy(entry->author, "unknown");
+			strcpy(entry->url, "local");
+			strcpy(entry->category, "unknown");
+			strcpy(entry->version, "unknown");
+			writer->currentMod = entry;
+		}
+
 		writer->currentMod->doneLoading = true; //@incomplete Do streaming
 	}
 
