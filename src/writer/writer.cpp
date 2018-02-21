@@ -106,38 +106,6 @@ namespace Writer {
 	void submitImage(const char *imgData);
 	void submitAudio(const char *audioData);
 
-	void js_print(CScriptVar *v, void *userdata);
-
-	void js_append(CScriptVar *v, void *userdata);
-	void js_addChoice(CScriptVar *v, void *userdata);
-
-	void js_submitPassage(CScriptVar *v, void *userdata);
-	void js_submitImage(CScriptVar *v, void *userdata);
-	void js_submitAudio(CScriptVar *v, void *userdata);
-
-	void js_gotoPassage(CScriptVar *v, void *userdata);
-	void js_jumpToPassage(CScriptVar *v, void *userdata);
-
-	void js_addImage(CScriptVar *v, void *userdata);
-	void js_permanentImage(CScriptVar *v, void *userdata);
-	void js_removeImage(CScriptVar *v, void *userdata);
-	void js_centerImage(CScriptVar *v, void *userdata);
-	void js_alignImage(CScriptVar *v, void *userdata);
-	void js_moveImage(CScriptVar *v, void *userdata);
-	void js_scaleImage(CScriptVar *v, void *userdata);
-	void js_rotateImage(CScriptVar *v, void *userdata);
-	void js_tintImage(CScriptVar *v, void *userdata);
-
-	void js_playAudio(CScriptVar *v, void *userdata);
-
-	void js_exitMod(CScriptVar *v, void *userdata);
-	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
-
-	void js_saveNumber(CScriptVar *v, void *userdata);
-	void js_saveText(CScriptVar *v, void *userdata);
-	void js_loadNumber(CScriptVar *v, void *userdata);
-	void js_loadText(CScriptVar *v, void *userdata);
-
 	void print(char *str);
 	void scaleImage(const char *name, float scaleX, float scaleY);
 	void moveImage(const char *name, float xoff, float yoff);
@@ -239,7 +207,6 @@ namespace Writer {
 		char *execWhenDoneLoading;
 	};
 
-	CTinyJS *jsInterp;
 	mjs *mjs;
 	WriterStruct *writer;
 }
@@ -277,6 +244,12 @@ namespace Writer {
 
 		if (streq(name, "submitNode")) return (void *)submitNode;
 		if (streq(name, "attachNode")) return (void *)attachNode;
+
+		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
+		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
+		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
+		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
+		//@incomplete rndInt, addChoice, permanentImage
 		return NULL;
 	}
 
@@ -302,49 +275,6 @@ namespace Writer {
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
 				execJs((char *)getAsset("sharedAssets/interConfig.js")->data);
-			}
-
-			{ /// tinyJs
-				jsInterp = new CTinyJS();
-				registerFunctions(jsInterp);
-				registerMathFunctions(jsInterp);
-
-				jsInterp->execute(
-					"CENTER = \"CENTER\";\n"
-					"TOP = \"TOP\";\n"
-					"BOTTOM = \"BOTTOM\";\n"
-					"LEFT = \"LEFT\";\n"
-					"RIGHT = \"RIGHT\";\n"
-					"function rndInt(min, max) {\n"
-					"	return Math.randInt(min, max);\n"
-					"}\n"
-				);
-
-				jsInterp->addNative("function print(text)", &js_print, 0);
-				jsInterp->addNative("function append(text)", &js_append, 0);
-				jsInterp->addNative("function addChoice(text, dest)", &js_addChoice, 0);
-				jsInterp->addNative("function submitPassage(text)", &js_submitPassage, 0);
-				jsInterp->addNative("function submitImage(text)", &js_submitImage, 0);
-				jsInterp->addNative("function submitAudio(text)", &js_submitAudio, 0);
-				jsInterp->addNative("function gotoPassage(text)", &js_gotoPassage, 0);
-				jsInterp->addNative("function jumpToPassage(text)", &js_jumpToPassage, 0);
-				jsInterp->addNative("function addImage(path, name)", &js_addImage, 0);
-				jsInterp->addNative("function permanentImage(name)", &js_permanentImage, 0);
-				jsInterp->addNative("function removeImage(name)", &js_removeImage, 0);
-				jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
-				jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
-				jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
-				jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
-				jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
-				jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
-				jsInterp->addNative("function playAudio(path, name)", &js_playAudio, 0);
-				jsInterp->addNative("function exitMod()", &js_exitMod, 0);
-				jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
-				jsInterp->addNative("function saveNumber(key, num)", &js_saveNumber, 0);
-				jsInterp->addNative("function saveText(key, text)", &js_saveText, 0);
-				jsInterp->addNative("function loadNumber(key)", &js_loadNumber, 0);
-				jsInterp->addNative("function loadText(key)", &js_loadText, 0);
-				jsInterp->execute("print(\"JS engine init\");");
 			}
 		}
 
@@ -497,13 +427,12 @@ namespace Writer {
 				if (autoRunMod[i] == '-')
 					autoRunMod[i] = ' ';
 
-
 			bool found = true;
 			if (autoRunMod[0] != '\0') {
 				found = false;
 				for (int i = 0; i < writer->urlModsNum; i++) {
 					ModEntry *entry = &writer->urlMods[i];
-					if (streq(autoRunMod, entry->name)) {
+					if (strSimilar(autoRunMod, entry->name)) {
 						found = true;
 						loadModEntry(entry);
 						break;
@@ -1373,6 +1302,18 @@ namespace Writer {
 		img->sprite->y += img->sprite->getHeight() * y;
 	}
 
+	void moveImagePx(const char *name, float x, float y) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->sprite->x = x;
+		img->sprite->y = y;
+	}
+
 	void scaleImage(const char *name, float scaleX, float scaleY) {
 		Image *img = getImage(name);
 
@@ -1433,26 +1374,6 @@ namespace Writer {
 		writer->tooltipShowing = true;
 	}
 
-	void js_print(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		printf("> %s\n", arg1);
-	}
-
-	void js_append(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		append(arg1);
-	}
-
-	void js_addChoice(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		const char *arg2 = v->getParameter("dest")->getString().c_str();
-		addChoice(arg1, arg2);
-	}
-
-	void js_submitPassage(CScriptVar *v, void *userdata) {
-		submitPassage(v->getParameter("text")->getString().c_str());
-	}
-
 	void submitPassage(const char *data) {
 		char delim[3];
 		if (strstr(data, "\r\n")) strcpy(delim, "\r\n");
@@ -1505,10 +1426,6 @@ namespace Writer {
 		if (addNew) writer->passages[writer->passagesNum++] = passage;
 	}
 
-	void js_submitImage(CScriptVar *v, void *userdata) {
-		submitImage(v->getParameter("text")->getString().c_str());
-	}
-
 	void submitImage(const char *imgData) {
 		// printf("Got image: %s\n", imgData);
 
@@ -1539,165 +1456,6 @@ namespace Writer {
 				break;
 			}
 		}
-	}
-
-	void js_submitAudio(CScriptVar *v, void *userdata) {
-		submitAudio(v->getParameter("text")->getString().c_str());
-	}
-
-	void js_gotoPassage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		gotoPassage(arg1);
-	}
-
-	void js_jumpToPassage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		gotoPassage(arg1, true);
-	}
-
-	void js_addImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("path")->getString().c_str();
-		const char *arg2 = v->getParameter("name")->getString().c_str();
-		addImage(arg1, arg2);
-	}
-
-	void js_removeImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("name")->getString().c_str();
-		removeImage(arg1);
-	}
-
-	void js_permanentImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("name")->getString().c_str();
-		Image *img = getImage(arg1);
-
-		if (!img) {
-			msg("Image named %s cannot be made permanent because it doesn't exist", MSG_ERROR, arg1);
-			return;
-		}
-
-		img->permanent = true;
-	}
-
-	void js_alignImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("name")->getString().c_str();
-		const char *arg2 = v->getParameter("gravity")->getString().c_str();
-		alignImage(arg1, arg2);
-	}
-
-	void js_moveImage(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		double x = v->getParameter("x")->getDouble();
-		double y = v->getParameter("y")->getDouble();
-
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Image named %s cannot be moved because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->x += img->sprite->getWidth() * x;
-		img->sprite->y += img->sprite->getHeight() * y;
-	}
-
-	void moveImagePx(const char *name, float x, float y) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Image named %s cannot be moved because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->x = x;
-		img->sprite->y = y;
-	}
-
-	void js_scaleImage(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		double x = v->getParameter("x")->getDouble();
-		double y = v->getParameter("y")->getDouble();
-
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Image named %s cannot be scaled because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->scale(x, y);
-	}
-
-	void js_rotateImage(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		double angle = v->getParameter("angle")->getDouble();
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Image named %s cannot be rotated because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->rotation = angle;
-	}
-
-	void js_tintImage(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		double tint = v->getParameter("tint")->getInt();
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Image named %s cannot be rotated because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->tint = tint;
-	}
-
-	void js_playAudio(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("path")->getString().c_str();
-		const char *arg2 = v->getParameter("name")->getString().c_str();
-		playAudio(arg1, arg2);
-	}
-
-	void js_exitMod(CScriptVar *v, void *userdata) {
-		changeState(STATE_MENU);
-	}
-
-	void js_centerImage(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("name")->getString().c_str();
-		alignImage(arg1, CENTER);
-	}
-
-	void js_saveNumber(CScriptVar *v, void *userdata) {
-		const char *key = v->getParameter("key")->getString().c_str();
-		const float num = v->getParameter("num")->getDouble();
-		writer->saveData->setFloat(key, num);
-	}
-
-	void js_saveText(CScriptVar *v, void *userdata) {
-		const char *key = v->getParameter("key")->getString().c_str();
-		const char *text = v->getParameter("text")->getString().c_str();
-		writer->saveData->setString(key, stringClone(text));
-	}
-
-	void js_loadNumber(CScriptVar *v, void *userdata) {
-		const char *key = v->getParameter("key")->getString().c_str();
-
-		float ret;
-		if (writer->saveData->isNull(key)) ret = 0;
-		else ret = writer->saveData->getFloat(key);
-
-		v->getReturnVar()->setDouble(ret);
-	}
-
-	void js_loadText(CScriptVar *v, void *userdata) {
-		const char *key = v->getParameter("key")->getString().c_str();
-
-		const char *ret;
-		if (writer->saveData->isNull(key)) ret = 0;
-		else ret = writer->saveData->getString(key);
-
-		v->getReturnVar()->setString(ret);
 	}
 
 	void print(char *str) {
@@ -1736,7 +1494,6 @@ namespace Writer {
 		if (writer->state != STATE_NULL) changeState(STATE_NULL);
 		writer->bg->destroy();
 		exists = false;
-		delete jsInterp;
 		Free(writer);
 	}
 }

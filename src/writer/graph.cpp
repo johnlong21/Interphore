@@ -11,9 +11,6 @@ namespace Writer {
 	void updateGraph();
 	void hideGraph();
 
-	void js_submitNode(CScriptVar *v, void *userdata);
-	void js_attachNode(CScriptVar *v, void *userdata);
-
 	struct Node {
 		char name[NODE_NAME_MAX];
 		char passage[PASSAGE_NAME_MAX];
@@ -32,8 +29,6 @@ namespace Writer {
 
 	void initGraph() {
 		graph = (GraphStruct *)zalloc(sizeof(GraphStruct));
-		jsInterp->addNative("function submitNode(name, passage)", &js_submitNode, 0);
-		jsInterp->addNative("function attachNode(name1, name2, dir)", &js_attachNode, 0);
 	}
 
 	void submitNode(const char *name, const char *passage) {
@@ -115,17 +110,5 @@ namespace Writer {
 
 		node1->connectedTo = node2;
 		node1->connectedDir = dir;
-	}
-
-	void js_submitNode(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		const char *passage = v->getParameter("passage")->getString().c_str();
-		submitNode(name, passage);
-	}
-
-	void js_attachNode(CScriptVar *v, void *userdata) {
-		const char *name1 = v->getParameter("name1")->getString().c_str();
-		const char *name2 = v->getParameter("name2")->getString().c_str();
-		const char *dir = v->getParameter("dir")->getString().c_str();
 	}
 }

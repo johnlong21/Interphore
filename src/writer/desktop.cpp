@@ -12,14 +12,9 @@ namespace WriterDesktop {
 	struct DesktopIcon;
 	struct DesktopEvent;
 
-	void js_addIcon(CScriptVar *v, void *userdata);
-	void js_installDesktopExtentions(CScriptVar *v, void *userdata);
-	void js_createDesktop(CScriptVar *v, void *userdata);
-	void js_attachImageToProgram(CScriptVar *v, void *userdata);
-	void js_startProgram(CScriptVar *v, void *userdata);
-	void js_addBookmarkBar(CScriptVar *v, void *userdata);
-	void js_pushDesktopEvent(CScriptVar *v, void *userdata);
-	void js_pushChoiceEvent(CScriptVar *v, void *userdata);
+	void attachImageToProgram(const char *imageName, const char *programName);
+	// void js_pushDesktopEvent(CScriptVar *v, void *userdata);
+	// void js_pushChoiceEvent(CScriptVar *v, void *userdata);
 
 	void createDesktop();
 	void destroyDesktop();
@@ -98,23 +93,6 @@ namespace WriterDesktop {
 
 	DesktopStruct *desktop;
 
-	void js_installDesktopExtentions(CScriptVar *v, void *userdata) {
-		using namespace Writer;
-		jsInterp->addNative("function addIcon(iconText, iconImg)", &js_addIcon, 0);
-		jsInterp->addNative("function createDesktop()", &js_createDesktop, 0);
-		jsInterp->addNative("function attachImageToProgram(imageName, programName)", &js_attachImageToProgram, 0);
-		jsInterp->addNative("function startProgram(programName, width, height)", &js_startProgram, 0);
-		jsInterp->addNative("function addBookmarkBar(programName)", &js_addBookmarkBar, 0);
-		jsInterp->addNative("function pushDesktopEvent(event)", &js_pushDesktopEvent, 0);
-		jsInterp->addNative("function pushChoiceEvent(text, choices)", &js_pushChoiceEvent, 0);
-		execJs(""
-			"PROGRAM_STARTED = \"PROGRAM_STARTED\";"
-			"CHOICE = \"CHOICE\";"
-			"IMAGE_CLICK = \"IMAGE_CLICK\";"
-			);
-		clear();
-	}
-
 	void createDesktop() {
 		using namespace Writer;
 		desktop = (DesktopStruct *)zalloc(sizeof(DesktopStruct));
@@ -168,18 +146,7 @@ namespace WriterDesktop {
 		Free(desktop);
 	}
 
-	void js_createDesktop(CScriptVar *v, void *userdata) {
-		createDesktop();
-	}
-
-	void js_addIcon(CScriptVar *v, void *userdata) {
-		addIcon(v->getParameter("iconText")->getString().c_str(), v->getParameter("iconImg")->getString().c_str());
-	}
-
-	void js_attachImageToProgram(CScriptVar *v, void *userdata) {
-		const char *imageName = v->getParameter("imageName")->getString().c_str();
-		const char *programName = v->getParameter("programName")->getString().c_str();
-
+	void attachImageToProgram(const char *imageName, const char *programName) {
 		using namespace Writer;
 		Image *img = getImage(imageName);
 
@@ -210,10 +177,6 @@ namespace WriterDesktop {
 		}
 
 		msg("Couldn't find program named %s", MSG_ERROR, programName);
-	}
-
-	void js_startProgram(CScriptVar *v, void *userdata) {
-		startProgram(v->getParameter("programName")->getString().c_str(), v->getParameter("width")->getDouble(), v->getParameter("height")->getDouble());
 	}
 
 	void updateDesktop() {
@@ -608,33 +571,33 @@ namespace WriterDesktop {
 		}
 	}
 
-	void js_pushDesktopEvent(CScriptVar *v, void *userdata) {
-		using namespace Writer;
+	// void js_pushDesktopEvent(CScriptVar *v, void *userdata) {
+	// 	using namespace Writer;
 
-		CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
-		CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
-		// CScriptVarLink *choicesVar = v->getParameter("event")->findChild("choices");
+	// 	CScriptVarLink *eventTypeVar = v->getParameter("event")->findChild("type");
+	// 	CScriptVarLink *textVar = v->getParameter("event")->findChild("text");
+	// 	// CScriptVarLink *choicesVar = v->getParameter("event")->findChild("choices");
 
-		DesktopEvent evt = {};
-		if (eventTypeVar) strcpy(evt.type, eventTypeVar->var->getString().c_str());
-		if (textVar) strcpy(evt.text, textVar->var->getString().c_str());
-		pushDesktopEvent(&evt);
-	}
+	// 	DesktopEvent evt = {};
+	// 	if (eventTypeVar) strcpy(evt.type, eventTypeVar->var->getString().c_str());
+	// 	if (textVar) strcpy(evt.text, textVar->var->getString().c_str());
+	// 	pushDesktopEvent(&evt);
+	// }
 
-	void js_pushChoiceEvent(CScriptVar *v, void *userdata) {
-		using namespace Writer;
-		const char *text = v->getParameter("text")->getString().c_str();
+	// void js_pushChoiceEvent(CScriptVar *v, void *userdata) {
+	// 	using namespace Writer;
+	// 	const char *text = v->getParameter("text")->getString().c_str();
 
-		CScriptVar *choicesArr = v->getParameter("choices");
+	// 	CScriptVar *choicesArr = v->getParameter("choices");
 
-		DesktopEvent evt = {};
-		strcpy(evt.type, "choice");
-		strcpy(evt.text, text);
-		evt.choicesNum = choicesArr->getArrayLength();
-		for (int i = 0; i < evt.choicesNum; i++) {
-			strcpy(evt.choices[i], choicesArr->getArrayIndex(i)->getString().c_str());
-		}
+	// 	DesktopEvent evt = {};
+	// 	strcpy(evt.type, "choice");
+	// 	strcpy(evt.text, text);
+	// 	evt.choicesNum = choicesArr->getArrayLength();
+	// 	for (int i = 0; i < evt.choicesNum; i++) {
+	// 		strcpy(evt.choices[i], choicesArr->getArrayIndex(i)->getString().c_str());
+	// 	}
 
-		pushDesktopEvent(&evt);
-	}
+	// 	pushDesktopEvent(&evt);
+	// }
 }
