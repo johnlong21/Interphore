@@ -298,7 +298,7 @@ namespace Writer {
 				mjs = mjs_create();
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-				execJs((char *)getAsset("info/baseJs.phore")->data);
+				execJs((char *)getAsset("sharedAssets/interConfig.js")->data);
 			}
 
 			{ /// tinyJs
