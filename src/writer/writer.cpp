@@ -67,7 +67,7 @@ namespace Writer {
 		"gotoPassage(\"Start\");\n"
 		;
 
-	enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD, STATE_GRAPH };
+	enum GameState { STATE_NULL=0, STATE_MENU, STATE_MOD, STATE_GRAPH, STATE_LOADING };
 	enum MsgType { MSG_NULL=0, MSG_INFO, MSG_WARNING, MSG_ERROR };
 	struct Button;
 	struct Msg;
@@ -96,6 +96,7 @@ namespace Writer {
 	Image *getImage(const char *name);
 	void removeImage(const char *name);
 	void removeImage(Image *img);
+	void permanentImage(const char *name);
 	void alignImage(const char *name, const char *gravity=CENTER);
 	void playAudio(const char *path, const char *name);
 	void clear();
@@ -221,10 +222,6 @@ namespace Writer {
 #include "graph.cpp"
 
 namespace Writer {
-	void foo(char *str) {
-		printf("N is: %s\n", str);
-	}
-
 	void *mjsResolver(void *handle, const char *name) {
 		if (streq(name, "print")) return (void *)print;
 		if (streq(name, "submitPassage")) return (void *)submitPassage;
@@ -242,6 +239,8 @@ namespace Writer {
 		if (streq(name, "playAudio")) return (void *)playAudio;
 		if (streq(name, "submitAudio")) return (void *)submitAudio;
 
+		if (streq(name, "permanentImage")) return (void *)permanentImage;
+
 		if (streq(name, "submitNode")) return (void *)submitNode;
 		if (streq(name, "attachNode")) return (void *)attachNode;
 
@@ -249,7 +248,7 @@ namespace Writer {
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
 		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
 		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
-		//@incomplete rndInt, addChoice, permanentImage
+		//@incomplete rndInt, addChoice
 		return NULL;
 	}
 
@@ -734,8 +733,8 @@ namespace Writer {
 			}
 
 			if (writer->refreshButton->justPressed) {
-				playSound("audio/ui/restart");
-				changeState(STATE_MENU);
+				// playSound("audio/ui/restart");
+				changeState(STATE_LOADING);
 				loadModEntry(writer->currentMod);
 			}
 		}
@@ -1488,6 +1487,17 @@ namespace Writer {
 		size_t dataLen;
 		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
 		addAsset(audioName, data, dataLen);
+	}
+
+	void permanentImage(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't make image named %s permanent because it doesn't exist", MSG_ERROR, name);
+			return;
+		}
+
+		img->permanent = true;
 	}
 
 	void deinitWriter() {
