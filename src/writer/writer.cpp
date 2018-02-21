@@ -274,6 +274,9 @@ namespace Writer {
 		if (streq(name, "tintImage")) return (void *)tintImage;
 		if (streq(name, "playAudio")) return (void *)playAudio;
 		if (streq(name, "submitAudio")) return (void *)submitAudio;
+
+		if (streq(name, "submitNode")) return (void *)submitNode;
+		if (streq(name, "attachNode")) return (void *)attachNode;
 		return NULL;
 	}
 
@@ -736,7 +739,7 @@ namespace Writer {
 			}
 
 			if (writer->nodesButton->sprite->justPressed) {
-				playSound("audio/ui/oldChoiceClick");
+				// playSound("audio/ui/altClick");
 				changeState(STATE_GRAPH);
 			}
 

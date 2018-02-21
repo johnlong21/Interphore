@@ -5,7 +5,7 @@ namespace Writer {
 
 	void initGraph();
 	void submitNode(const char *name, const char *passage);
-	void attachNode(const char *name1, const char *name2, Dir8 dir);
+	void attachNode(const char *name1, const char *name2, const char *dirStr);
 
 	void showGraph();
 	void updateGraph();
@@ -92,9 +92,15 @@ namespace Writer {
 		}
 	}
 
-	void attachNode(const char *name1, const char *name2, Dir8 dir) {
+	void attachNode(const char *name1, const char *name2, const char *dirStr) {
 		Node *node1 = NULL;
 		Node *node2 = NULL;
+
+		Dir8 dir = DIR8_CENTER;
+		if (streq(dirStr, LEFT)) dir = DIR8_LEFT;
+		else if (streq(dirStr, RIGHT)) dir = DIR8_RIGHT;
+		else if (streq(dirStr, TOP)) dir = DIR8_UP;
+		else if (streq(dirStr, BOTTOM)) dir = DIR8_DOWN;
 
 		for (int i = 0; i < graph->nodesNum; i++)
 			if (streq(graph->nodes[i].name, name1))
@@ -121,12 +127,5 @@ namespace Writer {
 		const char *name1 = v->getParameter("name1")->getString().c_str();
 		const char *name2 = v->getParameter("name2")->getString().c_str();
 		const char *dir = v->getParameter("dir")->getString().c_str();
-
-		Dir8 newDir;
-		if (streq(dir, LEFT)) newDir = DIR8_LEFT;
-		if (streq(dir, RIGHT)) newDir = DIR8_RIGHT;
-		if (streq(dir, TOP)) newDir = DIR8_UP;
-		if (streq(dir, BOTTOM)) newDir = DIR8_DOWN;
-		attachNode(name1, name2, newDir);
 	}
 }
