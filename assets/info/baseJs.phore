@@ -26,6 +26,10 @@ var moveImage = ffi("void moveImage(char *, float, float);");
 var scaleImage = ffi("void scaleImage(char *, float, float);");
 var rotateImage = ffi("void rotateImage(char *, float);");
 var tintImage = ffi("void tintImage(char *, int);");
+
+var submitAudio = ffi("void submitAudio(char *);");
+var playAudio = ffi("void playAudio(char *, char *);");
+// jsInterp->addNative("function installDesktopExtentions()", &WriterDesktop::js_installDesktopExtentions, 0);
 // if (streq(name, "moveImagePx")) return (void *)moveImagePx;
 
 var CENTER = "CENTER";

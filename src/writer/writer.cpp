@@ -97,12 +97,14 @@ namespace Writer {
 	void removeImage(const char *name);
 	void removeImage(Image *img);
 	void alignImage(const char *name, const char *gravity=CENTER);
+	void playAudio(const char *path, const char *name);
 	void clear();
 
 	void showTooltipCursor(const char *str);
 
 	void submitPassage(const char *data);
 	void submitImage(const char *imgData);
+	void submitAudio(const char *audioData);
 
 	void js_print(CScriptVar *v, void *userdata);
 
@@ -122,7 +124,6 @@ namespace Writer {
 	void js_centerImage(CScriptVar *v, void *userdata);
 	void js_alignImage(CScriptVar *v, void *userdata);
 	void js_moveImage(CScriptVar *v, void *userdata);
-	void js_moveImagePx(CScriptVar *v, void *userdata);
 	void js_scaleImage(CScriptVar *v, void *userdata);
 	void js_rotateImage(CScriptVar *v, void *userdata);
 	void js_tintImage(CScriptVar *v, void *userdata);
@@ -140,6 +141,7 @@ namespace Writer {
 	void print(char *str);
 	void scaleImage(const char *name, float scaleX, float scaleY);
 	void moveImage(const char *name, float xoff, float yoff);
+	void moveImagePx(const char *name, float x, float y);
 	void rotateImage(const char *name, float rotation);
 	void tintImage(const char *name, int tint);
 	void exitMod();
@@ -266,10 +268,12 @@ namespace Writer {
 		if (streq(name, "addImage")) return (void *)addImage;
 		if (streq(name, "alignImage")) return (void *)alignImage;
 		if (streq(name, "moveImage")) return (void *)moveImage;
-		// if (streq(name, "moveImagePx")) return (void *)moveImagePx;
+		if (streq(name, "moveImagePx")) return (void *)moveImagePx;
 		if (streq(name, "scaleImage")) return (void *)scaleImage;
 		if (streq(name, "rotateImage")) return (void *)rotateImage;
 		if (streq(name, "tintImage")) return (void *)tintImage;
+		if (streq(name, "playAudio")) return (void *)playAudio;
+		if (streq(name, "submitAudio")) return (void *)submitAudio;
 		return NULL;
 	}
 
@@ -327,7 +331,6 @@ namespace Writer {
 				jsInterp->addNative("function centerImage(name)", &js_centerImage, 0);
 				jsInterp->addNative("function alignImage(name, gravity)", &js_alignImage, 0);
 				jsInterp->addNative("function moveImage(name, x, y)", &js_moveImage, 0);
-				jsInterp->addNative("function moveImagePx(name, x, y)", &js_moveImagePx, 0);
 				jsInterp->addNative("function scaleImage(name, x, y)", &js_scaleImage, 0);
 				jsInterp->addNative("function rotateImage(name, angle)", &js_rotateImage, 0);
 				jsInterp->addNative("function tintImage(name, tint)", &js_tintImage, 0);
@@ -428,14 +431,8 @@ namespace Writer {
 					"Desktop Test",
 					"Fallowwing",
 					"https://www.dropbox.com/s/aselaeb3htueck3/Desktop%20Test.phore?dl=1",
-					"Tests",
-					"0.1.0"
-				}, {
-					"Desktop Test Internal",
-					"Fallowwing",
-					"https://www.dropbox.com/s/o6rl3oo4n9g4teo/Desktop%20Test%20Fallow.phore?dl=1",
 					"Internal",
-					"0.0.1"
+					"0.1.0"
 				}, {
 					"Test Nodes",
 					"Fallowwing",
@@ -1542,24 +1539,7 @@ namespace Writer {
 	}
 
 	void js_submitAudio(CScriptVar *v, void *userdata) {
-		const char *arg1 = v->getParameter("text")->getString().c_str();
-		// printf("Got image: %s\n", arg1);
-
-		char audioName[PATH_LIMIT];
-		strcpy(audioName, "modPath/");
-
-		const char *newline = strstr(arg1, "\n");
-		strncat(audioName, arg1, newline-arg1);
-		strcat(audioName, ".ogg");
-		// printf("Audio name: %s\n", audioName);
-
-		char *b64Data = tempBytes;
-		strcpy(b64Data, newline+1);
-		b64Data[strlen(b64Data)-1] = '\0';
-
-		size_t dataLen;
-		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
-		addAsset(audioName, data, dataLen);
+		submitAudio(v->getParameter("text")->getString().c_str());
 	}
 
 	void js_gotoPassage(CScriptVar *v, void *userdata) {
@@ -1617,11 +1597,7 @@ namespace Writer {
 		img->sprite->y += img->sprite->getHeight() * y;
 	}
 
-	void js_moveImagePx(CScriptVar *v, void *userdata) {
-		const char *name = v->getParameter("name")->getString().c_str();
-		double x = v->getParameter("x")->getDouble();
-		double y = v->getParameter("y")->getDouble();
-
+	void moveImagePx(const char *name, float x, float y) {
 		Image *img = getImage(name);
 
 		if (!img) {
@@ -1677,7 +1653,7 @@ namespace Writer {
 	void js_playAudio(CScriptVar *v, void *userdata) {
 		const char *arg1 = v->getParameter("path")->getString().c_str();
 		const char *arg2 = v->getParameter("name")->getString().c_str();
-		playSound(arg1, arg2);
+		playAudio(arg1, arg2);
 	}
 
 	void js_exitMod(CScriptVar *v, void *userdata) {
@@ -1727,6 +1703,30 @@ namespace Writer {
 
 	void exitMod() {
 		changeState(STATE_MENU);
+	}
+
+	void playAudio(const char *path, const char *name) {
+		playSound(path, name);
+	}
+
+	void submitAudio(const char *audioData) {
+		// printf("Got image: %s\n", audioData);
+
+		char audioName[PATH_LIMIT];
+		strcpy(audioName, "modPath/");
+
+		const char *newline = strstr(audioData, "\n");
+		strncat(audioName, audioData, newline-audioData);
+		strcat(audioName, ".ogg");
+		// printf("Audio name: %s\n", audioName);
+
+		char *b64Data = tempBytes;
+		strcpy(b64Data, newline+1);
+		b64Data[strlen(b64Data)-1] = '\0';
+
+		size_t dataLen;
+		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
+		addAsset(audioName, data, dataLen);
 	}
 
 	void deinitWriter() {
