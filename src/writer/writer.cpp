@@ -20,6 +20,8 @@
 #define TOOLTIP_BG_LAYER 1
 #define TOOLTIP_TEXT_LAYER 2
 
+#define BUTTON_ICONS_MAX 16
+
 namespace Writer {
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
@@ -116,6 +118,7 @@ namespace Writer {
 	void exitMod();
 
 	float getTime();
+	void addButtonIcon(const char *buttonText, const char *iconName);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -146,7 +149,7 @@ namespace Writer {
 
 	struct Button {
 		bool exists;
-		bool animating;
+		MintSprite *icons[BUTTON_ICONS_MAX];
 		MintSprite *sprite;
 		MintSprite *tf;
 		char destPassageName[PASSAGE_NAME_MAX];
@@ -246,6 +249,8 @@ namespace Writer {
 		if (streq(name, "submitNode")) return (void *)submitNode;
 		if (streq(name, "attachNode")) return (void *)attachNode;
 		if (streq(name, "getTime")) return (void *)getTime;
+		if (streq(name, "addChoice")) return (void *)addChoice;
+		if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -338,6 +343,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/mkboihcsw38y077/Audio%20Test.txt?dl=1",
 					"Examples",
 					"1.0.0"
+				}, {
+					"Icon Example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/sg83wwjz7l8ocd9/Icon%20Example.txt?dl=1",
+					"Examples",
+					"0.0.1"
 				}, {
 					"Gryphon Fight",
 					"Cade",
@@ -1401,7 +1412,27 @@ namespace Writer {
 
 				strcpy(passage->name, &line[1]);
 			} else if (line[0] == '[') {
-				strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
+				char *barPos = strstr(line, "|");
+				char text[CHOICE_TEXT_MAX] = {};
+				char dest[PASSAGE_NAME_MAX] = {};
+
+				if (barPos) {
+					char *textStart = &line[1];
+					char *textEnd = barPos;
+					char *destStart = textEnd+1;
+					char *destEnd = line+strlen(line)-1;
+					strncpy(text, textStart, textEnd-textStart);
+					strncpy(dest, destStart, destEnd-destStart);
+				} else {
+					strncpy(text, line+1, strlen(line)-2);
+					strncpy(dest, line+1, strlen(line)-2);
+				}
+
+				char newLine[CHOICE_BUTTON_MAX + PASSAGE_NAME_MAX + 32];
+				sprintf(newLine, "`addChoice(\"%s\", \"%s\");`\n", text, dest);
+				strcat(passage->appendData, newLine);
+
+				// strcpy(passage->choices[passage->choicesNum++], line); //@incomplete Assert this push
 			} else {
 				strcat(passage->appendData, line);
 				strcat(passage->appendData, "\n");
@@ -1409,7 +1440,7 @@ namespace Writer {
 
 			lineStart = lineEnd+1;
 		}
-		// printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
+		printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
 		// for (int i = 0; i < passage->choicesNum; i++) printf("Button: %s\n", passage->choices[i]);
 
 		if (writer->passagesNum+1 > PASSAGE_MAX) {
@@ -1507,6 +1538,15 @@ namespace Writer {
 
 	float getTime() {
 		return engine->time;
+	}
+
+	void addButtonIcon(const char *buttonText, const char *iconName) {
+		for (int i = 0; i < writer->choicesNum; i++) {
+			Button *btn = writer->choices[i];
+			if (!streq(btn->tf->rawText, buttonText)) continue;
+
+			printf("Found\n");
+		}
 	}
 
 	void deinitWriter() {
