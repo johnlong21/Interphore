@@ -123,8 +123,6 @@ namespace Writer {
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
-		char choices[CHOICE_BUTTON_MAX][CHOICE_TEXT_MAX];
-		int choicesNum;
 	};
 
 	struct ModEntry {
@@ -1140,21 +1138,6 @@ namespace Writer {
 					}
 
 					lineStart = lineEnd+1;
-				}
-
-				for (int choiceIndex = 0; choiceIndex < passage->choicesNum; choiceIndex++) {
-					char *choiceStr = passage->choices[choiceIndex];
-					char *barLoc = strstr(choiceStr, "|");
-					char text[CHOICE_TEXT_MAX] = {};
-					char dest[PASSAGE_NAME_MAX] = {};
-					if (barLoc) {
-						strncpy(text, choiceStr+1, barLoc-choiceStr-1);
-						strncpy(dest, barLoc+1, strlen(barLoc)-2);
-					} else {
-						strncpy(text, choiceStr+1, strlen(choiceStr)-2);
-						strcpy(dest, text);
-					}
-					addChoice(text, dest);
 				}
 				return;
 			}
