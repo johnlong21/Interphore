@@ -115,6 +115,8 @@ namespace Writer {
 	void tintImage(const char *name, int tint);
 	void exitMod();
 
+	float getTime();
+
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
@@ -243,6 +245,7 @@ namespace Writer {
 
 		if (streq(name, "submitNode")) return (void *)submitNode;
 		if (streq(name, "attachNode")) return (void *)attachNode;
+		if (streq(name, "getTime")) return (void *)getTime;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -715,6 +718,7 @@ namespace Writer {
 			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
 			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
+			execJs("__update();");
 			for (int i = 0; i < writer->choicesNum; i++) {
 				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
 				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
@@ -884,8 +888,9 @@ namespace Writer {
 		mjs_err_t err = mjs_exec(mjs, buffer, NULL);
 		if (err) {
 			const char *errStr = mjs_strerror(mjs, err);
-			printf("There was an error: %s\n", errStr);
-			exit(1);
+			msg("JS error: %s", MSG_ERROR, errStr);
+			printf("JS error: %s\n", errStr);
+			// assert(0);
 		}
 	}
 
@@ -1498,6 +1503,10 @@ namespace Writer {
 		}
 
 		img->permanent = true;
+	}
+
+	float getTime() {
+		return engine->time;
 	}
 
 	void deinitWriter() {
