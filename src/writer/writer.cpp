@@ -148,6 +148,7 @@ namespace Writer {
 	struct Button {
 		bool exists;
 		MintSprite *icons[BUTTON_ICONS_MAX];
+		int iconsNum;
 		MintSprite *sprite;
 		MintSprite *tf;
 		char destPassageName[PASSAGE_NAME_MAX];
@@ -1040,6 +1041,7 @@ namespace Writer {
 		}
 
 		Button *btn = &writer->buttons[slot];
+		memset(btn, 0, sizeof(Button));
 		btn->exists = true;
 
 		{ /// Button sprite
@@ -1528,7 +1530,15 @@ namespace Writer {
 			Button *btn = writer->choices[i];
 			if (!streq(btn->tf->rawText, buttonText)) continue;
 
-			printf("Found\n");
+			MintSprite *spr = createMintSprite("writer/icon.png");
+			spr->playing = false;
+			spr->gotoFrame(iconName);
+			btn->sprite->addChild(spr);
+			btn->icons[btn->iconsNum++] = spr;
+
+			if (btn->iconsNum > 1) {
+				spr->alignOutside(btn->icons[btn->iconsNum-1], DIR8_RIGHT);
+			}
 		}
 	}
 
