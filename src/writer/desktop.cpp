@@ -560,16 +560,16 @@ namespace WriterDesktop {
 		desktop->events[desktop->eventsNum++] = *newEvent;
 	}
 
-	void js_addBookmarkBar(CScriptVar *v, void *userdata) {
-		const char *programName = v->getParameter("programName")->getString().c_str();
-		using namespace Writer;
+	// void js_addBookmarkBar(CScriptVar *v, void *userdata) {
+	// 	const char *programName = v->getParameter("programName")->getString().c_str();
+	// 	using namespace Writer;
 
-		DesktopProgram *prog = getProgram(programName);
-		if (!prog) {
-			msg("Can't add a bookmakr bar on %s because it doesn't exist", MSG_ERROR, programName);
-			return;
-		}
-	}
+	// 	DesktopProgram *prog = getProgram(programName);
+	// 	if (!prog) {
+	// 		msg("Can't add a bookmakr bar on %s because it doesn't exist", MSG_ERROR, programName);
+	// 		return;
+	// 	}
+	// }
 
 	// void js_pushDesktopEvent(CScriptVar *v, void *userdata) {
 	// 	using namespace Writer;

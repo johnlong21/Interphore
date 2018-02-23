@@ -280,7 +280,7 @@ namespace Writer {
 				mjs = mjs_create();
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-				execJs((char *)getAsset("sharedAssets/interConfig.js")->data);
+				execJs((char *)getAsset("info/interConfig.js")->data);
 			}
 		}
 
@@ -1117,20 +1117,14 @@ namespace Writer {
 						// printf("Gonna eval: %s\n", line);
 
 						std::string resultString;
-						try {
-							if (printResult) {
-								prependStr(line, "append((");
-								if (line[strlen(line)-1] == ';') line[strlen(line)-1] = '\0';
-								strcat(line, "));");
-								// printf("Gonna really eval: %s\n", line);
-								execJs(line);
-							} else {
-								execJs(line);
-							}
-						} catch (CScriptException *e) {
-							msg(e->text.c_str(), MSG_ERROR);
-							resultString = e->text.c_str();
-							printResult = true;
+						if (printResult) {
+							prependStr(line, "append((");
+							if (line[strlen(line)-1] == ';') line[strlen(line)-1] = '\0';
+							strcat(line, "));");
+							// printf("Gonna really eval: %s\n", line);
+							execJs(line);
+						} else {
+							execJs(line);
 						}
 						if (writer->state != STATE_MOD) return;
 						if (printResult) {
