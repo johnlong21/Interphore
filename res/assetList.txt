@@ -1,4 +1,5 @@
 shader/*
+font/bitmap/*
 
 info/interConfig.js
 
@@ -22,7 +23,6 @@ img/ui/dialog/paraDialog.spr
 img/ui/dialog/wendyDialog.png
 img/ui/dialog/wendyDialog.spr
 
-font/bitmap/*
 
 audio/ui/notification.ogg
 audio/ui/choiceClick/1.ogg
