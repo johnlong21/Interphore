@@ -96,19 +96,8 @@ namespace Writer {
 	void gotoPassage(const char *passageName, bool skipClear=false);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
-	void addImage(const char *path, const char *name);
 	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
-
-	Image *getImage(const char *name);
-	void removeImage(const char *name);
-	void removeImage(Image *img);
-	void permanentImage(const char *name);
-	void alignImage(const char *name, const char *gravity=CENTER);
-	float getImageX(const char *name);
-	float getImageY(const char *name);
-	int getImageHeight(const char *name);
-	int getImageWidth(const char *name);
 
 	void playAudio(const char *path, const char *name);
 	void clear();
@@ -120,11 +109,6 @@ namespace Writer {
 	void submitAudio(const char *audioData);
 
 	void print(char *str);
-	void scaleImage(const char *name, float scaleX, float scaleY);
-	void moveImage(const char *name, float xoff, float yoff);
-	void moveImagePx(const char *name, float x, float y);
-	void rotateImage(const char *name, float rotation);
-	void tintImage(const char *name, int tint);
 	void exitMod();
 
 	float getTime();
@@ -232,6 +216,8 @@ namespace Writer {
 //         HEADER END
 //
 //
+
+#include "images.cpp"
 
 #include "desktop.cpp"
 #include "graph.cpp"
@@ -1247,176 +1233,6 @@ namespace Writer {
 		}
 	}
 
-	float getImageX(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't get the x of image named %s because it doesn't exist", MSG_ERROR, name);
-			return 0;
-		}
-
-		return img->sprite->x;
-	}
-
-	float getImageY(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't get the y of image named %s because it doesn't exist", MSG_ERROR, name);
-			return 0;
-		}
-
-		return img->sprite->y;
-	}
-
-	int getImageWidth(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't get the width of image named %s because it doesn't exist", MSG_ERROR, name);
-			return 0;
-		}
-
-		return img->sprite->getWidth();
-	}
-
-	int getImageHeight(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't get the height of image named %s because it doesn't exist", MSG_ERROR, name);
-			return 0;
-		}
-
-		return img->sprite->getHeight();
-	}
-
-	void addImage(const char *path, const char *name) {
-		int slot;
-		for (slot = 0; slot < IMAGES_MAX; slot++)
-			if (!writer->images[slot].exists)
-				break;
-
-		if (slot >= IMAGES_MAX) {
-			msg("Too many images", MSG_ERROR);
-			return;
-		}
-
-		Image *img = &writer->images[slot];
-		img->exists = true;
-		img->name = stringClone(name);
-		img->sprite = createMintSprite(path);
-		// img->sprite->centerPivot = true;
-		writer->bg->addChild(img->sprite);
-	}
-
-	Image *getImage(const char *name) {
-		for (int i = 0; i < IMAGES_MAX; i++)
-			if (writer->images[i].exists)
-				if (streq(writer->images[i].name, name))
-					return &writer->images[i];
-
-		return NULL;
-	}
-
-	void alignImage(const char *name, const char *gravity) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		Dir8 dir = DIR8_CENTER;
-		if (streq(gravity, CENTER)) dir = DIR8_CENTER;
-		if (streq(gravity, TOP)) dir = DIR8_UP;
-		if (streq(gravity, BOTTOM)) dir = DIR8_DOWN;
-		if (streq(gravity, LEFT)) dir = DIR8_LEFT;
-		if (streq(gravity, RIGHT)) dir = DIR8_RIGHT;
-
-		img->sprite->alignInside(dir);
-	}
-
-	void tintImage(const char *name, int tint) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->tint = tint;
-	}
-
-	void rotateImage(const char *name, float rotation) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->rotation = rotation;
-	}
-
-	void moveImage(const char *name, float x, float y) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->x += img->sprite->getWidth() * x;
-		img->sprite->y += img->sprite->getHeight() * y;
-	}
-
-	void moveImagePx(const char *name, float x, float y) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->x = x;
-		img->sprite->y = y;
-	}
-
-	void scaleImage(const char *name, float scaleX, float scaleY) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->sprite->scale(scaleX, scaleY);
-	}
-
-
-	void removeImage(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img || !img->exists) {
-			msg("Can't remove image named %s because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		removeImage(img);
-	}
-
-	void removeImage(Image *img) {
-		if (!img || !img->exists) {
-			msg("Can't remove image because it doesn't exist or is NULL", MSG_ERROR);
-			return;
-		}
-
-		img->exists = false;
-		img->sprite->destroy();
-		Free(img->name);
-	}
-
 	void showTooltipCursor(const char *str) {
 		if (!streq(writer->tooltipTf->rawText, str)) {
 			writer->tooltipTf->setText(str);
@@ -1577,17 +1393,6 @@ namespace Writer {
 		size_t dataLen;
 		char *data = (char *)base64_decode((unsigned char *)b64Data, strlen(b64Data), &dataLen);
 		addAsset(audioName, data, dataLen);
-	}
-
-	void permanentImage(const char *name) {
-		Image *img = getImage(name);
-
-		if (!img) {
-			msg("Can't make image named %s permanent because it doesn't exist", MSG_ERROR, name);
-			return;
-		}
-
-		img->permanent = true;
 	}
 
 	float getTime() {
