@@ -105,6 +105,8 @@ namespace Writer {
 	void removeImage(Image *img);
 	void permanentImage(const char *name);
 	void alignImage(const char *name, const char *gravity=CENTER);
+	float getImageX(const char *name);
+	float getImageY(const char *name);
 	int getImageHeight(const char *name);
 	int getImageWidth(const char *name);
 
@@ -262,13 +264,15 @@ namespace Writer {
 
 		if (streq(name, "getImageWidth")) return (void *)getImageWidth;
 		if (streq(name, "getImageHeight")) return (void *)getImageHeight;
+		if (streq(name, "getImageX")) return (void *)getImageX;
+		if (streq(name, "getImageY")) return (void *)getImageY;
 		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
 		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
 		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
-		//@incomplete rndInt, addChoice
+		//@incomplete rndInt
 		return NULL;
 	}
 
@@ -656,9 +660,6 @@ namespace Writer {
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
 
-			// for (int i = 0; i < IMAGES_MAX; i++) {
-			// 	if (writer->images[i].exists) removeImage(&writer->images[i]);
-			// }
 			execJs("removeAllImages();");
 
 			for (int i = 0; i < ASSETS_MAX; i++) {
@@ -1246,6 +1247,28 @@ namespace Writer {
 		}
 	}
 
+	float getImageX(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't get the x of image named %s because it doesn't exist", MSG_ERROR, name);
+			return 0;
+		}
+
+		return img->sprite->x;
+	}
+
+	float getImageY(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't get the y of image named %s because it doesn't exist", MSG_ERROR, name);
+			return 0;
+		}
+
+		return img->sprite->y;
+	}
+
 	int getImageWidth(const char *name) {
 		Image *img = getImage(name);
 
@@ -1261,7 +1284,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't get the width of image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't get the height of image named %s because it doesn't exist", MSG_ERROR, name);
 			return 0;
 		}
 
