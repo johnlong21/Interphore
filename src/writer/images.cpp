@@ -109,7 +109,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't tint image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -120,7 +120,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't rotate image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -131,7 +131,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't move image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -143,7 +143,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't movePx image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 
@@ -155,7 +155,7 @@ namespace Writer {
 		Image *img = getImage(name);
 
 		if (!img) {
-			msg("Can't align image named %s because it doesn't exist", MSG_ERROR, name);
+			msg("Can't scale image named %s because it doesn't exist", MSG_ERROR, name);
 			return;
 		}
 

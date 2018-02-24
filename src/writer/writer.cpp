@@ -670,6 +670,7 @@ namespace Writer {
 
 
 	void updateWriter() {
+			execJs(interUpdateFn);
 		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
@@ -724,8 +725,6 @@ namespace Writer {
 		}
 
 		if (writer->state == STATE_MOD) {
-			execJs(interUpdateFn);
-
 			if (writer->execWhenDoneLoading && writer->currentMod->doneLoading) {
 				execJs(writer->execWhenDoneLoading);
 				Free(writer->execWhenDoneLoading);
@@ -1083,11 +1082,12 @@ namespace Writer {
 	}
 
 	void clear() {
-		for (int i = 0; i < IMAGES_MAX; i++) {
-			if (writer->images[i].exists && !writer->images[i].permanent) {
-				removeImage(&writer->images[i]);
-			}
-		}
+			execJs("removeAllImages();");
+		// for (int i = 0; i < IMAGES_MAX; i++) {
+		// 	if (writer->images[i].exists && !writer->images[i].permanent) {
+		// 		removeImage(&writer->images[i]);
+		// 	}
+		// }
 
 		writer->mainText->setText("");
 		for (int i = 0; i < writer->choicesNum; i++) destroyButton(writer->choices[i]);
@@ -1197,7 +1197,8 @@ namespace Writer {
 			if (!writer->msgs[slot].exists)
 				break;
 
-		assert(slot < MSG_MAX);
+		// assert(slot < MSG_MAX);
+		if (slot >= MSG_MAX) return; //@incomplete This should return an actual error message of some kind
 		Msg *msg = &writer->msgs[slot];
 		memset(msg, 0, sizeof(Msg));
 		msg->exists = true;
