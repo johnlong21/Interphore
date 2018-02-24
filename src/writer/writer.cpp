@@ -83,6 +83,7 @@ namespace Writer {
 	void disableAllEntries();
 	void enableCategory(const char *category);
 	void execJs(const char *js, ...);
+	void execJs(mjs_val_t expr);
 	void loadModEntry(ModEntry *entry);
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
@@ -213,6 +214,7 @@ namespace Writer {
 	};
 
 	mjs *mjs;
+	mjs_val_t interUpdateFn;
 	WriterStruct *writer;
 }
 
@@ -281,6 +283,9 @@ namespace Writer {
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
 				execJs((char *)getAsset("info/interConfig.js")->data);
+
+				mjs_val_t global = mjs_get_global(mjs);
+				interUpdateFn = mjs_get(mjs, global, "__update", strlen("__update"));
 			}
 		}
 
@@ -728,7 +733,8 @@ namespace Writer {
 			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
 			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
-			execJs("__update();");
+			// execJs("__update();");
+			execJs(interUpdateFn);
 			for (int i = 0; i < writer->choicesNum; i++) {
 				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
 				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
@@ -867,6 +873,18 @@ namespace Writer {
 			Free(serialData);
 		} else {
 			msg("Failed to load.", MSG_ERROR);
+		}
+	}
+
+			// mjs_err_t mjs_call(struct mjs *mjs, mjs_val_t *res, mjs_val_t func, mjs_val_t this_val, int nargs, ...);
+
+	void execJs(mjs_val_t expr) {
+		mjs_err_t err = mjs_call(mjs, NULL, interUpdateFn, NULL, 0);
+		if (err) {
+			const char *errStr = mjs_strerror(mjs, err);
+			msg("JS error: %s", MSG_ERROR, errStr);
+			printf("JS error: %s\n", errStr);
+			// assert(0);
 		}
 	}
 
