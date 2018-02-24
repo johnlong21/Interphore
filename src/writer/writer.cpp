@@ -84,23 +84,30 @@ namespace Writer {
 	void enableCategory(const char *category);
 	void execJs(const char *js, ...);
 	void execJs(mjs_val_t expr);
+
 	void loadModEntry(ModEntry *entry);
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
 	void loadMod(char *serialData);
+
 	Button *createButton(const char *text, int width=256, int height=128);
 	void destroyButton(Button *btn);
+
 	void gotoPassage(const char *passageName, bool skipClear=false);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
 	void addImage(const char *path, const char *name);
 	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
+
 	Image *getImage(const char *name);
 	void removeImage(const char *name);
 	void removeImage(Image *img);
 	void permanentImage(const char *name);
 	void alignImage(const char *name, const char *gravity=CENTER);
+	int getImageHeight(const char *name);
+	int getImageWidth(const char *name);
+
 	void playAudio(const char *path, const char *name);
 	void clear();
 
@@ -252,6 +259,10 @@ namespace Writer {
 		if (streq(name, "getTime")) return (void *)getTime;
 		if (streq(name, "addChoice")) return (void *)addChoice;
 		if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
+
+		if (streq(name, "getImageWidth")) return (void *)getImageWidth;
+		if (streq(name, "getImageHeight")) return (void *)getImageHeight;
+		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -645,9 +656,10 @@ namespace Writer {
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
 
-			for (int i = 0; i < IMAGES_MAX; i++) {
-				if (writer->images[i].exists) removeImage(&writer->images[i]);
-			}
+			// for (int i = 0; i < IMAGES_MAX; i++) {
+			// 	if (writer->images[i].exists) removeImage(&writer->images[i]);
+			// }
+			execJs("removeAllImages();");
 
 			for (int i = 0; i < ASSETS_MAX; i++) {
 				if (writer->loadedAssets[i]) {
@@ -1232,6 +1244,28 @@ namespace Writer {
 				msg->sprite->alignInside(DIR8_DOWN, 0, 100);
 			}
 		}
+	}
+
+	int getImageWidth(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't get the width of image named %s because it doesn't exist", MSG_ERROR, name);
+			return 0;
+		}
+
+		return img->sprite->getWidth();
+	}
+
+	int getImageHeight(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't get the width of image named %s because it doesn't exist", MSG_ERROR, name);
+			return 0;
+		}
+
+		return img->sprite->getHeight();
 	}
 
 	void addImage(const char *path, const char *name) {
