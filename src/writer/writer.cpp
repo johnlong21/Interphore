@@ -725,6 +725,8 @@ namespace Writer {
 		}
 
 		if (writer->state == STATE_MOD) {
+			execJs(interUpdateFn);
+
 			if (writer->execWhenDoneLoading && writer->currentMod->doneLoading) {
 				execJs(writer->execWhenDoneLoading);
 				Free(writer->execWhenDoneLoading);
@@ -733,8 +735,6 @@ namespace Writer {
 			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
 			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
-			// execJs("__update();");
-			execJs(interUpdateFn);
 			for (int i = 0; i < writer->choicesNum; i++) {
 				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
 				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
@@ -1437,7 +1437,7 @@ namespace Writer {
 
 			lineStart = lineEnd+1;
 		}
-		printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
+		// printf("-----\nPassage name: %s\nData:\n%s\n", passage->name, passage->appendData);
 		// for (int i = 0; i < passage->choicesNum; i++) printf("Button: %s\n", passage->choices[i]);
 
 		if (writer->passagesNum+1 > PASSAGE_MAX) {

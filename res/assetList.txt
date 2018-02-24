@@ -3,6 +3,15 @@ font/bitmap/*
 
 info/interConfig.js
 
+img/writer/exit.png
+img/writer/exit.spr
+img/writer/restart.png
+img/writer/restart.spr
+img/writer/icon.png
+img/writer/icon.spr
+img/writer/writerChoice.png
+img/writer/writerChoice.spr
+
 img/ui/main.png
 img/ui/main.spr
 img/ui/next.png
@@ -22,7 +31,6 @@ img/ui/dialog/paraDialog.png
 img/ui/dialog/paraDialog.spr
 img/ui/dialog/wendyDialog.png
 img/ui/dialog/wendyDialog.spr
-
 
 audio/ui/notification.ogg
 audio/ui/choiceClick/1.ogg
