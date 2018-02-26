@@ -671,7 +671,7 @@ namespace Writer {
 
 
 	void updateWriter() {
-			execJs(interUpdateFn);
+		execJs(interUpdateFn);
 		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
