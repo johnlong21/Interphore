@@ -3,7 +3,7 @@
 
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 128
-#define PASSAGE_NAME_MAX MED_STR
+#define PASSAGE_NAME_MAX MED_STR // MED_STR is 256
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
 #define AUTHOR_NAME_MAX MED_STR
@@ -21,6 +21,7 @@
 #define TOOLTIP_TEXT_LAYER 2
 
 #define BUTTON_ICONS_MAX 16
+#define ICON_NAME_MAX MED_STR
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -739,9 +740,22 @@ namespace Writer {
 				// if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
 				// if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
 
-				if (writer->choices[i]->sprite->justPressed) {
+				Button *choiceButton = writer->choices[i];
+
+				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
+					MintSprite *spr = choiceButton->icons[iconIndex];
+
+					char iconName[ICON_NAME_MAX];
+					strcpy(iconName, spr->frames[spr->currentFrame].name);
+					char *zeroChar = strstr(iconName, "0");
+					if (zeroChar) *zeroChar = '\0';
+
+					if (spr->hovering) showTooltipCursor(iconName);
+				}
+
+				if (choiceButton->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
-					gotoPassage(writer->choices[i]->destPassageName);
+					gotoPassage(choiceButton->destPassageName);
 				}
 			}
 
