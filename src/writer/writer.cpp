@@ -1425,9 +1425,13 @@ namespace Writer {
 			btn->sprite->addChild(spr);
 			btn->icons[btn->iconsNum++] = spr;
 
+#if 1
+				spr->x = spr->width * (btn->iconsNum-1);
+#else
 			if (btn->iconsNum > 1) {
 				spr->alignOutside(btn->icons[btn->iconsNum-1], DIR8_RIGHT);
 			}
+#endif
 		}
 	}
 
