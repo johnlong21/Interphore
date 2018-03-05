@@ -35,6 +35,7 @@ namespace Writer {
 	bool exists = false;
 	int lowestLayer;
 	int oldDefaultLayer;
+	float mouseMultiplier = 1;
 
 	const char *jsTest = ""
 		"START_IMAGES\n"
@@ -420,7 +421,6 @@ namespace Writer {
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
 				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
-				writer->bg->addChild(spr);
 
 				writer->tooltipTf = spr;
 			}
@@ -1270,8 +1270,8 @@ namespace Writer {
 
 		}
 
-		writer->tooltipTf->x = engine->mouseX + 10;
-		writer->tooltipTf->y = engine->mouseY + 10;
+		writer->tooltipTf->x = engine->mouseX*mouseMultiplier + 10;
+		writer->tooltipTf->y = engine->mouseY*mouseMultiplier + 10;
 
 		writer->tooltipShowing = true;
 	}
