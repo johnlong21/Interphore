@@ -1226,7 +1226,7 @@ namespace Writer {
 		// btn->tf->scaleX = 0;
 		writer->bg->addChild(btn->sprite);
 
-		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 50, 5);
+		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
 		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
 		strcpy(btn->destPassageName, dest);
