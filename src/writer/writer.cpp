@@ -421,6 +421,8 @@ namespace Writer {
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
 				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
+				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->zooms = false;
 
 				writer->tooltipTf = spr;
@@ -612,7 +614,8 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width - 30, writer->bg->height*0.75); //@cleanup @note-fallow: - 30 magic number for right side text padding, needs to be based on writer->refreshButton->width or exitButton
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->setText("Mod load failed");
 				spr->y += 30;
 				spr->x += 30;
@@ -1087,7 +1090,8 @@ namespace Writer {
 		{ /// Button text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
-			strcpy(spr->defaultFont, "OpenSans-Regular_20");
+			// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+			strcpy(spr->defaultFont, "Espresso-Dolce_22");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
 			spr->alignInside(DIR8_CENTER);
