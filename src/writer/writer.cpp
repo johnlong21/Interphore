@@ -756,12 +756,12 @@ namespace Writer {
 				if (platformMouseWheel > 0) writer->scrollAmount -= 0.1;
 				writer->scrollAmount = Clamp(writer->scrollAmount, 0, 1);
 
-				float maxScroll = writer->bg->height - writer->mainText->textHeight;
+				float maxScroll = writer->mainText->textHeight - writer->mainText->clipRect.height;
 				float minScroll = 30;
 
-				if (writer->mainText->textHeight < writer->mainText->clipRect.height) writer->scrollAmount = 0;
+				if (maxScroll < minScroll) writer->scrollAmount = 0;
 
-				writer->mainText->y -= (writer->mainText->y - (writer->scrollAmount*maxScroll+minScroll))/10;
+				writer->mainText->y -= (writer->mainText->y - (-writer->scrollAmount*maxScroll+minScroll))/10;
 			}
 
 			for (int i = 0; i < writer->choicesNum; i++) {
