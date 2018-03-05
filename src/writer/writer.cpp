@@ -612,13 +612,22 @@ namespace Writer {
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->width - 30, writer->bg->height*0.75); //@cleanup @note-fallow: - 30 magic number for right side text padding, needs to be based on writer->refreshButton->width or exitButton
+				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
 				writer->bg->addChild(spr);
 				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->setText("Mod load failed");
 				spr->y += 30;
 				spr->x += 30;
+
+				Rect startRect;
+				startRect.x = spr->x;
+				startRect.y = spr->y;
+				startRect.width = spr->width;
+				startRect.height = writer->bg->height - startRect.x - 128 - 16; //@hardcode Buttons are 128px, padding is 16px
+
+				writer->bg->localToGlobal(&startRect);
+				spr->clipRect.setTo(startRect.x, startRect.y, startRect.width, startRect.height);
 
 				writer->mainText = spr;
 			}
@@ -1200,7 +1209,7 @@ namespace Writer {
 		// btn->tf->scaleX = 0;
 		writer->bg->addChild(btn->sprite);
 
-		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
+		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 50, 5);
 		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
 		strcpy(btn->destPassageName, dest);
