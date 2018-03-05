@@ -421,6 +421,7 @@ namespace Writer {
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
 				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
+				spr->zooms = false;
 
 				writer->tooltipTf = spr;
 			}
