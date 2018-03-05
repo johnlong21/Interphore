@@ -33,6 +33,8 @@ namespace Writer {
 	char tempBytes[Megabytes(2)];
 	char tempBytes2[Megabytes(2)];
 	bool exists = false;
+	int lowestLayer;
+	int oldDefaultLayer;
 
 	const char *jsTest = ""
 		"START_IMAGES\n"
@@ -198,8 +200,6 @@ namespace Writer {
 
 		Asset *loadedAssets[ASSETS_MAX];
 
-		int lowestLayer;
-
 		bool tooltipShowing;
 		MintSprite *tooltipTf;
 		MintSprite *tooltipBg;
@@ -274,6 +274,8 @@ namespace Writer {
 		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
+		oldDefaultLayer = engine->spriteData.defaultLayer;
+		engine->spriteData.defaultLayer = lowestLayer;
 
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
@@ -417,7 +419,7 @@ namespace Writer {
 				spr->setupRect(512, 128, 0xFFFFFF);
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
-				spr->layer = writer->lowestLayer + TOOLTIP_TEXT_LAYER;
+				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
 				writer->bg->addChild(spr);
 
 				writer->tooltipTf = spr;
@@ -1260,7 +1262,7 @@ namespace Writer {
 			{ /// Tooltip bg
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->tooltipTf->getFrameWidth(), writer->tooltipTf->getFrameHeight(), 0x111111);
-				spr->layer = writer->lowestLayer + TOOLTIP_BG_LAYER;
+				spr->layer = lowestLayer + TOOLTIP_BG_LAYER;
 				writer->tooltipTf->addChild(spr);
 
 				writer->tooltipBg = spr;
@@ -1440,5 +1442,7 @@ namespace Writer {
 		writer->bg->destroy();
 		exists = false;
 		Free(writer);
+
+		engine->spriteData.defaultLayer = oldDefaultLayer;
 	}
 }
