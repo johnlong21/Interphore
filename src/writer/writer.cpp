@@ -206,6 +206,8 @@ namespace Writer {
 		MintSprite *tooltipBg;
 
 		char *execWhenDoneLoading;
+
+		float scrollAmount;
 	};
 
 	mjs *mjs;
@@ -749,6 +751,19 @@ namespace Writer {
 			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
 			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
+			{ /// Section: Scrolling
+				if (platformMouseWheel < 0) writer->scrollAmount += 0.1;
+				if (platformMouseWheel > 0) writer->scrollAmount -= 0.1;
+				writer->scrollAmount = Clamp(writer->scrollAmount, 0, 1);
+
+				float maxScroll = writer->bg->height - writer->mainText->textHeight;
+				float minScroll = 30;
+
+				if (writer->mainText->textHeight < writer->mainText->clipRect.height) writer->scrollAmount = 0;
+
+				writer->mainText->y -= (writer->mainText->y - (writer->scrollAmount*maxScroll+minScroll))/10;
+			}
+
 			for (int i = 0; i < writer->choicesNum; i++) {
 				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
 				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
@@ -1126,6 +1141,8 @@ namespace Writer {
 
 	void gotoPassage(const char *passageName, bool skipClear) {
 		if (!skipClear) clear();
+
+		writer->scrollAmount = 0;
 
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
