@@ -3,7 +3,7 @@
 
 #define CHOICE_BUTTON_MAX 4
 #define BUTTON_MAX 128
-#define PASSAGE_NAME_MAX MED_STR
+#define PASSAGE_NAME_MAX MED_STR // MED_STR is 256
 #define CHOICE_TEXT_MAX MED_STR
 #define MOD_NAME_MAX MED_STR
 #define AUTHOR_NAME_MAX MED_STR
@@ -21,6 +21,7 @@
 #define TOOLTIP_TEXT_LAYER 2
 
 #define BUTTON_ICONS_MAX 16
+#define ICON_NAME_MAX MED_STR
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -32,6 +33,9 @@ namespace Writer {
 	char tempBytes[Megabytes(2)];
 	char tempBytes2[Megabytes(2)];
 	bool exists = false;
+	int lowestLayer;
+	int oldDefaultLayer;
+	float mouseMultiplier = 1;
 
 	const char *jsTest = ""
 		"START_IMAGES\n"
@@ -141,6 +145,7 @@ namespace Writer {
 
 	struct Button {
 		bool exists;
+		float creationTime;
 		MintSprite *icons[BUTTON_ICONS_MAX];
 		int iconsNum;
 		MintSprite *sprite;
@@ -197,13 +202,13 @@ namespace Writer {
 
 		Asset *loadedAssets[ASSETS_MAX];
 
-		int lowestLayer;
-
 		bool tooltipShowing;
 		MintSprite *tooltipTf;
 		MintSprite *tooltipBg;
 
 		char *execWhenDoneLoading;
+
+		float scrollAmount;
 	};
 
 	mjs *mjs;
@@ -273,6 +278,8 @@ namespace Writer {
 		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
+		oldDefaultLayer = engine->spriteData.defaultLayer;
+		engine->spriteData.defaultLayer = lowestLayer;
 
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
@@ -422,8 +429,10 @@ namespace Writer {
 				spr->setupRect(512, 128, 0xFFFFFF);
 				spr->setText("Test tooltip");
 				spr->alpha = 0;
-				spr->layer = writer->lowestLayer + TOOLTIP_TEXT_LAYER;
-				writer->bg->addChild(spr);
+				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
+				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "Espresso-Dolce_22");
+				spr->zooms = false;
 
 				writer->tooltipTf = spr;
 			}
@@ -612,12 +621,22 @@ namespace Writer {
 		if (newState == STATE_MOD) {
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(writer->bg->width - 30, writer->bg->height*0.75); //@cleanup @note-fallow: - 30 magic number for right side text padding, needs to be based on writer->refreshButton->width or exitButton
+				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->setText("Mod load failed");
 				spr->y += 30;
 				spr->x += 30;
+
+				Rect startRect;
+				startRect.x = spr->x;
+				startRect.y = spr->y;
+				startRect.width = spr->width;
+				startRect.height = writer->bg->height - startRect.x - 128 - 16; //@hardcode Buttons are 128px, padding is 16px
+
+				writer->bg->localToGlobal(&startRect);
+				spr->clipRect.setTo(startRect.x, startRect.y, startRect.width, startRect.height);
 
 				writer->mainText = spr;
 			}
@@ -676,7 +695,7 @@ namespace Writer {
 
 
 	void updateWriter() {
-			execJs(interUpdateFn);
+		execJs(interUpdateFn);
 		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
@@ -736,18 +755,39 @@ namespace Writer {
 				Free(writer->execWhenDoneLoading);
 				writer->execWhenDoneLoading = NULL;
 			}
-			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
-			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
+
+			{ /// Section: Scrolling
+				if (platformMouseWheel < 0) writer->scrollAmount += 0.1;
+				if (platformMouseWheel > 0) writer->scrollAmount -= 0.1;
+				writer->scrollAmount = Clamp(writer->scrollAmount, 0, 1);
+
+				float maxScroll = writer->mainText->textHeight - writer->mainText->clipRect.height;
+				float minScroll = 30;
+
+				if (maxScroll < minScroll) writer->scrollAmount = 0;
+
+				writer->mainText->y -= (writer->mainText->y - (-writer->scrollAmount*maxScroll+minScroll))/10;
+			}
 
 			for (int i = 0; i < writer->choicesNum; i++) {
-				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
-				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
-				// if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
-				// if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
+				Button *choiceButton = writer->choices[i];
 
-				if (writer->choices[i]->sprite->justPressed) {
+				choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.5, engine->height, engine->height - choiceButton->sprite->getHeight(), ELASTIC_OUT);
+
+				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
+					MintSprite *spr = choiceButton->icons[iconIndex];
+
+					char iconName[ICON_NAME_MAX];
+					strcpy(iconName, spr->frames[spr->currentFrame].name);
+					char *zeroChar = strstr(iconName, "0");
+					if (zeroChar) *zeroChar = '\0';
+
+					if (spr->hovering) showTooltipCursor(iconName);
+				}
+
+				if (choiceButton->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
-					gotoPassage(writer->choices[i]->destPassageName);
+					gotoPassage(choiceButton->destPassageName);
 				}
 			}
 
@@ -1065,6 +1105,7 @@ namespace Writer {
 		Button *btn = &writer->buttons[slot];
 		memset(btn, 0, sizeof(Button));
 		btn->exists = true;
+		btn->creationTime = engine->time;
 
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
@@ -1076,7 +1117,8 @@ namespace Writer {
 		{ /// Button text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
-			strcpy(spr->defaultFont, "OpenSans-Regular_20");
+			// strcpy(spr->defaultFont, "OpenSans-Regular_20");
+			strcpy(spr->defaultFont, "Espresso-Dolce_22");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
 			spr->alignInside(DIR8_CENTER);
@@ -1102,6 +1144,8 @@ namespace Writer {
 
 	void gotoPassage(const char *passageName, bool skipClear) {
 		if (!skipClear) clear();
+
+		writer->scrollAmount = 0;
 
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
@@ -1252,7 +1296,7 @@ namespace Writer {
 			{ /// Tooltip bg
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->tooltipTf->getFrameWidth(), writer->tooltipTf->getFrameHeight(), 0x111111);
-				spr->layer = writer->lowestLayer + TOOLTIP_BG_LAYER;
+				spr->layer = lowestLayer + TOOLTIP_BG_LAYER;
 				writer->tooltipTf->addChild(spr);
 
 				writer->tooltipBg = spr;
@@ -1260,8 +1304,8 @@ namespace Writer {
 
 		}
 
-		writer->tooltipTf->x = engine->mouseX + 10;
-		writer->tooltipTf->y = engine->mouseY + 10;
+		writer->tooltipTf->x = engine->mouseX*mouseMultiplier + 10;
+		writer->tooltipTf->y = engine->mouseY*mouseMultiplier + 10;
 
 		writer->tooltipShowing = true;
 	}
@@ -1417,9 +1461,13 @@ namespace Writer {
 			btn->sprite->addChild(spr);
 			btn->icons[btn->iconsNum++] = spr;
 
+#if 1
+				spr->x = spr->width * (btn->iconsNum-1);
+#else
 			if (btn->iconsNum > 1) {
 				spr->alignOutside(btn->icons[btn->iconsNum-1], DIR8_RIGHT);
 			}
+#endif
 		}
 	}
 
@@ -1428,5 +1476,7 @@ namespace Writer {
 		writer->bg->destroy();
 		exists = false;
 		Free(writer);
+
+		engine->spriteData.defaultLayer = oldDefaultLayer;
 	}
 }
