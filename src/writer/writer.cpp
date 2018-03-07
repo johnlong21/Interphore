@@ -145,6 +145,7 @@ namespace Writer {
 
 	struct Button {
 		bool exists;
+		float creationTime;
 		MintSprite *icons[BUTTON_ICONS_MAX];
 		int iconsNum;
 		MintSprite *sprite;
@@ -748,8 +749,6 @@ namespace Writer {
 				Free(writer->execWhenDoneLoading);
 				writer->execWhenDoneLoading = NULL;
 			}
-			//zoomPerc = tweenEase(zoomPerc, SINE_IN);
-			//zoomChange = mathLerp(zoomPerc, 1, 1.01);
 
 			{ /// Section: Scrolling
 				if (platformMouseWheel < 0) writer->scrollAmount += 0.1;
@@ -765,12 +764,9 @@ namespace Writer {
 			}
 
 			for (int i = 0; i < writer->choicesNum; i++) {
-				// if (writer->choices[i]->sprite->scaleX < 1) writer->choices[i]->sprite->scaleX += 0.05;
-				// if (writer->choices[i]->sprite->scaleY < 1) writer->choices[i]->sprite->scaleY += 0.05;
-				// if (writer->choices[i]->tf->scaleY < 1) writer->choices[i]->tf->scaleY += 0.05;
-				// if (writer->choices[i]->tf->scaleX < 1) writer->choices[i]->tf->scaleX += 0.05;
-
 				Button *choiceButton = writer->choices[i];
+
+				choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.5, engine->height, engine->height - choiceButton->sprite->getHeight(), ELASTIC_OUT);
 
 				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
 					MintSprite *spr = choiceButton->icons[iconIndex];
@@ -1103,6 +1099,7 @@ namespace Writer {
 		Button *btn = &writer->buttons[slot];
 		memset(btn, 0, sizeof(Button));
 		btn->exists = true;
+		btn->creationTime = engine->time;
 
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
