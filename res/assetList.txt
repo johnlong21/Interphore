@@ -36,3 +36,13 @@ audio/ui/notification.ogg
 audio/ui/choiceClick/1.ogg
 audio/ui/choiceClick/2.ogg
 audio/ui/choiceClick/3.ogg
+audio/ui/hoverChoiceButtons/1.ogg
+audio/ui/hoverChoiceButtons/2.ogg
+audio/ui/hoverChoiceButtons/3.ogg
+audio/ui/hoverChoiceIcons/1.ogg
+audio/ui/hoverChoiceIcons/2.ogg
+audio/ui/hoverChoiceIcons/3.ogg
+audio/ui/restart.ogg
+audio/ui/exit.ogg
+audio/ui/load.ogg
+audio/music/newCoworker.mp3

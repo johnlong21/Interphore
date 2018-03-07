@@ -702,6 +702,7 @@ namespace Writer {
 
 		if (writer->state == STATE_MENU) {
 			if (writer->loadButton->sprite->justPressed) {
+				playSound("audio/ui/load");
 #ifdef SEMI_WIN32
 				loadMod((char *)jsTest);
 #else
@@ -792,12 +793,12 @@ namespace Writer {
 			}
 
 			if (writer->exitButton->justPressed) {
-				playSound("audio/ui/choiceClick");
+				playSound("audio/ui/exit");
 				changeState(STATE_MENU);
 			}
 
 			if (writer->refreshButton->justPressed) {
-				// playSound("audio/ui/restart");
+				playSound("audio/ui/restart");
 				changeState(STATE_LOADING);
 				loadModEntry(writer->currentMod);
 			}
