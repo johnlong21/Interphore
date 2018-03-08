@@ -100,7 +100,7 @@ namespace Writer {
 	Button *createButton(const char *text, int width=256, int height=128);
 	void destroyButton(Button *btn);
 
-	void gotoPassage(const char *passageName, bool skipClear=false);
+	void gotoPassage(const char *passageName);
 	void append(const char *text);
 	void addChoice(const char *text, const char *dest);
 	void msg(const char *str, MsgType type, ...);
@@ -250,6 +250,7 @@ namespace Writer {
 		if (streq(name, "tintImage")) return (void *)tintImage;
 		if (streq(name, "playAudio")) return (void *)playAudio;
 		if (streq(name, "submitAudio")) return (void *)submitAudio;
+		if (streq(name, "clear")) return (void *)clear;
 
 		if (streq(name, "permanentImage")) return (void *)permanentImage;
 
@@ -1169,9 +1170,7 @@ namespace Writer {
 		writer->choicesNum = 0;
 	}
 
-	void gotoPassage(const char *passageName, bool skipClear) {
-		if (!skipClear) clear();
-
+	void gotoPassage(const char *passageName) {
 		writer->scrollAmount = 0;
 
 		// printf("Passages %d\n", writer->passagesNum);
