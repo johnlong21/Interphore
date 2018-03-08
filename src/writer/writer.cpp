@@ -386,6 +386,12 @@ namespace Writer {
 					"Internal",
 					"0.0.1"
 				}, {
+					"Intro",
+					"Craig Barrel",
+					"https://www.dropbox.com/s/ox4aqpkajswnnlf/introMod.phore?dl=1",
+					"Internal",
+					"0.0.1"
+				}, {
 					"Cade's Test",
 					"Cade",
 					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
