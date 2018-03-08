@@ -9,12 +9,12 @@
 #define AUTHOR_NAME_MAX MED_STR
 #define CATEGORIES_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
-#define MOD_ENTRIES_MAX 16
+#define MOD_ENTRIES_MAX 64
 #define MSG_MAX 64
 #define IMAGES_MAX 128
 #define ASSETS_MAX 128
 #define CATEGORIES_MAX 8
-#define ENTRY_LIST_MAX 16
+#define ENTRY_LIST_MAX 64
 #define VERSION_STR_MAX 16
 
 #define BG1_LAYER 10
@@ -104,7 +104,7 @@ namespace Writer {
 
 	void gotoPassage(const char *passageName);
 	void append(const char *text);
-	void addChoice(const char *text, const char *dest);
+	void addChoice(const char *text, void (*dest)(void *), void *userdata);
 	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
 
@@ -157,7 +157,8 @@ namespace Writer {
 		int iconsNum;
 		MintSprite *sprite;
 		MintSprite *tf;
-		char destPassageName[PASSAGE_NAME_MAX];
+		void (*dest)(void *);
+		void *userdata;
 	};
 
 	struct Image {
@@ -367,6 +368,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
 					"Examples",
 					"1.0.0"
+				}, {
+					"Add choice example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/g0anhgehafkad9c/addChoiceExample.phore?dl=1",
+					"Examples",
+					"0.1.0"
 				}, {
 					"Image example",
 					"Fallowwing",
@@ -714,6 +721,8 @@ namespace Writer {
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
+			writer->bgSprite1->destroy();
+			writer->bgSprite2->destroy();
 
 			execJs("removeAllImages();");
 
@@ -832,7 +841,7 @@ namespace Writer {
 
 				if (choiceButton->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
-					gotoPassage(choiceButton->destPassageName);
+					choiceButton->dest(choiceButton->userdata);
 				}
 			}
 
@@ -1272,7 +1281,7 @@ namespace Writer {
 		writer->mainText->setText(writer->mainText->rawText);
 	}
 
-	void addChoice(const char *text, const char *dest) {
+	void addChoice(const char *text, void (*dest)(void *), void *userdata) {
 		if (writer->choicesNum+1 > CHOICE_BUTTON_MAX) {
 			msg("Too many choices", MSG_ERROR);
 			return;
@@ -1290,7 +1299,8 @@ namespace Writer {
 		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
 		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
-		strcpy(btn->destPassageName, dest);
+		btn->dest = dest;
+		btn->userdata = userdata;
 		writer->choices[writer->choicesNum++] = btn;
 	}
 
