@@ -26,6 +26,8 @@
 #define BUTTON_ICONS_MAX 16
 #define ICON_NAME_MAX MED_STR
 
+#define TIMERS_MAX 128
+
 namespace Writer {
 	const char *CENTER = "CENTER";
 	const char *TOP = "TOP";
@@ -121,6 +123,8 @@ namespace Writer {
 	float getTime();
 	void addButtonIcon(const char *buttonText, const char *iconName);
 
+	int timer(float delay, void (*onComplete)(void *), void *userdata);
+
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
@@ -161,6 +165,14 @@ namespace Writer {
 		bool permanent;
 		char *name;
 		MintSprite *sprite;
+	};
+
+	struct Timer {
+		bool exists;
+		float delay;
+		float timeLeft;
+		void (*onComplete)(void *);
+		void *userdata;
 	};
 
 	struct WriterStruct {
@@ -215,6 +227,8 @@ namespace Writer {
 
 		MintSprite *bgSprite1;
 		MintSprite *bgSprite2;
+
+		Timer timers[TIMERS_MAX];
 	};
 
 	mjs *mjs;
@@ -266,11 +280,14 @@ namespace Writer {
 		if (streq(name, "getImageY")) return (void *)getImageY;
 		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
 
+		if (streq(name, "timer")) return (void *)timer;
+
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
 		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
 		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
 		//@incomplete rndInt
+
 		return NULL;
 	}
 
@@ -855,13 +872,28 @@ namespace Writer {
 			}
 		}
 
-		if (writer->tooltipShowing) {
-			writer->tooltipTf->alpha += 0.05;
-		} else {
-			writer->tooltipTf->alpha -= 0.05;
+		{ /// Tooltips
+			if (writer->tooltipShowing) {
+				writer->tooltipTf->alpha += 0.05;
+			} else {
+				writer->tooltipTf->alpha -= 0.05;
+			}
+
+			writer->tooltipShowing = false;
 		}
 
-		writer->tooltipShowing = false;
+		{ /// Timers
+			for (int i = 0; i < TIMERS_MAX; i++) {
+				Timer *curTimer = &writer->timers[i];
+				if (!curTimer->exists) continue;
+
+				curTimer->timeLeft -= engine->elapsed;
+				if (curTimer->timeLeft <= 0) {
+					curTimer->onComplete(curTimer->userdata);
+					curTimer->exists = false;
+				}
+			}
+		}
 	}
 
 	void loadModEntry(ModEntry *entry) {
@@ -1495,6 +1527,28 @@ namespace Writer {
 			}
 #endif
 		}
+	}
+
+	int timer(float delay, void (*onComplete)(void *), void *userdata) {
+		int slot;
+		for (slot = 0; slot < TIMERS_MAX; slot++)
+			if (!writer->timers[slot].exists)
+				break;
+
+		if (slot >= BUTTON_MAX) {
+			msg("Too many timers", MSG_ERROR);
+			return NULL;
+		}
+
+		Timer *curTimer = &writer->timers[slot];
+		memset(curTimer, 0, sizeof(Timer));
+		curTimer->exists = true;
+
+		curTimer->delay = curTimer->timeLeft = delay;
+		curTimer->onComplete = onComplete;
+		curTimer->userdata = userdata;
+
+		return slot;
 	}
 
 	void deinitWriter() {
