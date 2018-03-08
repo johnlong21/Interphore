@@ -9,19 +9,24 @@
 #define AUTHOR_NAME_MAX MED_STR
 #define CATEGORIES_NAME_MAX MED_STR
 #define PASSAGE_MAX 1024
-#define MOD_ENTRIES_MAX 16
+#define MOD_ENTRIES_MAX 64
 #define MSG_MAX 64
 #define IMAGES_MAX 128
 #define ASSETS_MAX 128
 #define CATEGORIES_MAX 8
-#define ENTRY_LIST_MAX 16
+#define ENTRY_LIST_MAX 64
 #define VERSION_STR_MAX 16
 
-#define TOOLTIP_BG_LAYER 1
-#define TOOLTIP_TEXT_LAYER 2
+#define BG1_LAYER 10
+#define BG2_LAYER 20
+#define DEFAULT_LAYER 30
+#define TOOLTIP_BG_LAYER 40
+#define TOOLTIP_TEXT_LAYER 50
 
 #define BUTTON_ICONS_MAX 16
 #define ICON_NAME_MAX MED_STR
+
+#define TIMERS_MAX 128
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -97,9 +102,9 @@ namespace Writer {
 	Button *createButton(const char *text, int width=256, int height=128);
 	void destroyButton(Button *btn);
 
-	void gotoPassage(const char *passageName, bool skipClear=false);
+	void gotoPassage(const char *passageName);
 	void append(const char *text);
-	void addChoice(const char *text, const char *dest);
+	void addChoice(const char *text, void (*dest)(void *), void *userdata);
 	void msg(const char *str, MsgType type, ...);
 	void destroyMsg(Msg *msg);
 
@@ -117,6 +122,8 @@ namespace Writer {
 
 	float getTime();
 	void addButtonIcon(const char *buttonText, const char *iconName);
+
+	int timer(float delay, void (*onComplete)(void *), void *userdata);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -150,7 +157,8 @@ namespace Writer {
 		int iconsNum;
 		MintSprite *sprite;
 		MintSprite *tf;
-		char destPassageName[PASSAGE_NAME_MAX];
+		void (*dest)(void *);
+		void *userdata;
 	};
 
 	struct Image {
@@ -158,6 +166,14 @@ namespace Writer {
 		bool permanent;
 		char *name;
 		MintSprite *sprite;
+	};
+
+	struct Timer {
+		bool exists;
+		float delay;
+		float timeLeft;
+		void (*onComplete)(void *);
+		void *userdata;
 	};
 
 	struct WriterStruct {
@@ -209,6 +225,11 @@ namespace Writer {
 		char *execWhenDoneLoading;
 
 		float scrollAmount;
+
+		MintSprite *bgSprite1;
+		MintSprite *bgSprite2;
+
+		Timer timers[TIMERS_MAX];
 	};
 
 	mjs *mjs;
@@ -244,6 +265,7 @@ namespace Writer {
 		if (streq(name, "tintImage")) return (void *)tintImage;
 		if (streq(name, "playAudio")) return (void *)playAudio;
 		if (streq(name, "submitAudio")) return (void *)submitAudio;
+		if (streq(name, "clear")) return (void *)clear;
 
 		if (streq(name, "permanentImage")) return (void *)permanentImage;
 
@@ -259,11 +281,14 @@ namespace Writer {
 		if (streq(name, "getImageY")) return (void *)getImageY;
 		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
 
+		if (streq(name, "timer")) return (void *)timer;
+
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
 		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
 		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
 		//@incomplete rndInt
+
 		return NULL;
 	}
 
@@ -279,7 +304,7 @@ namespace Writer {
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
 		oldDefaultLayer = engine->spriteData.defaultLayer;
-		engine->spriteData.defaultLayer = lowestLayer;
+		engine->spriteData.defaultLayer = lowestLayer + DEFAULT_LAYER;
 
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
@@ -343,6 +368,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
 					"Examples",
 					"1.0.0"
+				}, {
+					"Add choice example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/g0anhgehafkad9c/addChoiceExample.phore?dl=1",
+					"Examples",
+					"0.1.0"
 				}, {
 					"Image example",
 					"Fallowwing",
@@ -625,6 +656,26 @@ namespace Writer {
 		}
 
 		if (newState == STATE_MOD) {
+			{ /// Bg Sprite 1
+				MintSprite *spr = createMintSprite();
+				writer->bg->addChild(spr);
+				spr->setupRect(engine->width, engine->height, 0xFF0000);
+				spr->layer = lowestLayer + BG1_LAYER;
+				spr->alpha = 0.3;
+
+				writer->bgSprite1 = spr;
+			}
+
+			{ /// Bg Sprite 2
+				MintSprite *spr = createMintSprite();
+				writer->bg->addChild(spr);
+				spr->setupRect(engine->width, engine->height, 0x00FF00);
+				spr->layer = lowestLayer + BG2_LAYER;
+				spr->alpha = 0.3;
+
+				writer->bgSprite2 = spr;
+			}
+
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
@@ -676,6 +727,8 @@ namespace Writer {
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
+			writer->bgSprite1->destroy();
+			writer->bgSprite2->destroy();
 
 			execJs("removeAllImages();");
 
@@ -794,7 +847,7 @@ namespace Writer {
 
 				if (choiceButton->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
-					gotoPassage(choiceButton->destPassageName);
+					choiceButton->dest(choiceButton->userdata);
 				}
 			}
 
@@ -834,13 +887,28 @@ namespace Writer {
 			}
 		}
 
-		if (writer->tooltipShowing) {
-			writer->tooltipTf->alpha += 0.05;
-		} else {
-			writer->tooltipTf->alpha -= 0.05;
+		{ /// Tooltips
+			if (writer->tooltipShowing) {
+				writer->tooltipTf->alpha += 0.05;
+			} else {
+				writer->tooltipTf->alpha -= 0.05;
+			}
+
+			writer->tooltipShowing = false;
 		}
 
-		writer->tooltipShowing = false;
+		{ /// Timers
+			for (int i = 0; i < TIMERS_MAX; i++) {
+				Timer *curTimer = &writer->timers[i];
+				if (!curTimer->exists) continue;
+
+				curTimer->timeLeft -= engine->elapsed;
+				if (curTimer->timeLeft <= 0) {
+					curTimer->onComplete(curTimer->userdata);
+					curTimer->exists = false;
+				}
+			}
+		}
 	}
 
 	void loadModEntry(ModEntry *entry) {
@@ -1149,9 +1217,7 @@ namespace Writer {
 		writer->choicesNum = 0;
 	}
 
-	void gotoPassage(const char *passageName, bool skipClear) {
-		if (!skipClear) clear();
-
+	void gotoPassage(const char *passageName) {
 		writer->scrollAmount = 0;
 
 		// printf("Passages %d\n", writer->passagesNum);
@@ -1221,7 +1287,7 @@ namespace Writer {
 		writer->mainText->setText(writer->mainText->rawText);
 	}
 
-	void addChoice(const char *text, const char *dest) {
+	void addChoice(const char *text, void (*dest)(void *), void *userdata) {
 		if (writer->choicesNum+1 > CHOICE_BUTTON_MAX) {
 			msg("Too many choices", MSG_ERROR);
 			return;
@@ -1239,7 +1305,8 @@ namespace Writer {
 		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
 		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
-		strcpy(btn->destPassageName, dest);
+		btn->dest = dest;
+		btn->userdata = userdata;
 		writer->choices[writer->choicesNum++] = btn;
 	}
 
@@ -1476,6 +1543,28 @@ namespace Writer {
 			}
 #endif
 		}
+	}
+
+	int timer(float delay, void (*onComplete)(void *), void *userdata) {
+		int slot;
+		for (slot = 0; slot < TIMERS_MAX; slot++)
+			if (!writer->timers[slot].exists)
+				break;
+
+		if (slot >= BUTTON_MAX) {
+			msg("Too many timers", MSG_ERROR);
+			return NULL;
+		}
+
+		Timer *curTimer = &writer->timers[slot];
+		memset(curTimer, 0, sizeof(Timer));
+		curTimer->exists = true;
+
+		curTimer->delay = curTimer->timeLeft = delay;
+		curTimer->onComplete = onComplete;
+		curTimer->userdata = userdata;
+
+		return slot;
 	}
 
 	void deinitWriter() {
