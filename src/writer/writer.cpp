@@ -17,8 +17,11 @@
 #define ENTRY_LIST_MAX 16
 #define VERSION_STR_MAX 16
 
-#define TOOLTIP_BG_LAYER 1
-#define TOOLTIP_TEXT_LAYER 2
+#define BG1_LAYER 10
+#define BG2_LAYER 20
+#define DEFAULT_LAYER 30
+#define TOOLTIP_BG_LAYER 40
+#define TOOLTIP_TEXT_LAYER 50
 
 #define BUTTON_ICONS_MAX 16
 #define ICON_NAME_MAX MED_STR
@@ -209,6 +212,9 @@ namespace Writer {
 		char *execWhenDoneLoading;
 
 		float scrollAmount;
+
+		MintSprite *bgSprite1;
+		MintSprite *bgSprite2;
 	};
 
 	mjs *mjs;
@@ -279,7 +285,7 @@ namespace Writer {
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
 		oldDefaultLayer = engine->spriteData.defaultLayer;
-		engine->spriteData.defaultLayer = lowestLayer;
+		engine->spriteData.defaultLayer = lowestLayer + DEFAULT_LAYER;
 
 		writer = (WriterStruct *)zalloc(sizeof(WriterStruct));
 		writer->bg = bgSpr;
@@ -619,6 +625,26 @@ namespace Writer {
 		}
 
 		if (newState == STATE_MOD) {
+			{ /// Bg Sprite 1
+				MintSprite *spr = createMintSprite();
+				writer->bg->addChild(spr);
+				spr->setupRect(engine->width, engine->height, 0xFF0000);
+				spr->layer = lowestLayer + BG1_LAYER;
+				spr->alpha = 0.3;
+
+				writer->bgSprite1 = spr;
+			}
+
+			{ /// Bg Sprite 2
+				MintSprite *spr = createMintSprite();
+				writer->bg->addChild(spr);
+				spr->setupRect(engine->width, engine->height, 0x00FF00);
+				spr->layer = lowestLayer + BG2_LAYER;
+				spr->alpha = 0.3;
+
+				writer->bgSprite2 = spr;
+			}
+
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
