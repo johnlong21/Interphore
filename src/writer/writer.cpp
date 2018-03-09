@@ -832,7 +832,7 @@ namespace Writer {
 			for (int i = 0; i < writer->choicesNum; i++) {
 				Button *choiceButton = writer->choices[i];
 
-				choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.5, engine->height, engine->height - choiceButton->sprite->getHeight(), ELASTIC_OUT);
+				choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.2, engine->height, engine->height - choiceButton->sprite->getHeight(), QUAD_OUT);
 
 				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
 					MintSprite *spr = choiceButton->icons[iconIndex];
@@ -843,11 +843,18 @@ namespace Writer {
 					if (zeroChar) *zeroChar = '\0';
 
 					if (spr->hovering) showTooltipCursor(iconName);
+					if (spr->justHovered) {
+						playSound("audio/ui/hoverChoiceIcons/");
+					}
 				}
 
 				if (choiceButton->sprite->justPressed) {
 					playSound("audio/ui/choiceClick");
 					choiceButton->dest(choiceButton->userdata);
+				}
+
+				if (choiceButton->sprite->justHovered) {
+					playSound("audio/ui/hoverChoiceButtons/");
 				}
 			}
 
@@ -856,10 +863,18 @@ namespace Writer {
 				changeState(STATE_MENU);
 			}
 
+			if (writer->exitButton->justHovered) {
+				playSound("audio/ui/hoverChoiceButtons/");
+			}
+
 			if (writer->refreshButton->justPressed) {
 				playSound("audio/ui/restart");
 				changeState(STATE_LOADING);
 				loadModEntry(writer->currentMod);
+			}
+
+			if (writer->refreshButton->justHovered) {
+				playSound("audio/ui/hoverChoiceButtons/");
 			}
 		}
 
