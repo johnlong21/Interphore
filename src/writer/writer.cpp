@@ -297,6 +297,8 @@ namespace Writer {
 		printf("Init\n");
 		exists = true;
 
+		addSoundTweak("audio/ui/exit", 0.01);
+
 		getTextureAsset("Espresso-Dolce_22")->level = 3;
 		getTextureAsset("Espresso-Dolce_30")->level = 3;
 		getTextureAsset("Espresso-Dolce_38")->level = 3;
