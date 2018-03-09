@@ -859,7 +859,7 @@ namespace Writer {
 					}
 
 					if (choiceButton->hoveredTime) {
-						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->hoveredTime, choiceButton->hoveredTime+0.2, buttonY-10, buttonY, QUAD_OUT);
+						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->hoveredTime, choiceButton->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
 					}
 				}
 
@@ -1229,7 +1229,7 @@ namespace Writer {
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
 			// spr->setupRect(width, height, 0x444444);
-			spr->setup9Slice("ui/dialog/basicDialog", width, height, 15, 15, 30, 30);
+			spr->setup9Slice("img/writer/writerChoice", width, height, 15, 15, 30, 30);
 			btn->sprite = spr;
 		}
 
