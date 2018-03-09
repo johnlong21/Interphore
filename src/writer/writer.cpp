@@ -835,19 +835,23 @@ namespace Writer {
 
 				float buttonY = engine->height - choiceButton->sprite->getHeight();
 
-				choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
-
-				if (choiceButton->sprite->hovering && !choiceButton->hoveredTime) {
-					choiceButton->hoveredTime = engine->time;
+				{ /// Appear anim
+					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
 				}
 
-				if (!choiceButton->sprite->hovering && choiceButton->hoveredTime) {
-					choiceButton->hoveredTime = 0;
-					choiceButton->sprite->y = buttonY;
-				}
+				{ /// Hover anim
+					if (choiceButton->sprite->hovering && !choiceButton->hoveredTime) {
+						choiceButton->hoveredTime = engine->time;
+					}
 
-				if (choiceButton->hoveredTime) {
-					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->hoveredTime, choiceButton->hoveredTime+0.2, buttonY-10, buttonY, QUAD_OUT);
+					if (!choiceButton->sprite->hovering && choiceButton->hoveredTime) {
+						choiceButton->hoveredTime = 0;
+						choiceButton->sprite->y = buttonY;
+					}
+
+					if (choiceButton->hoveredTime) {
+						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->hoveredTime, choiceButton->hoveredTime+0.2, buttonY-10, buttonY, QUAD_OUT);
+					}
 				}
 
 				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
