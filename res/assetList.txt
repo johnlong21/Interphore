@@ -20,6 +20,8 @@ img/ui/pause.png
 img/ui/pause.spr
 img/ui/title.png
 img/ui/title.spr
+img/ui/tooltip.png
+img/ui/tooltip.spr
 
 img/ui/dialog/basicDialog.png
 img/ui/dialog/basicDialog.spr
