@@ -667,17 +667,17 @@ namespace Writer {
 
 		if (newState == STATE_MOD) {
 			{ /// Bg Sprite 1
-				MintSprite *spr = createMintSprite();
+				MintSprite *spr = createMintSprite("img/writer/mynt/bg/myntBg.png");
 				writer->bg->addChild(spr);
 				spr->setupRect(engine->width, engine->height, 0xFF0000);
 				spr->layer = lowestLayer + BG1_LAYER;
-				spr->alpha = 0.3;
+				spr->alpha = 1;
 
 				writer->bgSprite1 = spr;
 			}
 
 			{ /// Bg Sprite 2
-				MintSprite *spr = createMintSprite();
+				MintSprite *spr = createMintSprite("img/writer/mynt/bg/myntBg2.png");
 				writer->bg->addChild(spr);
 				spr->setupRect(engine->width, engine->height, 0x00FF00);
 				spr->layer = lowestLayer + BG2_LAYER;

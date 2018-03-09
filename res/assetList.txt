@@ -32,6 +32,13 @@ img/ui/dialog/paraDialog.spr
 img/ui/dialog/wendyDialog.png
 img/ui/dialog/wendyDialog.spr
 
+img/writer/mynt/bg/myntBg.png
+img/writer/mynt/bg/myntBg.spr
+img/writer/mynt/bg/myntBg2.png
+img/writer/mynt/bg/myntBg2.spr
+img/writer/mynt/face/mynt.png
+img/writer/mynt/face/mynt.spr
+
 audio/ui/notification.ogg
 audio/ui/choiceClick/1.ogg
 audio/ui/choiceClick/2.ogg
