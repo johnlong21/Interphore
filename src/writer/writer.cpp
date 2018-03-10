@@ -123,6 +123,9 @@ namespace Writer {
 	float getTime();
 	void addButtonIcon(const char *buttonText, const char *iconName);
 
+	void hideAllIcons();
+	void showButtonsIcons(Button *btn);
+
 	int timer(float delay, void (*onComplete)(void *), void *userdata);
 
 	struct Passage {
@@ -847,14 +850,20 @@ namespace Writer {
 					if (choiceButton->sprite->hoveredTime) {
 						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
 					}
-					
+
 					if (!choiceButton->sprite->hoveredTime && engine->time - choiceButton->sprite->creationTime > 1) {
 						choiceButton->sprite->y = buttonY;
 					}
 				}
 
+				if (choiceButton->sprite->justHovered) {
+					hideAllIcons();
+					showButtonsIcons(choiceButton);
+				}
+
 				for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
 					MintSprite *spr = choiceButton->icons[iconIndex];
+					if (!spr->visible) continue;
 
 					char iconName[ICON_NAME_MAX];
 					strcpy(iconName, spr->frames[spr->currentFrame].name);
@@ -864,6 +873,15 @@ namespace Writer {
 					if (spr->hovering) showTooltipCursor(iconName);
 					if (spr->justHovered) {
 						playSound("audio/ui/hoverChoiceIcons/");
+					}
+
+					spr->x = spr->width * iconIndex;
+					float iconY = writer->bg->height - 128 - spr->height - 8; //@hardcode Buttons are 128px, padding is 8px
+
+					if (spr->hoveredTime) {
+						spr->y = mathClampMap(engine->time, spr->hoveredTime, spr->hoveredTime+0.2, iconY-10, iconY, QUAD_IN);
+					} else {
+						spr->y = iconY;
 					}
 				}
 
@@ -1198,6 +1216,10 @@ namespace Writer {
 	void destroyButton(Button *btn) {
 		btn->exists = false;
 		btn->sprite->destroy();
+
+		for (int i = 0; i < btn->iconsNum; i++) {
+			btn->icons[i]->destroy();
+		}
 	}
 
 	Button *createButton(const char *text, int width, int height) {
@@ -1566,16 +1588,7 @@ namespace Writer {
 			MintSprite *spr = createMintSprite("writer/icon.png");
 			spr->playing = false;
 			spr->gotoFrame(iconName);
-			btn->sprite->addChild(spr);
 			btn->icons[btn->iconsNum++] = spr;
-
-#if 1
-				spr->x = spr->width * (btn->iconsNum-1);
-#else
-			if (btn->iconsNum > 1) {
-				spr->alignOutside(btn->icons[btn->iconsNum-1], DIR8_RIGHT);
-			}
-#endif
 		}
 	}
 
@@ -1599,6 +1612,24 @@ namespace Writer {
 		curTimer->userdata = userdata;
 
 		return slot;
+	}
+
+	void hideAllIcons() {
+		for (int i = 0; i < writer->choicesNum; i++) {
+			Button *choiceButton = writer->choices[i];
+
+			for (int iconIndex = 0; iconIndex < choiceButton->iconsNum; iconIndex++) {
+				MintSprite *spr = choiceButton->icons[iconIndex];
+				spr->visible = false;
+			}
+		}
+	}
+
+	void showButtonsIcons(Button *btn) {
+		for (int i = 0; i < btn->iconsNum; i++) {
+			MintSprite *spr = btn->icons[i];
+			spr->visible = true;
+		}
 	}
 
 	void deinitWriter() {
