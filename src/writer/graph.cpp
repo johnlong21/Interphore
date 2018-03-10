@@ -5,7 +5,7 @@ namespace Writer {
 
 	void initGraph();
 	void submitNode(const char *name, const char *passage);
-	void attachNode(const char *name1, const char *name2, const char *dirStr);
+	void attachNode(const char *prev, const char *next, const char *dirStr);
 
 	void showGraph();
 	void updateGraph();
@@ -87,7 +87,7 @@ namespace Writer {
 		}
 	}
 
-	void attachNode(const char *name1, const char *name2, const char *dirStr) {
+	void attachNode(const char *prev, const char *next, const char *dirStr) {
 		Node *node1 = NULL;
 		Node *node2 = NULL;
 
@@ -98,11 +98,11 @@ namespace Writer {
 		else if (streq(dirStr, BOTTOM)) dir = DIR8_DOWN;
 
 		for (int i = 0; i < graph->nodesNum; i++)
-			if (streq(graph->nodes[i].name, name1))
+			if (streq(graph->nodes[i].name, next))
 				node1 = &graph->nodes[i];
 
 		for (int i = 0; i < graph->nodesNum; i++)
-			if (streq(graph->nodes[i].name, name2))
+			if (streq(graph->nodes[i].name, prev))
 				node2 = &graph->nodes[i];
 
 		Assert(node1);
