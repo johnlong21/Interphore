@@ -1,5 +1,9 @@
 #define NODES_MAX 128
+#define LINES_MAX 128
 #define NODE_NAME_MAX SHORT_STR
+
+#define LINES_LAYER 40
+#define NODES_LAYER 50
 
 namespace Writer {
 
@@ -21,8 +25,13 @@ namespace Writer {
 	};
 
 	struct GraphStruct {
+		MintSprite *bg;
+
 		Node nodes[NODES_MAX];
 		int nodesNum;
+
+		MintSprite *lines[LINES_MAX];
+		int linesNum;
 	};
 
 	GraphStruct *graph;
@@ -38,20 +47,32 @@ namespace Writer {
 	}
 
 	void showGraph() {
+		graph->linesNum = 0;
+
+		{ /// Bg
+			MintSprite *spr = createMintSprite();
+			spr->setupRect(engine->width, engine->height, 0x000000);
+			graph->bg = spr;
+		}
+
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
 
 			{ /// Node sprite
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(128, 128, 0x555555);
+				graph->bg->addChild(spr);
+				spr->layer = lowestLayer + NODES_LAYER;
+
 				node->sprite = spr;
 			}
 
 			{ /// Node text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(node->sprite->width, node->sprite->height);
-				spr->setText(node->name);
 				node->sprite->addChild(spr);
+				spr->setText(node->name);
+				spr->layer = lowestLayer + NODES_LAYER;
 				spr->alignOutside(DIR8_CENTER);
 			}
 
@@ -61,16 +82,34 @@ namespace Writer {
 			Node *node = &graph->nodes[i];
 			Node *other = node->connectedTo;
 			if (other) {
-				node->sprite->alignOutside(other->sprite, node->connectedDir, 10, 10);
+				node->sprite->alignOutside(other->sprite, node->connectedDir, 50, 50);
+
+				{ /// Line
+					Point p1 = node->sprite->getCenterPoint();
+					Point p2 = other->sprite->getCenterPoint();
+					float dist = pointDistance(&p1, &p2);
+
+					MintSprite *spr = createMintSprite();
+					spr->setupRect(dist, 4, 0xFFFFFF);
+					spr->centerPivot = true;
+					spr->layer = lowestLayer + LINES_LAYER;
+					spr->x = (p1.x + p2.x) / 2.0 - spr->width/2;
+					spr->y = (p1.y + p2.y) / 2.0 - spr->height/2;
+					spr->rotation = atan2(p2.y - p1.y, p2.x - p1.x) * 180 / M_PI;
+					graph->bg->addChild(spr);
+
+					graph->lines[graph->linesNum++] = spr;
+				}
 			}
 		}
 	}
 
 	void hideGraph() {
+		graph->bg->destroy();
+
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
 			if (node->sprite) {
-				node->sprite->destroy();
 				node->sprite = NULL;
 			}
 		}
