@@ -232,6 +232,8 @@ namespace Writer {
 		MintSprite *bgSprite2;
 
 		Timer timers[TIMERS_MAX];
+
+		float passageStartTime;
 	};
 
 	mjs *mjs;
@@ -824,7 +826,11 @@ namespace Writer {
 				writer->execWhenDoneLoading = NULL;
 			}
 
-			{ /// Section: Scrolling
+			{ /// Passage appear anim
+				writer->mainText->alpha = mathClampMap(engine->time, writer->passageStartTime, writer->passageStartTime+0.2, 0, 1, QUAD_IN);
+			}
+
+			{ /// Scrolling
 				if (platformMouseWheel < 0) writer->scrollAmount += 0.1;
 				if (platformMouseWheel > 0) writer->scrollAmount -= 0.1;
 				writer->scrollAmount = Clamp(writer->scrollAmount, 0, 1);
@@ -1274,6 +1280,8 @@ namespace Writer {
 
 	void gotoPassage(const char *passageName) {
 		writer->scrollAmount = 0;
+		writer->passageStartTime = engine->time;
+		writer->mainText->alpha = 0;
 
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
