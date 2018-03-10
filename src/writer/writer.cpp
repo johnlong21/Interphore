@@ -152,8 +152,6 @@ namespace Writer {
 
 	struct Button {
 		bool exists;
-		float creationTime;
-		float hoveredTime;
 		MintSprite *icons[BUTTON_ICONS_MAX];
 		int iconsNum;
 		MintSprite *sprite;
@@ -842,21 +840,16 @@ namespace Writer {
 				float buttonY = engine->height - choiceButton->sprite->getHeight();
 
 				{ /// Appear anim
-					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->creationTime, choiceButton->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
+					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->creationTime, choiceButton->sprite->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
 				}
 
 				{ /// Hover anim
-					if (choiceButton->sprite->hovering && !choiceButton->hoveredTime) {
-						choiceButton->hoveredTime = engine->time;
+					if (choiceButton->sprite->hoveredTime) {
+						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
 					}
-
-					if (!choiceButton->sprite->hovering && choiceButton->hoveredTime) {
-						choiceButton->hoveredTime = 0;
+					
+					if (!choiceButton->sprite->hoveredTime && engine->time - choiceButton->sprite->creationTime > 1) {
 						choiceButton->sprite->y = buttonY;
-					}
-
-					if (choiceButton->hoveredTime) {
-						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->hoveredTime, choiceButton->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
 					}
 				}
 
@@ -1221,7 +1214,6 @@ namespace Writer {
 		Button *btn = &writer->buttons[slot];
 		memset(btn, 0, sizeof(Button));
 		btn->exists = true;
-		btn->creationTime = engine->time;
 
 		{ /// Button sprite
 			MintSprite *spr = createMintSprite();
