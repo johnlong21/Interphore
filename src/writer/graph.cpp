@@ -25,6 +25,7 @@ namespace Writer {
 	};
 
 	struct GraphStruct {
+		float creationTime;
 		MintSprite *bg;
 
 		Node nodes[NODES_MAX];
@@ -48,10 +49,11 @@ namespace Writer {
 
 	void showGraph() {
 		graph->linesNum = 0;
+		graph->creationTime = engine->time;
 
 		{ /// Bg
 			MintSprite *spr = createMintSprite();
-			spr->setupRect(engine->width, engine->height, 0x000000);
+			spr->setupRect(2048, 2048, 0x222222);
 			graph->bg = spr;
 		}
 
@@ -116,6 +118,14 @@ namespace Writer {
 	}
 
 	void updateGraph() {
+		if (graph->bg->holding && engine->time - graph->creationTime > 1) {
+			graph->bg->x = engine->mouseX - graph->bg->holdPivot.x;
+			graph->bg->y = engine->mouseY - graph->bg->holdPivot.y;
+
+			graph->bg->x = Clamp(graph->bg->x, -(graph->bg->width - engine->width), 0);
+			graph->bg->y = Clamp(graph->bg->y, -(graph->bg->height - engine->height), 0);
+		}
+
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
 
