@@ -1410,12 +1410,10 @@ namespace Writer {
 
 			{ /// Tooltip bg
 				MintSprite *spr = createMintSprite();
-				spr->setup9Slice("img/ui/tooltip", writer->tooltipTf->getFrameWidth() + 10, writer->tooltipTf->getFrameHeight() + 10, 5, 5, 15, 15);
-				//spr->setupRect(writer->tooltipTf->getFrameWidth(), writer->tooltipTf->getFrameHeight(), 0x111111);
-				//spr->x = writer->tooltipTf->x - 5;
-				//spr->y = writer->tooltipTf->y - 5;
-				spr->layer = lowestLayer + TOOLTIP_BG_LAYER;
+				spr->setup9Slice("img/ui/tooltip", writer->tooltipTf->getFrameWidth() + 10, writer->tooltipTf->getFrameHeight() + 10, 5, 5, 10, 10);
 				writer->tooltipTf->addChild(spr);
+				spr->layer = lowestLayer + TOOLTIP_BG_LAYER;
+				spr->alignInside(DIR8_CENTER);
 
 				writer->tooltipBg = spr;
 			}
