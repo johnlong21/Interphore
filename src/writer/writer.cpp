@@ -885,7 +885,7 @@ namespace Writer {
 					float iconY = writer->bg->height - 128 - spr->height - 8; //@hardcode Buttons are 128px, padding is 8px
 
 					if (spr->hoveredTime) {
-						spr->y = mathClampMap(engine->time, spr->hoveredTime, spr->hoveredTime+0.2, iconY-10, iconY, QUAD_IN);
+						spr->y = mathClampMap(engine->time, spr->hoveredTime, spr->hoveredTime+0.1, iconY-1, iconY, QUAD_IN);
 					} else {
 						spr->y = iconY;
 					}
