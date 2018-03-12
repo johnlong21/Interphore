@@ -27,6 +27,7 @@
 #define ICON_NAME_MAX MED_STR
 
 #define TIMERS_MAX 128
+#define NOTIFS_MAX 32
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -85,6 +86,7 @@ namespace Writer {
 	struct Image;
 	struct Audio;
 	struct ModEntry;
+	struct Notif;
 
 	void changeState(GameState newState);
 	void enableEntry(ModEntry *entry);
@@ -128,6 +130,11 @@ namespace Writer {
 
 	int timer(float delay, void (*onComplete)(void *), void *userdata);
 	void setBackground(int bgNum, const char *assetId);
+
+	void addNotif(const char *title, const char *body);
+	void destroyNotif(Notif *notif);
+
+	int qsortNotif(const void *a, const void *b);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -177,6 +184,13 @@ namespace Writer {
 		float timeLeft;
 		void (*onComplete)(void *);
 		void *userdata;
+	};
+
+	struct Notif {
+		bool exists;
+		MintSprite *sprite;
+		char *title;
+		char *body;
 	};
 
 	struct WriterStruct {
@@ -237,6 +251,8 @@ namespace Writer {
 		Timer timers[TIMERS_MAX];
 
 		float passageStartTime;
+
+		Notif notifs[NOTIFS_MAX];
 	};
 
 	mjs *mjs;
@@ -291,6 +307,7 @@ namespace Writer {
 
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
+		if (streq(name, "addNotif")) return (void *)addNotif;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -417,6 +434,12 @@ namespace Writer {
 					"Examples",
 					"0.1.0"
 				}, {
+					"Notif Example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/cgdd03hx1tdc3i3/notifExample.phore?dl=1",
+					"Examples",
+					"0.1.0"
+				}, {
 					"Gryphon Fight",
 					"Cade",
 					"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
@@ -497,6 +520,25 @@ namespace Writer {
 
 				writer->tooltipTf = spr;
 			}
+		}
+
+		{ /// Bg Sprite 1
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width, engine->height);
+			writer->bg->addChild(spr);
+			spr->layer = lowestLayer + BG1_LAYER;
+
+			writer->bgSprite0 = spr;
+		}
+
+		{ /// Bg Sprite 2
+			MintSprite *spr = createMintSprite();
+			spr->setupEmpty(engine->width, engine->height);
+			writer->bg->addChild(spr);
+			spr->layer = lowestLayer + BG2_LAYER;
+			spr->alpha = 0.3;
+
+			writer->bgSprite1 = spr;
 		}
 
 		{ /// Autorun
@@ -680,25 +722,6 @@ namespace Writer {
 		}
 
 		if (newState == STATE_MOD) {
-			{ /// Bg Sprite 1
-				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width, engine->height);
-				writer->bg->addChild(spr);
-				spr->layer = lowestLayer + BG1_LAYER;
-
-				writer->bgSprite0 = spr;
-			}
-
-			{ /// Bg Sprite 2
-				MintSprite *spr = createMintSprite();
-				spr->setupEmpty(engine->width, engine->height);
-				writer->bg->addChild(spr);
-				spr->layer = lowestLayer + BG2_LAYER;
-				spr->alpha = 0.3;
-
-				writer->bgSprite1 = spr;
-			}
-
 			{ /// Main text
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
@@ -750,8 +773,6 @@ namespace Writer {
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
-			writer->bgSprite0->destroy();
-			writer->bgSprite1->destroy();
 
 			execJs("removeAllImages();");
 
@@ -981,7 +1002,7 @@ namespace Writer {
 			}
 		}
 
-		{ /// Background
+		{ /// Backgrounds
 			if (writer->nextBg0[0] != '\0') {
 				writer->bgSprite0->alpha -= 0.05;
 				if (writer->bgSprite0->alpha <= 0) {
@@ -1000,6 +1021,29 @@ namespace Writer {
 				}
 			} else {
 				writer->bgSprite1->alpha += 0.05;
+			}
+		}
+
+		{ /// Notifs
+			Notif *notifs[NOTIFS_MAX];
+			int notifsNum = 0;
+			for (int i = 0; i < NOTIFS_MAX; i++)
+				if (writer->notifs[i].exists)
+					notifs[notifsNum++] = &writer->notifs[i];
+
+			qsort(notifs, notifsNum, sizeof(Notif *), qsortNotif);
+
+			for (int i = 0; i < notifsNum; i++) {
+				Notif *notif = notifs[i];
+				float startX = engine->width - notif->sprite->width - 16; //@hardcode 16px right edge padding
+				float startY = engine->height/2;
+				notif->sprite->x = startX;
+				notif->sprite->y = startY + (notif->sprite->height + 8) * i; //@hardcode 8px inner padding
+
+				char buf[HUGE_STR];
+				sprintf(buf, "%s\n%s", notif->title, notif->body);
+				if (notif->sprite->hovering) showTooltipCursor(buf);
+				if (notif->sprite->justPressed) destroyNotif(notif);
 			}
 		}
 	}
@@ -1680,6 +1724,35 @@ namespace Writer {
 		if (bgNum == 1) strcpy(writer->nextBg1, assetId);
 	}
 
+	void addNotif(const char *title, const char *body) {
+		int slot;
+		for (slot = 0; slot < NOTIFS_MAX; slot++)
+			if (!writer->notifs[slot].exists)
+				break;
+
+		if (slot >= NOTIFS_MAX) {
+			msg("Too many buttons", MSG_ERROR);
+			return;
+		}
+
+		Notif *notif = &writer->notifs[slot];
+		memset(notif, 0, sizeof(Notif));
+		notif->exists = true;
+
+		notif->title = stringClone(title);
+		notif->body = stringClone(body);
+
+		notif->sprite = createMintSprite();
+		notif->sprite->setupRect(64, 64, 0x000088);
+	}
+
+	void destroyNotif(Notif *notif) {
+		notif->exists = false;
+		notif->sprite->destroy();
+		free(notif->title);
+		free(notif->body);
+	}
+
 	void deinitWriter() {
 		if (writer->state != STATE_NULL) changeState(STATE_NULL);
 		writer->bg->destroy();
@@ -1687,5 +1760,18 @@ namespace Writer {
 		Free(writer);
 
 		engine->spriteData.defaultLayer = oldDefaultLayer;
+	}
+
+	int qsortNotif(const void *a, const void *b) {
+		Notif *n1 = *(Notif **)a;
+		Notif *n2 = *(Notif **)b;
+
+		if (n1->sprite->creationTime < n2->sprite->creationTime) return -1;
+		if (n1->sprite->creationTime > n2->sprite->creationTime) return 1;
+
+		if (n1->sprite->index < n2->sprite->index) return -1;
+		if (n1->sprite->index > n2->sprite->index) return 1;
+
+		return 0;
 	}
 }
