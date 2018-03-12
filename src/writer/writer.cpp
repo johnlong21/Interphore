@@ -229,8 +229,8 @@ namespace Writer {
 
 		float scrollAmount;
 
+		MintSprite *bgSprite0;
 		MintSprite *bgSprite1;
-		MintSprite *bgSprite2;
 		char nextBg0[PATH_LIMIT];
 		char nextBg1[PATH_LIMIT];
 
@@ -685,7 +685,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				spr->layer = lowestLayer + BG1_LAYER;
 
-				writer->bgSprite1 = spr;
+				writer->bgSprite0 = spr;
 			}
 
 			{ /// Bg Sprite 2
@@ -694,7 +694,7 @@ namespace Writer {
 				spr->layer = lowestLayer + BG2_LAYER;
 				spr->alpha = 0.3;
 
-				writer->bgSprite2 = spr;
+				writer->bgSprite1 = spr;
 			}
 
 			{ /// Main text
@@ -748,8 +748,8 @@ namespace Writer {
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
+			writer->bgSprite0->destroy();
 			writer->bgSprite1->destroy();
-			writer->bgSprite2->destroy();
 
 			execJs("removeAllImages();");
 
@@ -976,6 +976,28 @@ namespace Writer {
 					curTimer->onComplete(curTimer->userdata);
 					curTimer->exists = false;
 				}
+			}
+		}
+
+		{ /// Background
+			if (writer->nextBg0[0] != '\0') {
+				writer->bgSprite0->alpha -= 0.05;
+				if (writer->bgSprite0->alpha <= 0) {
+					writer->bgSprite0 = writer->bgSprite0->recreate(writer->nextBg0);
+					writer->nextBg0[0] = '\0';
+				}
+			} else {
+				writer->bgSprite0->alpha += 0.05;
+			}
+
+			if (writer->nextBg1[0] != '\0') {
+				writer->bgSprite1->alpha -= 0.05;
+				if (writer->bgSprite1->alpha <= 0) {
+					writer->bgSprite1 = writer->bgSprite1->recreate(writer->nextBg1);
+					writer->nextBg1[0] = '\0';
+				}
+			} else {
+				writer->bgSprite1->alpha += 0.05;
 			}
 		}
 	}
