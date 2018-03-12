@@ -121,12 +121,13 @@ namespace Writer {
 	void exitMod();
 
 	float getTime();
-	void addButtonIcon(const char *buttonText, const char *iconName);
 
+	void addButtonIcon(const char *buttonText, const char *iconName);
 	void hideAllIcons();
 	void showButtonsIcons(Button *btn);
 
 	int timer(float delay, void (*onComplete)(void *), void *userdata);
+	void setBackground(int bgNum, const char *assetId);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -230,6 +231,8 @@ namespace Writer {
 
 		MintSprite *bgSprite1;
 		MintSprite *bgSprite2;
+		char nextBg0[PATH_LIMIT];
+		char nextBg1[PATH_LIMIT];
 
 		Timer timers[TIMERS_MAX];
 
@@ -254,6 +257,7 @@ namespace Writer {
 
 namespace Writer {
 	void *mjsResolver(void *handle, const char *name) {
+		/// ffi
 		if (streq(name, "print")) return (void *)print;
 		if (streq(name, "submitPassage")) return (void *)submitPassage;
 		if (streq(name, "submitImage")) return (void *)submitImage;
@@ -286,6 +290,7 @@ namespace Writer {
 		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
 
 		if (streq(name, "timer")) return (void *)timer;
+		if (streq(name, "setBackground")) return (void *)setBackground;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -405,6 +410,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/sg83wwjz7l8ocd9/Icon%20Example.txt?dl=1",
 					"Examples",
 					"0.0.1"
+				}, {
+					"Background Example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/x3g5ulva5wae922/backgroundExample.phore?dl=1",
+					"Examples",
+					"0.1.0"
 				}, {
 					"Gryphon Fight",
 					"Cade",
@@ -1638,6 +1649,11 @@ namespace Writer {
 			MintSprite *spr = btn->icons[i];
 			spr->visible = true;
 		}
+	}
+
+	void setBackground(int bgNum, const char *assetId) {
+		if (bgNum == 0) strcpy(writer->nextBg0, assetId);
+		if (bgNum == 1) strcpy(writer->nextBg1, assetId);
 	}
 
 	void deinitWriter() {
