@@ -1518,11 +1518,14 @@ namespace Writer {
 
 				writer->tooltipBg = spr;
 			}
-
 		}
 
-		writer->tooltipTf->x = engine->mouseX*mouseMultiplier + 10;
-		writer->tooltipTf->y = engine->mouseY*mouseMultiplier + 10;
+		int cursorPad = 10;
+		writer->tooltipTf->x = engine->mouseX*mouseMultiplier + cursorPad;
+		writer->tooltipTf->y = engine->mouseY*mouseMultiplier + cursorPad;
+
+		if (writer->tooltipTf->x + writer->tooltipTf->getWidth() > engine->width) writer->tooltipTf->x -= writer->tooltipTf->getWidth() + cursorPad*2;
+		if (writer->tooltipTf->y + writer->tooltipTf->getHeight() > engine->height) writer->tooltipTf->y -= writer->tooltipTf->getHeight() + cursorPad*2;
 
 		writer->tooltipShowing = true;
 	}
