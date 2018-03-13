@@ -134,6 +134,11 @@ namespace Writer {
 	void addNotif(const char *title, const char *body);
 	void destroyNotif(Notif *notif);
 
+	void loadGame();
+	void gameLoaded(char *data);
+	void saveGame();
+	void saveCheckpoint();
+
 	int qsortNotif(const void *a, const void *b);
 
 	struct Passage {
@@ -253,6 +258,9 @@ namespace Writer {
 		float passageStartTime;
 
 		Notif notifs[NOTIFS_MAX];
+
+		char *curSave;
+		bool needToSave;
 	};
 
 	mjs *mjs;
@@ -803,6 +811,25 @@ namespace Writer {
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
+		if (writer->needToSave) {
+
+			writer->needToSave = false;
+			execJs("var dataStr = JSON.stringify(data);");
+
+			mjs_val_t jsData = mjs_get(mjs, mjs_get_global(mjs), "dataStr", strlen("dataStr"));
+			size_t jsStrLen = 0;
+			const char *jsStr = mjs_get_string(mjs, &jsData, &jsStrLen);
+
+			if (writer->curSave) free(writer->curSave);
+			writer->curSave = (char *)malloc(jsStrLen);
+			strncpy(writer->curSave, jsStr, jsStrLen);
+			writer->curSave[jsStrLen] = '\0';
+
+			execJs("dataStr = \"\";");
+
+			// printf("Checkpoint: %s\n", writer->curSave);
+		}
+
 		if (writer->state == STATE_MENU) {
 			if (writer->loadButton->sprite->justPressed) {
 				playSound("audio/ui/load");
@@ -1131,8 +1158,6 @@ namespace Writer {
 			msg("Failed to load.", MSG_ERROR);
 		}
 	}
-
-			// mjs_err_t mjs_call(struct mjs *mjs, mjs_val_t *res, mjs_val_t func, mjs_val_t this_val, int nargs, ...);
 
 	void execJs(mjs_val_t expr) {
 		mjs_err_t err = mjs_call(mjs, NULL, interUpdateFn, NULL, 0);
@@ -1639,6 +1664,7 @@ namespace Writer {
 	}
 
 	void exitMod() {
+		saveCheckpoint();
 		changeState(STATE_MENU);
 	}
 
@@ -1754,6 +1780,29 @@ namespace Writer {
 		notif->sprite->destroy();
 		free(notif->title);
 		free(notif->body);
+	}
+
+	void saveCheckpoint() {
+		writer->needToSave = true;
+	}
+
+	void saveGame() {
+		// printf("Saved: %s\n", writer->curSave);
+		platformSaveToDisk(writer->curSave);
+	}
+
+	void loadGame() {
+		platformLoadFromDisk(gameLoaded);
+	}
+
+	void gameLoaded(char *data) {
+		char *jsCommand = (char *)malloc(strlen(data) + MED_STR);
+		sprintf(jsCommand, "data = JSON.parse('%s');", data);
+		// printf("Running: %s\n", jsCommand);
+		execJs(jsCommand);
+		free(jsCommand);
+
+		saveCheckpoint();
 	}
 
 	void deinitWriter() {

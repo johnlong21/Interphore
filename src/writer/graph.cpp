@@ -33,6 +33,9 @@ namespace Writer {
 
 		MintSprite *lines[LINES_MAX];
 		int linesNum;
+
+		MintSprite *saveButton;
+		MintSprite *loadButton;
 	};
 
 	GraphStruct *graph;
@@ -104,10 +107,31 @@ namespace Writer {
 				}
 			}
 		}
+
+		{ /// Save button
+			MintSprite *spr = createMintSprite("writer/exit.png");
+			spr->scale(2, 2);
+			spr->x = engine->width - spr->getWidth() - 16; //@hardcode padding 16px
+			spr->y = 16; //@hardcode padding 16px
+
+			graph->saveButton = spr;
+		}
+
+		{ /// load button
+			MintSprite *spr = createMintSprite("writer/restart.png");
+			writer->bg->addChild(spr);
+			spr->scale(2, 2);
+			spr->x = graph->saveButton->x;
+			spr->y = graph->saveButton->y + graph->saveButton->getHeight() + 16; //@hardcode padding 16px
+
+			graph->loadButton = spr;
+		}
 	}
 
 	void hideGraph() {
 		graph->bg->destroy();
+		graph->saveButton->destroy();
+		graph->loadButton->destroy();
 
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
@@ -125,6 +149,9 @@ namespace Writer {
 			graph->bg->x = Clamp(graph->bg->x, -(graph->bg->width - engine->width), 0);
 			graph->bg->y = Clamp(graph->bg->y, -(graph->bg->height - engine->height), 0);
 		}
+
+		if (graph->saveButton->justPressed) saveGame();
+		if (graph->loadButton->justPressed) loadGame();
 
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
