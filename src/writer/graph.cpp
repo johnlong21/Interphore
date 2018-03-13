@@ -15,9 +15,12 @@ namespace Writer {
 	void updateGraph();
 	void hideGraph();
 
+	void setNodeLocked(char *nodeName, char *varName);
+
 	struct Node {
 		char name[NODE_NAME_MAX];
 		char passage[PASSAGE_NAME_MAX];
+		char *unlockVarName;
 		MintSprite *sprite;
 
 		Node *connectedTo;
@@ -81,6 +84,21 @@ namespace Writer {
 				spr->alignOutside(DIR8_CENTER);
 			}
 
+			{ /// Node locked
+				if (node->unlockVarName) {
+					execJs("var nodeLockedStr = %s ? \"1\" : \"0\";", node->unlockVarName);
+
+					mjs_val_t jsData = mjs_get(mjs, mjs_get_global(mjs), "nodeLockedStr", strlen("nodeLockedStr"));
+					size_t jsStrLen = 0;
+					const char *jsStr = mjs_get_string(mjs, &jsData, &jsStrLen);
+					bool isUnlocked = jsStr[0] == '1' ? true : false;
+					// printf("%s is %d\n", node->name, isUnlocked);
+
+					execJs("var nodeLockedStr = null;");
+
+					if (!isUnlocked) node->sprite->alpha = 0.5;
+				}
+			}
 		}
 
 		for (int i = 0; i < graph->nodesNum; i++) {
@@ -126,6 +144,9 @@ namespace Writer {
 
 			graph->loadButton = spr;
 		}
+
+		mjs_val_t onMapStartFn = mjs_get(mjs, mjs_get_global(mjs), "onMapStart", strlen("onMapStart"));
+		execJs(onMapStartFn);
 	}
 
 	void hideGraph() {
@@ -186,5 +207,21 @@ namespace Writer {
 
 		node1->connectedTo = node2;
 		node1->connectedDir = dir;
+	}
+
+	void setNodeLocked(char *nodeName, char *varName) {
+		printf("Got: %s %s\n", nodeName, varName);
+
+		Node *node = NULL;
+		for (int i = 0; i < graph->nodesNum; i++)
+			if (streq(graph->nodes[i].name, nodeName))
+				node = &graph->nodes[i];
+
+		if (!node) {
+			msg("Failed to set lock because node named %s doen't exist", MSG_ERROR, nodeName);
+			return;
+		}
+
+		node->unlockVarName = stringClone(varName);
 	}
 }

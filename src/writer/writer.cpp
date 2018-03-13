@@ -318,6 +318,7 @@ namespace Writer {
 		if (streq(name, "setBackground")) return (void *)setBackground;
 		if (streq(name, "addNotif")) return (void *)addNotif;
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
+		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -788,11 +789,10 @@ namespace Writer {
 			// for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
 			// writer->passagesNum = 0;
 
+			clear();
 			writer->mainText->destroy();
 			writer->exitButton->destroy();
 			writer->refreshButton->destroy();
-
-			execJs("removeAllImages();");
 
 			for (int i = 0; i < ASSETS_MAX; i++) {
 				if (writer->loadedAssets[i]) {
@@ -840,7 +840,7 @@ namespace Writer {
 				writer->curSave[jsStrLen] = '\0';
 			}
 
-			execJs("dataStr = \"\";");
+			execJs("dataStr = null;");
 
 			// printf("Checkpoint: %s\n", writer->curSave);
 		}
