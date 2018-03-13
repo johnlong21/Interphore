@@ -747,7 +747,7 @@ namespace Writer {
 				writer->bg->addChild(spr);
 				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
 				strcpy(spr->defaultFont, "Espresso-Dolce_22");
-				spr->setText("Mod load failed");
+				spr->setText("");
 				spr->y += 30;
 				spr->x += 30;
 
@@ -783,7 +783,6 @@ namespace Writer {
 		}
 
 		if (oldState == STATE_MOD) {
-			clear();
 			if (WriterDesktop::exists) WriterDesktop::destroyDesktop();
 			//@incomplete Should namespace the passage names off somehow? To prevent mods from overwriting each other's passages?
 			// for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
