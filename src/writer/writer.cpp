@@ -138,6 +138,7 @@ namespace Writer {
 	void gameLoaded(char *data);
 	void saveGame();
 	void saveCheckpoint();
+	void gotoMap();
 
 	int qsortNotif(const void *a, const void *b);
 
@@ -316,6 +317,7 @@ namespace Writer {
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
 		if (streq(name, "addNotif")) return (void *)addNotif;
+		if (streq(name, "gotoMap")) return (void *)gotoMap;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -588,6 +590,15 @@ namespace Writer {
 		}
 	}
 
+	void deinitWriter() {
+		if (writer->state != STATE_NULL) changeState(STATE_NULL);
+		writer->bg->destroy();
+		exists = false;
+		Free(writer);
+
+		engine->spriteData.defaultLayer = oldDefaultLayer;
+	}
+
 	void changeState(GameState newState) {
 		GameState oldState = writer->state;
 
@@ -812,7 +823,6 @@ namespace Writer {
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
 		if (writer->needToSave) {
-
 			writer->needToSave = false;
 			execJs("var dataStr = JSON.stringify(data);");
 
@@ -820,10 +830,16 @@ namespace Writer {
 			size_t jsStrLen = 0;
 			const char *jsStr = mjs_get_string(mjs, &jsData, &jsStrLen);
 
-			if (writer->curSave) free(writer->curSave);
-			writer->curSave = (char *)malloc(jsStrLen);
-			strncpy(writer->curSave, jsStr, jsStrLen);
-			writer->curSave[jsStrLen] = '\0';
+			if (writer->curSave) {
+				Free(writer->curSave);
+				writer->curSave = NULL;
+			}
+
+			if (jsStrLen != 0) {
+				writer->curSave = (char *)Malloc(jsStrLen + 1);
+				strncpy(writer->curSave, jsStr, jsStrLen);
+				writer->curSave[jsStrLen] = '\0';
+			}
 
 			execJs("dataStr = \"\";");
 
@@ -842,7 +858,7 @@ namespace Writer {
 
 			if (writer->nodesButton->sprite->justPressed) {
 				// playSound("audio/ui/altClick");
-				changeState(STATE_GRAPH);
+				gotoMap();
 			}
 
 			for (int i = 0; i < writer->categoryButtonsNum; i++) {
@@ -1778,8 +1794,8 @@ namespace Writer {
 	void destroyNotif(Notif *notif) {
 		notif->exists = false;
 		notif->sprite->destroy();
-		free(notif->title);
-		free(notif->body);
+		Free(notif->title);
+		Free(notif->body);
 	}
 
 	void saveCheckpoint() {
@@ -1796,22 +1812,18 @@ namespace Writer {
 	}
 
 	void gameLoaded(char *data) {
-		char *jsCommand = (char *)malloc(strlen(data) + MED_STR);
+		char *jsCommand = (char *)Malloc(strlen(data) + MED_STR);
 		sprintf(jsCommand, "data = JSON.parse('%s');", data);
 		// printf("Running: %s\n", jsCommand);
 		execJs(jsCommand);
-		free(jsCommand);
+		Free(jsCommand);
 
 		saveCheckpoint();
 	}
 
-	void deinitWriter() {
-		if (writer->state != STATE_NULL) changeState(STATE_NULL);
-		writer->bg->destroy();
-		exists = false;
-		Free(writer);
-
-		engine->spriteData.defaultLayer = oldDefaultLayer;
+	void gotoMap() {
+		if (writer->state == STATE_MOD) exitMod();
+		changeState(STATE_GRAPH);
 	}
 
 	int qsortNotif(const void *a, const void *b) {
