@@ -210,8 +210,6 @@ namespace Writer {
 	}
 
 	void setNodeLocked(char *nodeName, char *varName) {
-		printf("Got: %s %s\n", nodeName, varName);
-
 		Node *node = NULL;
 		for (int i = 0; i < graph->nodesNum; i++)
 			if (streq(graph->nodes[i].name, nodeName))

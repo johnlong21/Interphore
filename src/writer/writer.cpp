@@ -801,6 +801,8 @@ namespace Writer {
 					writer->loadedAssets[i] = NULL;
 				}
 			}
+
+			if (writer->curSave && !writer->needToSave) gameLoaded(writer->curSave);
 		}
 
 		if (newState == STATE_GRAPH) {
