@@ -68,7 +68,7 @@ namespace Writer {
 
 			{ /// Node sprite
 				MintSprite *spr = createMintSprite();
-				spr->setupRect(128, 128, 0x555555);
+				spr->setup9Slice("img/writer/nodeChoice", 180, 180, 22, 22, 66, 66);
 				graph->bg->addChild(spr);
 				spr->layer = lowestLayer + NODES_LAYER;
 
