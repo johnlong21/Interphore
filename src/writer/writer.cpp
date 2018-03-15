@@ -379,6 +379,12 @@ namespace Writer {
 
 			ModEntryDef defs[] = {
 				{
+					"Mud Pies",
+					"Roxelle Devaunt",
+					"https://www.dropbox.com/s/ekf7dvnnglfxaul/Mud%20Pies.txt?dl=1",
+					"Story",
+					"0.0.1"
+				}, {
 					"False Moon",
 					"Kittery",
 					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
@@ -924,7 +930,7 @@ namespace Writer {
 			for (int i = 0; i < writer->choicesNum; i++) {
 				Button *choiceButton = writer->choices[i];
 
-				float buttonY = engine->height - choiceButton->sprite->getHeight();
+				float buttonY = engine->height - choiceButton->sprite->getHeight() - 5;
 
 				{ /// Appear anim
 					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->creationTime, choiceButton->sprite->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
@@ -932,7 +938,7 @@ namespace Writer {
 
 				{ /// Hover anim
 					if (choiceButton->sprite->hoveredTime) {
-						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
+						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-5, buttonY, QUAD_IN);
 					}
 
 					if (!choiceButton->sprite->hoveredTime && engine->time - choiceButton->sprite->creationTime > 1) {
