@@ -7,10 +7,22 @@ img/writer/exit.png
 img/writer/exit.spr
 img/writer/restart.png
 img/writer/restart.spr
+img/writer/load.png
+img/writer/load.spr
+img/writer/save.png
+img/writer/save.spr
 img/writer/icon.png
 img/writer/icon.spr
 img/writer/writerChoice.png
 img/writer/writerChoice.spr
+img/writer/nodeChoice.png
+img/writer/nodeChoice.spr
+img/writer/mynt/bg/myntBg.png
+img/writer/mynt/bg/myntBg.spr
+img/writer/mynt/bg/myntBg2.png
+img/writer/mynt/bg/myntBg2.spr
+img/writer/mynt/face/mynt.png
+img/writer/mynt/face/mynt.spr
 
 img/ui/main.png
 img/ui/main.spr
@@ -33,13 +45,6 @@ img/ui/dialog/paraDialog.png
 img/ui/dialog/paraDialog.spr
 img/ui/dialog/wendyDialog.png
 img/ui/dialog/wendyDialog.spr
-
-img/writer/mynt/bg/myntBg.png
-img/writer/mynt/bg/myntBg.spr
-img/writer/mynt/bg/myntBg2.png
-img/writer/mynt/bg/myntBg2.spr
-img/writer/mynt/face/mynt.png
-img/writer/mynt/face/mynt.spr
 
 audio/ui/notification.ogg
 audio/ui/choiceClick/1.ogg
