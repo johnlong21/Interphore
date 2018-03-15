@@ -113,7 +113,7 @@ namespace Writer {
 					float dist = pointDistance(&p1, &p2);
 
 					MintSprite *spr = createMintSprite();
-					spr->setupRect(dist, 4, 0xFFFFFF);
+					spr->setupRect(dist, 4, 0x752b2b);
 					spr->centerPivot = true;
 					spr->layer = lowestLayer + LINES_LAYER;
 					spr->x = (p1.x + p2.x) / 2.0 - spr->width/2;
@@ -127,7 +127,7 @@ namespace Writer {
 		}
 
 		{ /// Save button
-			MintSprite *spr = createMintSprite("writer/exit.png");
+			MintSprite *spr = createMintSprite("writer/save.png");
 			spr->scale(2, 2);
 			spr->x = engine->width - spr->getWidth() - 16; //@hardcode padding 16px
 			spr->y = 16; //@hardcode padding 16px
@@ -136,7 +136,7 @@ namespace Writer {
 		}
 
 		{ /// load button
-			MintSprite *spr = createMintSprite("writer/restart.png");
+			MintSprite *spr = createMintSprite("writer/load.png");
 			writer->bg->addChild(spr);
 			spr->scale(2, 2);
 			spr->x = graph->saveButton->x;
@@ -173,6 +173,9 @@ namespace Writer {
 
 		if (graph->saveButton->justPressed) saveGame();
 		if (graph->loadButton->justPressed) loadGame();
+
+		if (graph->saveButton->hovering) showTooltipCursor("Save");
+		if (graph->loadButton->hovering) showTooltipCursor("Load");
 
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
