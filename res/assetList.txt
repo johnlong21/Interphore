@@ -13,6 +13,8 @@ img/writer/save.png
 img/writer/save.spr
 img/writer/icon.png
 img/writer/icon.spr
+img/writer/notification.png
+img/writer/notification.spr
 img/writer/writerChoice.png
 img/writer/writerChoice.spr
 img/writer/nodeChoice.png
@@ -47,6 +49,15 @@ img/ui/dialog/wendyDialog.png
 img/ui/dialog/wendyDialog.spr
 
 audio/ui/notification.ogg
+audio/ui/newChoiceClick/1.ogg
+audio/ui/newChoiceClick/2.ogg
+audio/ui/newChoiceClick/3.ogg
+audio/ui/newChoiceClick/4.ogg
+audio/ui/newChoiceClick/5.ogg
+audio/ui/newChoiceClick/6.ogg
+audio/ui/newChoiceClick/7.ogg
+audio/ui/newChoiceClick/8.ogg
+audio/ui/newChoiceClick/9.ogg
 audio/ui/choiceClick/1.ogg
 audio/ui/choiceClick/2.ogg
 audio/ui/choiceClick/3.ogg

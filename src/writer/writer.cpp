@@ -335,6 +335,15 @@ namespace Writer {
 
 		addSoundTweak("audio/ui/exit", 0.1);
 		addSoundTweak("audio/ui/restart", 0.3);
+		addSoundTweak("audio/ui/newChoiceClick/1", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/2", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/3", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/4", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/5", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/6", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/7", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/8", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/9", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/1", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/2", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/3", 0.2);
@@ -871,7 +880,7 @@ namespace Writer {
 			for (int i = 0; i < writer->categoryButtonsNum; i++) {
 				Button *btn = writer->categoryButtons[i];
 				if (btn->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					enableCategory(btn->tf->rawText);
 				}
 			}
@@ -887,17 +896,17 @@ namespace Writer {
 				}
 
 				if (entry->button->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					loadModEntry(entry);
 				}
 
 				if (entry->peakButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					platformLoadFromUrl(entry->url, urlModSourceLoaded);
 				}
 
 				if (entry->sourceButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					gotoUrl(entry->url);
 				}
 			}
@@ -976,7 +985,7 @@ namespace Writer {
 				}
 
 				if (choiceButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					choiceButton->dest(choiceButton->userdata);
 				}
 
@@ -1794,8 +1803,8 @@ namespace Writer {
 		notif->title = stringClone(title);
 		notif->body = stringClone(body);
 
-		notif->sprite = createMintSprite();
-		notif->sprite->setupRect(64, 64, 0x000088);
+		notif->sprite = createMintSprite("img/writer/notification");
+		notif->sprite->scale(2, 2);
 	}
 
 	void destroyNotif(Notif *notif) {
