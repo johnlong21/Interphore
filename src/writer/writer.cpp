@@ -349,6 +349,15 @@ namespace Writer {
 
 		addSoundTweak("audio/ui/exit", 0.1);
 		addSoundTweak("audio/ui/restart", 0.3);
+		addSoundTweak("audio/ui/newChoiceClick/1", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/2", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/3", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/4", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/5", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/6", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/7", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/8", 0.2);
+		addSoundTweak("audio/ui/newChoiceClick/9", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/1", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/2", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/3", 0.2);
@@ -393,6 +402,12 @@ namespace Writer {
 
 			ModEntryDef defs[] = {
 				{
+					"Mud Pies",
+					"Roxelle Devaunt",
+					"https://www.dropbox.com/s/ekf7dvnnglfxaul/Mud%20Pies.txt?dl=1",
+					"Story",
+					"0.0.1"
+				}, {
 					"False Moon",
 					"Kittery",
 					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
@@ -887,7 +902,7 @@ namespace Writer {
 			for (int i = 0; i < writer->categoryButtonsNum; i++) {
 				Button *btn = writer->categoryButtons[i];
 				if (btn->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					enableCategory(btn->tf->rawText);
 				}
 			}
@@ -903,17 +918,17 @@ namespace Writer {
 				}
 
 				if (entry->button->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					loadModEntry(entry);
 				}
 
 				if (entry->peakButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					platformLoadFromUrl(entry->url, urlModSourceLoaded);
 				}
 
 				if (entry->sourceButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					gotoUrl(entry->url);
 				}
 			}
@@ -946,7 +961,7 @@ namespace Writer {
 			for (int i = 0; i < writer->choicesNum; i++) {
 				Button *choiceButton = writer->choices[i];
 
-				float buttonY = engine->height - choiceButton->sprite->getHeight();
+				float buttonY = engine->height - choiceButton->sprite->getHeight() - 5;
 
 				{ /// Appear anim
 					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->creationTime, choiceButton->sprite->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
@@ -954,7 +969,7 @@ namespace Writer {
 
 				{ /// Hover anim
 					if (choiceButton->sprite->hoveredTime) {
-						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-10, buttonY, QUAD_IN);
+						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-5, buttonY, QUAD_IN);
 					}
 
 					if (!choiceButton->sprite->hoveredTime && engine->time - choiceButton->sprite->creationTime > 1) {
@@ -992,7 +1007,7 @@ namespace Writer {
 				}
 
 				if (choiceButton->sprite->justPressed) {
-					playSound("audio/ui/choiceClick");
+					playSound("audio/ui/newChoiceClick/");
 					choiceButton->dest(choiceButton->userdata);
 				}
 
@@ -1810,8 +1825,8 @@ namespace Writer {
 		notif->title = stringClone(title);
 		notif->body = stringClone(body);
 
-		notif->sprite = createMintSprite();
-		notif->sprite->setupRect(64, 64, 0x000088);
+		notif->sprite = createMintSprite("img/writer/notification");
+		notif->sprite->scale(2, 2);
 	}
 
 	void destroyNotif(Notif *notif) {
