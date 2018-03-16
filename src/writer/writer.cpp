@@ -28,6 +28,7 @@
 
 #define TIMERS_MAX 128
 #define NOTIFS_MAX 32
+#define STREAM_MAX 32
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -139,6 +140,9 @@ namespace Writer {
 	void saveGame();
 	void saveCheckpoint();
 	void gotoMap();
+
+	void streamImage(const char *imgName, const char *url);
+	void assetStreamed(char *serialData);
 
 	int qsortNotif(const void *a, const void *b);
 
@@ -262,6 +266,15 @@ namespace Writer {
 
 		char *curSave;
 		bool needToSave;
+
+		char *streamNames[STREAM_MAX];
+		int streamNamesNum;
+
+		char *streamUrls[STREAM_MAX];
+		int streamUrlsNum;
+
+		bool isStreaming;
+		int curStreamIndex;
 	};
 
 	mjs *mjs;
@@ -319,6 +332,7 @@ namespace Writer {
 		if (streq(name, "addNotif")) return (void *)addNotif;
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
 		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
+		if (streq(name, "streamImage")) return (void *)streamImage;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -816,35 +830,43 @@ namespace Writer {
 		writer->state = newState;
 	}
 
-
 	void updateWriter() {
 		execJs(interUpdateFn);
 		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
-		if (writer->needToSave) {
-			writer->needToSave = false;
-			execJs("var dataStr = JSON.stringify(data);");
-
-			mjs_val_t jsData = mjs_get(mjs, mjs_get_global(mjs), "dataStr", strlen("dataStr"));
-			size_t jsStrLen = 0;
-			const char *jsStr = mjs_get_string(mjs, &jsData, &jsStrLen);
-
-			if (writer->curSave) {
-				Free(writer->curSave);
-				writer->curSave = NULL;
+		{ /// Update streaming
+			if (!writer->isStreaming && writer->streamNamesNum > writer->curStreamIndex) {
+				writer->isStreaming = true;
+				platformLoadFromUrl(writer->streamUrls[writer->curStreamIndex], assetStreamed);
 			}
+		}
 
-			if (jsStrLen != 0) {
-				writer->curSave = (char *)Malloc(jsStrLen + 1);
-				strncpy(writer->curSave, jsStr, jsStrLen);
-				writer->curSave[jsStrLen] = '\0';
+		{ /// Update saving
+			if (writer->needToSave) {
+				writer->needToSave = false;
+				execJs("var dataStr = JSON.stringify(data);");
+
+				mjs_val_t jsData = mjs_get(mjs, mjs_get_global(mjs), "dataStr", strlen("dataStr"));
+				size_t jsStrLen = 0;
+				const char *jsStr = mjs_get_string(mjs, &jsData, &jsStrLen);
+
+				if (writer->curSave) {
+					Free(writer->curSave);
+					writer->curSave = NULL;
+				}
+
+				if (jsStrLen != 0) {
+					writer->curSave = (char *)Malloc(jsStrLen + 1);
+					strncpy(writer->curSave, jsStr, jsStrLen);
+					writer->curSave[jsStrLen] = '\0';
+				}
+
+				execJs("dataStr = null;");
+
+				// printf("Checkpoint: %s\n", writer->curSave);
 			}
-
-			execJs("dataStr = null;");
-
-			// printf("Checkpoint: %s\n", writer->curSave);
 		}
 
 		if (writer->state == STATE_MENU) {
@@ -1825,6 +1847,24 @@ namespace Writer {
 	void gotoMap() {
 		if (writer->state == STATE_MOD) exitMod();
 		changeState(STATE_GRAPH);
+	}
+
+	void streamImage(const char *imgName, const char *url) {
+		writer->streamNames[writer->streamNamesNum++] = stringClone(imgName);
+		writer->streamUrls[writer->streamUrlsNum++] = stringClone(url);
+	}
+
+	void assetStreamed(char *serialData) {
+		const char *name = writer->streamNames[writer->curStreamIndex];
+		const char *url = writer->streamUrls[writer->curStreamIndex];
+
+		printf("Loaded %s at %d\n", name, strlen(serialData));
+		Free((void *)name);
+		Free((void *)url);
+		Free((void *)serialData);
+
+		writer->curStreamIndex++;
+		writer->isStreaming = false;
 	}
 
 	int qsortNotif(const void *a, const void *b) {
