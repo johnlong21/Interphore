@@ -1873,16 +1873,20 @@ namespace Writer {
 		const char *name = writer->streamNames[writer->curStreamIndex];
 		const char *url = writer->streamUrls[writer->curStreamIndex];
 
-		// printf("Loaded %s at %d (%d)\n", name, strlen(serialData), platformLoadedStringSize);
-		// char *assetSrc = (char *)malloc(platformLoadedStringSize + 1);
 		addAsset(name, serialData, platformLoadedStringSize);
 
 		Free((void *)name);
 		Free((void *)url);
-		Free((void *)serialData);
 
 		writer->curStreamIndex++;
 		writer->isStreaming = false;
+
+		for (int i = 0; i < ASSETS_MAX; i++) {
+			if (!writer->loadedAssets[i]) {
+				writer->loadedAssets[i] = getAsset(name);
+				break;
+			}
+		}
 	}
 
 	int qsortNotif(const void *a, const void *b) {
