@@ -1792,7 +1792,7 @@ namespace Writer {
 				break;
 
 		if (slot >= NOTIFS_MAX) {
-			msg("Too many buttons", MSG_ERROR);
+			msg("Too many notifs", MSG_ERROR);
 			return;
 		}
 
