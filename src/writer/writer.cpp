@@ -509,7 +509,7 @@ namespace Writer {
 					"Tests",
 					"0.0.1"
 				}, {
-					"Main Menu",
+					"Main",
 					"John Johnson",
 					"",
 					"Internal",
@@ -1200,8 +1200,8 @@ namespace Writer {
 	}
 
 	void loadModEntry(ModEntry *entry) {
-		if (streq(entry->name, "Main Menu")) {
-			loadMod((char *)getAsset("mainMenu.phore")->data);
+		if (streq(entry->name, "Main")) {
+			loadMod((char *)getAsset("main.phore")->data);
 			return;
 		}
 
