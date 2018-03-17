@@ -102,6 +102,7 @@ namespace Writer {
 	void urlModLoaded(char *serialData);
 	void urlModSourceLoaded(char *serialData);
 	void loadMod(char *serialData);
+	void execMod(char *serialData);
 
 	Button *createButton(const char *text, int width=256, int height=128);
 	void destroyButton(Button *btn);
@@ -895,7 +896,7 @@ namespace Writer {
 					}
 
 					// printf("iexec: %s\n", (char *)asset->data);
-					loadMod((char *)asset->data);
+					execMod((char *)asset->data);
 
 					Free(assetName);
 					writer->execQueue[i] = NULL;
@@ -1281,7 +1282,7 @@ namespace Writer {
 
 	void urlModLoaded(char *serialData) {
 		if (serialData) {
-			loadMod(serialData);
+			execMod(serialData);
 			Free(serialData);
 		} else {
 			msg("Failed to load.", MSG_ERROR);
@@ -1338,6 +1339,11 @@ namespace Writer {
 		// writer->passagesNum = 0;
 
 		if (writer->state != STATE_MOD) changeState(STATE_MOD);
+		execMod(serialData);
+
+	}
+
+	void execMod(char *serialData) {
 		// printf("Loaded data: %s\n", serialData);
 		char *inputData = (char *)zalloc(SERIAL_SIZE);
 
@@ -1437,7 +1443,6 @@ namespace Writer {
 
 		Free(inputData);
 
-		writer->execWhenDoneLoading = realData;
 		if (!writer->currentMod) {
 			ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
 			memset(entry, 0, sizeof(ModEntry));
@@ -1450,6 +1455,7 @@ namespace Writer {
 			writer->currentMod = entry;
 		}
 
+		writer->execWhenDoneLoading = realData;
 		writer->currentMod->doneLoading = true; //@incomplete Do streaming
 	}
 
