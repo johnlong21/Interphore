@@ -141,7 +141,7 @@ namespace Writer {
 	void saveCheckpoint();
 	void gotoMap();
 
-	void streamImage(const char *imgName, const char *url);
+	void streamAsset(const char *assetName, const char *url);
 	void assetStreamed(char *serialData);
 
 	int qsortNotif(const void *a, const void *b);
@@ -332,7 +332,7 @@ namespace Writer {
 		if (streq(name, "addNotif")) return (void *)addNotif;
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
 		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
-		if (streq(name, "streamImage")) return (void *)streamImage;
+		if (streq(name, "streamAsset")) return (void *)streamAsset;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -1864,8 +1864,8 @@ namespace Writer {
 		changeState(STATE_GRAPH);
 	}
 
-	void streamImage(const char *imgName, const char *url) {
-		writer->streamNames[writer->streamNamesNum++] = stringClone(imgName);
+	void streamAsset(const char *assetName, const char *url) {
+		writer->streamNames[writer->streamNamesNum++] = stringClone(assetName);
 		writer->streamUrls[writer->streamUrlsNum++] = stringClone(url);
 	}
 
