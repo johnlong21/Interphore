@@ -4,6 +4,7 @@ font/bitmap/*
 info/interConfig.js
 info/introMod.phore
 info/mainMenu.phore
+info/utils.js
 
 img/writer/exit.png
 img/writer/exit.spr

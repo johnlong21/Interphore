@@ -29,6 +29,7 @@
 #define TIMERS_MAX 128
 #define NOTIFS_MAX 32
 #define STREAM_MAX 32
+#define EXEC_QUEUE_MAX 32
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -141,8 +142,10 @@ namespace Writer {
 	void saveCheckpoint();
 	void gotoMap();
 
-	void streamImage(const char *imgName, const char *url);
+	void streamAsset(const char *assetName, const char *url);
 	void assetStreamed(char *serialData);
+
+	void execAsset(const char *assetName);
 
 	int qsortNotif(const void *a, const void *b);
 
@@ -275,6 +278,8 @@ namespace Writer {
 
 		bool isStreaming;
 		int curStreamIndex;
+
+		char *execQueue[EXEC_QUEUE_MAX];
 	};
 
 	mjs *mjs;
@@ -330,9 +335,12 @@ namespace Writer {
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
 		if (streq(name, "addNotif")) return (void *)addNotif;
+
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
 		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
-		if (streq(name, "streamImage")) return (void *)streamImage;
+
+		if (streq(name, "streamAsset")) return (void *)streamAsset;
+		if (streq(name, "execAsset")) return (void *)execAsset;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -528,6 +536,12 @@ namespace Writer {
 					"Test Nodes",
 					"Fallowwing",
 					"https://www.dropbox.com/s/c15v66k0opzr5dt/Test%20Nodes.phore?dl=1",
+					"Internal",
+					"0.0.1"
+				}, {
+					"Loader Test",
+					"Fallowwing",
+					"https://www.dropbox.com/s/9og995zimh0vpee/loaderTest.phore?dl=1",
 					"Internal",
 					"0.0.1"
 				}
@@ -854,10 +868,38 @@ namespace Writer {
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
+		// Streaming and exec have to happen here because they can't happen in the mjs call graph
 		{ /// Update streaming
 			if (!writer->isStreaming && writer->streamNamesNum > writer->curStreamIndex) {
 				writer->isStreaming = true;
 				platformLoadFromUrl(writer->streamUrls[writer->curStreamIndex], assetStreamed);
+			}
+
+			if (writer->curStreamIndex == writer->streamUrlsNum) {
+				writer->streamUrlsNum = 0;
+				writer->streamNamesNum = 0;
+				writer->curStreamIndex = 0;
+			}
+		}
+
+		{ /// Update exec
+			for (int i = 0; i < EXEC_QUEUE_MAX; i++) {
+				if (writer->execQueue[i]) {
+
+					char *assetName = writer->execQueue[i];
+					Asset *asset = getAsset(assetName);
+
+					if (!asset) {
+						msg("Failed to execuate asset named %s because it does not exist", MSG_ERROR, assetName);
+						return;
+					}
+
+					printf("iexec: %s\n", (char *)asset->data);
+					execJs((char *)asset->data);
+
+					Free(assetName);
+					writer->execQueue[i] = NULL;
+				}
 			}
 		}
 
@@ -1892,8 +1934,8 @@ namespace Writer {
 		changeState(STATE_GRAPH);
 	}
 
-	void streamImage(const char *imgName, const char *url) {
-		writer->streamNames[writer->streamNamesNum++] = stringClone(imgName);
+	void streamAsset(const char *assetName, const char *url) {
+		writer->streamNames[writer->streamNamesNum++] = stringClone(assetName);
 		writer->streamUrls[writer->streamUrlsNum++] = stringClone(url);
 	}
 
@@ -1903,18 +1945,31 @@ namespace Writer {
 
 		addAsset(name, serialData, platformLoadedStringSize);
 
-		Free((void *)name);
-		Free((void *)url);
-
-		writer->curStreamIndex++;
-		writer->isStreaming = false;
-
 		for (int i = 0; i < ASSETS_MAX; i++) {
 			if (!writer->loadedAssets[i]) {
 				writer->loadedAssets[i] = getAsset(name);
 				break;
 			}
 		}
+
+		if (stringEndsWith(name, ".phore") || stringEndsWith(name, ".js")) execJs((char *)getAsset(name)->data);
+
+		writer->curStreamIndex++;
+		writer->isStreaming = false;
+
+		Free((void *)name);
+		Free((void *)url);
+	}
+
+	void execAsset(const char *assetName) {
+		for (int i = 0; i < EXEC_QUEUE_MAX; i++) {
+			if (!writer->execQueue[i]) {
+				writer->execQueue[i] = stringClone(assetName);
+				return;
+			}
+		}
+
+		msg("Exec queue too big", MSG_ERROR);
 	}
 
 	int qsortNotif(const void *a, const void *b) {
