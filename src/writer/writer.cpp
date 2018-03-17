@@ -157,7 +157,6 @@ namespace Writer {
 
 	struct ModEntry {
 		bool enabled;
-		bool doneLoading;
 		char name[MOD_NAME_MAX];
 		char author[AUTHOR_NAME_MAX];
 		char url[URL_LIMIT];
@@ -981,12 +980,6 @@ namespace Writer {
 		}
 
 		if (writer->state == STATE_MOD) {
-			if (writer->execWhenDoneLoading && writer->currentMod->doneLoading) {
-				execJs(writer->execWhenDoneLoading);
-				Free(writer->execWhenDoneLoading);
-				writer->execWhenDoneLoading = NULL;
-			}
-
 			{ /// Passage appear anim
 				writer->mainText->alpha = mathClampMap(engine->time, writer->passageStartTime, writer->passageStartTime+0.2, 0, 1, QUAD_IN);
 			}
@@ -1207,7 +1200,6 @@ namespace Writer {
 		}
 
 		writer->currentMod = entry;
-		writer->currentMod->doneLoading = false;
 		platformLoadFromUrl(entry->url, urlModLoaded);
 	}
 
@@ -1455,8 +1447,8 @@ namespace Writer {
 			writer->currentMod = entry;
 		}
 
-		writer->execWhenDoneLoading = realData;
-		writer->currentMod->doneLoading = true; //@incomplete Do streaming
+		execJs(realData);
+		Free(realData);
 	}
 
 	void destroyButton(Button *btn) {
