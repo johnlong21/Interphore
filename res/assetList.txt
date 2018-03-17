@@ -2,6 +2,7 @@ shader/*
 font/bitmap/*
 
 info/interConfig.js
+info/utils.js
 
 img/writer/exit.png
 img/writer/exit.spr
