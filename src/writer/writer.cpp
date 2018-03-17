@@ -894,8 +894,8 @@ namespace Writer {
 						return;
 					}
 
-					printf("iexec: %s\n", (char *)asset->data);
-					execJs((char *)asset->data);
+					// printf("iexec: %s\n", (char *)asset->data);
+					loadMod((char *)asset->data);
 
 					Free(assetName);
 					writer->execQueue[i] = NULL;
@@ -1333,6 +1333,7 @@ namespace Writer {
 	}
 
 	void loadMod(char *serialData) {
+		//@hack How do I know to dump the passages???
 		// for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
 		// writer->passagesNum = 0;
 
