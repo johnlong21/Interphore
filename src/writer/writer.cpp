@@ -1201,7 +1201,7 @@ namespace Writer {
 
 	void loadModEntry(ModEntry *entry) {
 		if (streq(entry->name, "Main Menu")) {
-			execJs((char *)getAsset("mainMenu.phore")->data);
+			loadMod((char *)getAsset("mainMenu.phore")->data);
 			return;
 		}
 
@@ -1333,8 +1333,8 @@ namespace Writer {
 	}
 
 	void loadMod(char *serialData) {
-		for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
-		writer->passagesNum = 0;
+		// for (int i = 0; i < writer->passagesNum; i++) Free(writer->passages[i]);
+		// writer->passagesNum = 0;
 
 		if (writer->state != STATE_MOD) changeState(STATE_MOD);
 		// printf("Loaded data: %s\n", serialData);
