@@ -511,7 +511,7 @@ namespace Writer {
 				}, {
 					"Main Menu",
 					"John Johnson",
-					"https://www.dropbox.com/s/naa8evyajjcmjw0/mainMenu.phore?dl=1",
+					"",
 					"Internal",
 					"0.0.1"
 				}, {
@@ -1200,6 +1200,11 @@ namespace Writer {
 	}
 
 	void loadModEntry(ModEntry *entry) {
+		if (streq(entry->name, "Main Menu")) {
+			execJs((char *)getAsset("mainMenu.phore")->data);
+			return;
+		}
+
 		writer->currentMod = entry;
 		writer->currentMod->doneLoading = false;
 		platformLoadFromUrl(entry->url, urlModLoaded);
