@@ -1498,6 +1498,7 @@ namespace Writer {
 	}
 
 	void clear() {
+		if (writer->state == STATE_MENU) changeState(STATE_MOD);
 			execJs("removeAllImages();");
 		// for (int i = 0; i < IMAGES_MAX; i++) {
 		// 	if (writer->images[i].exists && !writer->images[i].permanent) {
@@ -1511,6 +1512,8 @@ namespace Writer {
 	}
 
 	void gotoPassage(const char *passageName) {
+		if (writer->state == STATE_MENU) changeState(STATE_MOD);
+
 		writer->scrollAmount = 0;
 		writer->passageStartTime = engine->time;
 		writer->mainText->alpha = 0;
