@@ -530,6 +530,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/c15v66k0opzr5dt/Test%20Nodes.phore?dl=1",
 					"Internal",
 					"0.0.1"
+				}, {
+					"Loader Test",
+					"Fallowwing",
+					"https://www.dropbox.com/s/9og995zimh0vpee/loaderTest.phore?dl=1",
+					"Internal",
+					"0.0.1"
 				}
 			};
 
@@ -1903,9 +1909,6 @@ namespace Writer {
 
 		addAsset(name, serialData, platformLoadedStringSize);
 
-		Free((void *)name);
-		Free((void *)url);
-
 		writer->curStreamIndex++;
 		writer->isStreaming = false;
 
@@ -1915,6 +1918,11 @@ namespace Writer {
 				break;
 			}
 		}
+
+		if (stringEndsWith(name, ".phore") || stringEndsWith(name, ".js")) execJs((char *)getAsset(name)->data);
+
+		Free((void *)name);
+		Free((void *)url);
 	}
 
 	int qsortNotif(const void *a, const void *b) {
