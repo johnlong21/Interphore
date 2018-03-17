@@ -361,6 +361,9 @@ namespace Writer {
 		addSoundTweak("audio/ui/hoverChoiceButtons/1", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/2", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceButtons/3", 0.2);
+		addSoundTweak("audio/ui/tooltip/1", 0.2);
+		addSoundTweak("audio/ui/tooltip/2", 0.2);
+		addSoundTweak("audio/ui/tooltip/3", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceIcons/1", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceIcons/2", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceIcons/3", 0.2);
@@ -1021,6 +1024,12 @@ namespace Writer {
 				changeState(STATE_MENU);
 			}
 
+			if (writer->exitButton->hovering) {
+				if (writer->exitButton->scaleX < 2.3) writer->exitButton->scaleX += 0.07;
+			} else if (writer->exitButton->scaleX > 2) {
+				writer->exitButton->scaleX -= 0.07;
+			}
+
 			if (writer->exitButton->justHovered) {
 				playSound("audio/ui/hoverChoiceButtons/");
 			}
@@ -1029,6 +1038,12 @@ namespace Writer {
 				playSound("audio/ui/restart");
 				changeState(STATE_LOADING);
 				loadModEntry(writer->currentMod);
+			}
+
+			if (writer->refreshButton->hovering) {
+				if (writer->refreshButton->scaleX < 2.3) writer->refreshButton->scaleX += 0.07;
+			} else if (writer->refreshButton->scaleX > 2) {
+				writer->refreshButton->scaleX -= 0.07;
 			}
 
 			if (writer->refreshButton->justHovered) {
@@ -1116,15 +1131,28 @@ namespace Writer {
 
 			for (int i = 0; i < notifsNum; i++) {
 				Notif *notif = notifs[i];
-				float startX = engine->width - notif->sprite->width - 16; //@hardcode 16px right edge padding
+				float startX = engine->width - notif->sprite->getWidth() - 10; //@hardcode 64px right edge padding
 				float startY = engine->height/2;
 				notif->sprite->x = startX;
-				notif->sprite->y = startY + (notif->sprite->height + 8) * i; //@hardcode 8px inner padding
+				notif->sprite->y = startY + (notif->sprite->getHeight() + 5) * i; //@hardcode 5px inner padding
 
 				char buf[HUGE_STR];
 				sprintf(buf, "%s\n%s", notif->title, notif->body);
-				if (notif->sprite->hovering) showTooltipCursor(buf);
-				if (notif->sprite->justPressed) destroyNotif(notif);
+				if (notif->sprite->justHovered) playSound("audio/ui/tooltip/");
+				
+				if (notif->sprite->hovering) {
+					if (notif->sprite->scaleX < 2.3) notif->sprite->scaleX += 0.07;
+					//if (notif->sprite->scaleY < 2.2) notif->sprite->scaleY += 0.05;
+					showTooltipCursor(buf);
+				} else if (notif->sprite->scaleX > 2) {
+					notif->sprite->scaleX -= 0.07;
+					//notif->sprite->scaleY -= 0.05;
+				}
+
+				if (notif->sprite->justPressed) {
+					playSound("audio/ui/newChoiceClick/");
+					destroyNotif(notif);
+				}
 			}
 		}
 	}

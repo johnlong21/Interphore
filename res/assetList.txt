@@ -67,6 +67,9 @@ audio/ui/hoverChoiceButtons/3.ogg
 audio/ui/hoverChoiceIcons/1.ogg
 audio/ui/hoverChoiceIcons/2.ogg
 audio/ui/hoverChoiceIcons/3.ogg
+audio/ui/tooltip/1.ogg
+audio/ui/tooltip/2.ogg
+audio/ui/tooltip/3.ogg
 audio/ui/restart.ogg
 audio/ui/exit.ogg
 audio/ui/load.ogg
