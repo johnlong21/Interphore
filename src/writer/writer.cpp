@@ -30,6 +30,7 @@
 #define NOTIFS_MAX 32
 #define STREAM_MAX 32
 #define EXEC_QUEUE_MAX 32
+#define TITLE_MAX MED_STR
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -147,6 +148,8 @@ namespace Writer {
 	void assetStreamed(char *serialData);
 
 	void execAsset(const char *assetName);
+
+	void setTitle(const char *str);
 
 	int qsortNotif(const void *a, const void *b);
 
@@ -280,6 +283,9 @@ namespace Writer {
 		int curStreamIndex;
 
 		char *execQueue[EXEC_QUEUE_MAX];
+
+		char nextTitle[TITLE_MAX];
+		MintSprite *titleSprite;
 	};
 
 	mjs *mjs;
@@ -341,6 +347,7 @@ namespace Writer {
 
 		if (streq(name, "streamAsset")) return (void *)streamAsset;
 		if (streq(name, "execAsset")) return (void *)execAsset;
+		if (streq(name, "setTitle")) return (void *)setTitle;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -488,6 +495,12 @@ namespace Writer {
 					"Notif Example",
 					"Fallowwing",
 					"https://www.dropbox.com/s/cgdd03hx1tdc3i3/notifExample.phore?dl=1",
+					"Examples",
+					"0.1.0"
+				}, {
+					"Title Example",
+					"Fallowwing",
+					"https://www.dropbox.com/s/gjmcnr18smhkavh/titleExample.phore?dl=1",
 					"Examples",
 					"0.1.0"
 				}, {
@@ -926,6 +939,39 @@ namespace Writer {
 				execJs("dataStr = null;");
 
 				// printf("Checkpoint: %s\n", writer->curSave);
+			}
+		}
+
+		{ /// Update title
+			if (writer->titleSprite) {
+
+				if (writer->nextTitle[0] == '\0') {
+					writer->titleSprite->alpha += 0.07;
+				} else {
+					writer->titleSprite->alpha -= 0.07;
+					if (writer->titleSprite->alpha <= 0) {
+						writer->titleSprite->destroy();
+						writer->titleSprite = NULL;
+					}
+				}
+
+			} else {
+				if (writer->nextTitle[0] != '\0' && writer->nextTitle[0] != ' ') {
+					MintSprite *bg = createMintSprite();
+					bg->setupRect(engine->width, 50, 0x111111);
+					bg->y = engine->height * 0.75;
+					bg->alpha = 0;
+
+					MintSprite *tf = createMintSprite();
+					bg->addChild(tf);
+					tf->setupEmpty(engine->width, 50);
+					tf->setText(writer->nextTitle);
+					tf->alignInside(DIR8_CENTER);
+
+					writer->titleSprite = bg;
+
+					writer->nextTitle[0] = '\0';
+				}
 			}
 		}
 
@@ -1990,5 +2036,10 @@ namespace Writer {
 		if (n1->sprite->index > n2->sprite->index) return 1;
 
 		return 0;
+	}
+
+	void setTitle(const char *str) {
+		if (strlen(str) == 0) strcpy(writer->nextTitle, " ");
+		else strcpy(writer->nextTitle, str);
 	}
 }
