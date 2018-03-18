@@ -77,4 +77,4 @@ audio/ui/tooltip/3.ogg
 audio/ui/restart.ogg
 audio/ui/exit.ogg
 audio/ui/load.ogg
-audio/music/newCoworker.mp3
+audio/music/newVictim.ogg
