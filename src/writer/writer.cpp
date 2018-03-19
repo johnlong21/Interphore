@@ -31,6 +31,7 @@
 #define STREAM_MAX 32
 #define EXEC_QUEUE_MAX 32
 #define TITLE_MAX MED_STR
+#define BGS_MAX 8
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -263,6 +264,9 @@ namespace Writer {
 		MintSprite *bgSprite1;
 		char nextBg0[PATH_LIMIT];
 		char nextBg1[PATH_LIMIT];
+
+		MintSprite *bgs[BGS_MAX];
+		char *nextBgs[BGS_MAX];
 
 		Timer timers[TIMERS_MAX];
 
@@ -1175,24 +1179,30 @@ namespace Writer {
 		}
 
 		{ /// Backgrounds
-			if (writer->nextBg0[0] != '\0') {
-				writer->bgSprite0->alpha -= 0.05;
-				if (writer->bgSprite0->alpha <= 0) {
-					writer->bgSprite0 = writer->bgSprite0->recreate(writer->nextBg0);
-					writer->nextBg0[0] = '\0';
-				}
-			} else {
-				writer->bgSprite0->alpha += 0.05;
-			}
+			for (int i = 0; i < BGS_MAX; i++) {
+				if (writer->nextBgs[i] && writer->bgs[i]) {
+					writer->bgs[i]->alpha -= 0.05;
 
-			if (writer->nextBg1[0] != '\0') {
-				writer->bgSprite1->alpha -= 0.05;
-				if (writer->bgSprite1->alpha <= 0) {
-					writer->bgSprite1 = writer->bgSprite1->recreate(writer->nextBg1);
-					writer->nextBg1[0] = '\0';
+					if (writer->bgs[i]->alpha <= 0) {
+						writer->bgs[i]->destroy();
+						writer->bgs[i] = NULL;
+					}
 				}
-			} else {
-				writer->bgSprite1->alpha += 0.05;
+
+				if (writer->nextBgs[i] && writer->bgs[i] == NULL) {
+					if (writer->nextBgs[i][0] != '\0') {
+						writer->bgs[i] = createMintSprite(writer->nextBgs[i]);
+						writer->bgs[i]->alpha = 0;
+						writer->bgs[i]->layer = lowestLayer + BG1_LAYER;
+					}
+
+					Free(writer->nextBgs[i]);
+					writer->nextBgs[i] = NULL;
+				}
+
+				if (writer->nextBgs[i] == NULL && writer->bgs[i]) {
+					writer->bgs[i]->alpha += 0.05;
+				}
 			}
 		}
 
@@ -1920,8 +1930,9 @@ namespace Writer {
 	}
 
 	void setBackground(int bgNum, const char *assetId) {
-		if (bgNum == 0) strcpy(writer->nextBg0, assetId);
-		if (bgNum == 1) strcpy(writer->nextBg1, assetId);
+		writer->nextBgs[bgNum] = stringClone(assetId);
+		// if (bgNum == 0) strcpy(writer->nextBg0, assetId);
+		// if (bgNum == 1) strcpy(writer->nextBg1, assetId);
 	}
 
 	void addNotif(const char *title, const char *body) {
