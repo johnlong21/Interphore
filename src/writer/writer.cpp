@@ -537,6 +537,12 @@ namespace Writer {
 					"Internal",
 					"0.0.1"
 				}, {
+					"thirstyCaves",
+					"Kittery",
+					"",
+					"Internal",
+					"0.0.1"
+				}, {
 					"Cade's Test",
 					"Cade",
 					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
