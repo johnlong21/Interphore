@@ -2,8 +2,8 @@ namespace Writer {
 	void setBackground(int bgNum, const char *assetId);
 	void updateBackgrounds();
 
-	void setScrollingBackground(int bgNum, float scrollX, float scrollY);
 	void resetBackgroundMode(int bgNum);
+	void setBackgroundBob(int bgNum, float bobX, float bobY);
 
 	void setBackground(int bgNum, const char *assetId) {
 		writer->nextBgs[bgNum] = stringClone(assetId);
@@ -39,15 +39,15 @@ namespace Writer {
 				MintSprite *bg = writer->bgs[i];
 				BackgroundMode *mode = &writer->bgModes[i];
 
-				bg->x += mode->scrollX;
-				bg->y += mode->scrollY;
+				bg->x = sin(engine->time * mode->bobX) * 30;
+				bg->y = sin(engine->time * mode->bobY) * 30;
 			}
 		}
 	}
 
-	void setScrollingBackground(int bgNum, float scrollX, float scrollY) {
-		writer->bgModes[bgNum].scrollX = scrollX;
-		writer->bgModes[bgNum].scrollY = scrollX;
+	void setBackgroundBob(int bgNum, float bobX, float bobY) {
+		writer->bgModes[bgNum].bobX = bobX;
+		writer->bgModes[bgNum].bobY = bobY;
 	}
 
 	void resetBackgroundMode(int bgNum) {

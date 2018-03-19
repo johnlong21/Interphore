@@ -210,8 +210,8 @@ namespace Writer {
 	};
 
 	struct BackgroundMode {
-		float scrollX;
-		float scrollY;
+		float bobX;
+		float bobY;
 	};
 
 	struct WriterStruct {
@@ -353,7 +353,7 @@ namespace Writer {
 		if (streq(name, "streamAsset")) return (void *)streamAsset;
 		if (streq(name, "execAsset")) return (void *)execAsset;
 		if (streq(name, "setTitle")) return (void *)setTitle;
-		if (streq(name, "setScrollingBackground")) return (void *)setScrollingBackground;
+		if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
 		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
@@ -556,6 +556,12 @@ namespace Writer {
 					"Loader Test",
 					"Fallowwing",
 					"https://www.dropbox.com/s/9og995zimh0vpee/loaderTest.phore?dl=1",
+					"Internal",
+					"0.0.1"
+				}, {
+					"Scratch",
+					"FallowWing",
+					"",
 					"Internal",
 					"0.0.1"
 				}
@@ -1204,6 +1210,11 @@ namespace Writer {
 	void loadModEntry(ModEntry *entry) {
 		if (streq(entry->name, "Main")) {
 			loadMod((char *)getAsset("main.phore")->data);
+			return;
+		}
+
+		if (streq(entry->name, "Scratch")) {
+			loadMod((char *)getAsset("scratch.phore")->data);
 			return;
 		}
 
