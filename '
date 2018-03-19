@@ -353,8 +353,7 @@ namespace Writer {
 		if (streq(name, "streamAsset")) return (void *)streamAsset;
 		if (streq(name, "execAsset")) return (void *)execAsset;
 		if (streq(name, "setTitle")) return (void *)setTitle;
-		if (streq(name, "setScrollingBackground")) return (void *)setScrollingBackground;
-		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
+		if (streq(name, "setBackgroundScrolling")) return (void *)setBackgroundScrolling;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
