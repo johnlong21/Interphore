@@ -151,6 +151,8 @@ namespace Writer {
 
 	void setTitle(const char *str);
 
+	void addInputField();
+
 	int qsortNotif(const void *a, const void *b);
 
 	struct Passage {
@@ -290,6 +292,8 @@ namespace Writer {
 
 		char nextTitle[TITLE_MAX];
 		MintSprite *titleSprite;
+
+		MintSprite *inputField;
 	};
 
 	mjs *mjs;
@@ -355,6 +359,7 @@ namespace Writer {
 		if (streq(name, "setTitle")) return (void *)setTitle;
 		if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
 		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
+		if (streq(name, "addInputField")) return (void *)addInputField;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -1518,16 +1523,17 @@ namespace Writer {
 
 	void clear() {
 		if (writer->state == STATE_MENU) changeState(STATE_MOD);
-			execJs("removeAllImages();");
-		// for (int i = 0; i < IMAGES_MAX; i++) {
-		// 	if (writer->images[i].exists && !writer->images[i].permanent) {
-		// 		removeImage(&writer->images[i]);
-		// 	}
-		// }
 
+		execJs("removeAllImages();");
 		writer->mainText->setText("");
 		for (int i = 0; i < writer->choicesNum; i++) destroyButton(writer->choices[i]);
 		writer->choicesNum = 0;
+
+		if (writer->inputField) {
+			execJs("lastInput = '%s';", writer->inputField->rawText);
+			writer->inputField->destroy();
+			writer->inputField = NULL;
+		}
 	}
 
 	void gotoPassage(const char *passageName) {
@@ -2009,5 +2015,16 @@ namespace Writer {
 	void setTitle(const char *str) {
 		if (strlen(str) == 0) strcpy(writer->nextTitle, " ");
 		else strcpy(writer->nextTitle, str);
+	}
+
+	void addInputField() {
+		if (writer->inputField) return;
+
+		MintSprite *spr = createMintSprite();
+		spr->setupEmpty(engine->width, 50);
+		spr->setText("This is some text");
+		spr->y = engine->height / 2;
+
+		writer->inputField = spr;
 	}
 }
