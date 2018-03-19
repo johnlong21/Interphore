@@ -5,6 +5,7 @@ info/interConfig.js
 info/introMod.phore
 info/mainMenu.phore
 info/main.phore
+info/scratch.phore
 info/utils.js
 
 img/writer/exit.png

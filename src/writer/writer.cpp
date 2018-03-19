@@ -31,6 +31,7 @@
 #define STREAM_MAX 32
 #define EXEC_QUEUE_MAX 32
 #define TITLE_MAX MED_STR
+#define BGS_MAX 8
 
 namespace Writer {
 	const char *CENTER = "CENTER";
@@ -133,7 +134,6 @@ namespace Writer {
 	void showButtonsIcons(Button *btn);
 
 	int timer(float delay, void (*onComplete)(void *), void *userdata);
-	void setBackground(int bgNum, const char *assetId);
 
 	void addNotif(const char *title, const char *body);
 	void destroyNotif(Notif *notif);
@@ -209,6 +209,11 @@ namespace Writer {
 		char *body;
 	};
 
+	struct BackgroundMode {
+		float bobX;
+		float bobY;
+	};
+
 	struct WriterStruct {
 		GameState state;
 		ModEntry *currentMod;
@@ -259,10 +264,9 @@ namespace Writer {
 
 		float scrollAmount;
 
-		MintSprite *bgSprite0;
-		MintSprite *bgSprite1;
-		char nextBg0[PATH_LIMIT];
-		char nextBg1[PATH_LIMIT];
+		MintSprite *bgs[BGS_MAX];
+		char *nextBgs[BGS_MAX];
+		BackgroundMode bgModes[BGS_MAX];
 
 		Timer timers[TIMERS_MAX];
 
@@ -300,6 +304,7 @@ namespace Writer {
 //
 
 #include "images.cpp"
+#include "backgrounds.cpp"
 
 #include "desktop.cpp"
 #include "graph.cpp"
@@ -348,6 +353,8 @@ namespace Writer {
 		if (streq(name, "streamAsset")) return (void *)streamAsset;
 		if (streq(name, "execAsset")) return (void *)execAsset;
 		if (streq(name, "setTitle")) return (void *)setTitle;
+		if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
+		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -553,6 +560,12 @@ namespace Writer {
 					"https://www.dropbox.com/s/9og995zimh0vpee/loaderTest.phore?dl=1",
 					"Internal",
 					"0.0.1"
+				}, {
+					"Scratch",
+					"FallowWing",
+					"",
+					"Internal",
+					"0.0.1"
 				}
 			};
 
@@ -586,25 +599,6 @@ namespace Writer {
 
 				writer->tooltipTf = spr;
 			}
-		}
-
-		{ /// Bg Sprite 1
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width, engine->height);
-			writer->bg->addChild(spr);
-			spr->layer = lowestLayer + BG1_LAYER;
-
-			writer->bgSprite0 = spr;
-		}
-
-		{ /// Bg Sprite 2
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width, engine->height);
-			writer->bg->addChild(spr);
-			spr->layer = lowestLayer + BG2_LAYER;
-			spr->alpha = 0.3;
-
-			writer->bgSprite1 = spr;
 		}
 
 		{ /// Autorun
@@ -1176,27 +1170,7 @@ namespace Writer {
 			}
 		}
 
-		{ /// Backgrounds
-			if (writer->nextBg0[0] != '\0') {
-				writer->bgSprite0->alpha -= 0.05;
-				if (writer->bgSprite0->alpha <= 0) {
-					writer->bgSprite0 = writer->bgSprite0->recreate(writer->nextBg0);
-					writer->nextBg0[0] = '\0';
-				}
-			} else {
-				writer->bgSprite0->alpha += 0.05;
-			}
-
-			if (writer->nextBg1[0] != '\0') {
-				writer->bgSprite1->alpha -= 0.05;
-				if (writer->bgSprite1->alpha <= 0) {
-					writer->bgSprite1 = writer->bgSprite1->recreate(writer->nextBg1);
-					writer->nextBg1[0] = '\0';
-				}
-			} else {
-				writer->bgSprite1->alpha += 0.05;
-			}
-		}
+		updateBackgrounds();
 
 		{ /// Notifs
 			Notif *notifs[NOTIFS_MAX];
@@ -1238,6 +1212,11 @@ namespace Writer {
 	void loadModEntry(ModEntry *entry) {
 		if (streq(entry->name, "Main")) {
 			loadMod((char *)getAsset("main.phore")->data);
+			return;
+		}
+
+		if (streq(entry->name, "Scratch")) {
+			loadMod((char *)getAsset("scratch.phore")->data);
 			return;
 		}
 
@@ -1919,11 +1898,6 @@ namespace Writer {
 			MintSprite *spr = btn->icons[i];
 			spr->visible = true;
 		}
-	}
-
-	void setBackground(int bgNum, const char *assetId) {
-		if (bgNum == 0) strcpy(writer->nextBg0, assetId);
-		if (bgNum == 1) strcpy(writer->nextBg1, assetId);
 	}
 
 	void addNotif(const char *title, const char *body) {
