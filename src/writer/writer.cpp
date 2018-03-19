@@ -260,11 +260,6 @@ namespace Writer {
 
 		float scrollAmount;
 
-		MintSprite *bgSprite0;
-		MintSprite *bgSprite1;
-		char nextBg0[PATH_LIMIT];
-		char nextBg1[PATH_LIMIT];
-
 		MintSprite *bgs[BGS_MAX];
 		char *nextBgs[BGS_MAX];
 
@@ -588,25 +583,6 @@ namespace Writer {
 
 				writer->tooltipTf = spr;
 			}
-		}
-
-		{ /// Bg Sprite 1
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width, engine->height);
-			writer->bg->addChild(spr);
-			spr->layer = lowestLayer + BG1_LAYER;
-
-			writer->bgSprite0 = spr;
-		}
-
-		{ /// Bg Sprite 2
-			MintSprite *spr = createMintSprite();
-			spr->setupEmpty(engine->width, engine->height);
-			writer->bg->addChild(spr);
-			spr->layer = lowestLayer + BG2_LAYER;
-			spr->alpha = 0.3;
-
-			writer->bgSprite1 = spr;
 		}
 
 		{ /// Autorun
@@ -1931,8 +1907,6 @@ namespace Writer {
 
 	void setBackground(int bgNum, const char *assetId) {
 		writer->nextBgs[bgNum] = stringClone(assetId);
-		// if (bgNum == 0) strcpy(writer->nextBg0, assetId);
-		// if (bgNum == 1) strcpy(writer->nextBg1, assetId);
 	}
 
 	void addNotif(const char *title, const char *body) {
