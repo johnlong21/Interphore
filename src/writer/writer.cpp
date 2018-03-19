@@ -395,6 +395,8 @@ namespace Writer {
 		addSoundTweak("audio/ui/hoverChoiceIcons/2", 0.2);
 		addSoundTweak("audio/ui/hoverChoiceIcons/3", 0.2);
 
+		addSoundTweak("audio/music/newVictim", 0.5);
+
 		getTextureAsset("Espresso-Dolce_22")->level = 3;
 		getTextureAsset("Espresso-Dolce_30")->level = 3;
 		getTextureAsset("Espresso-Dolce_38")->level = 3;
@@ -536,6 +538,12 @@ namespace Writer {
 				}, {
 					"Main",
 					"John Johnson",
+					"",
+					"Internal",
+					"0.0.1"
+				}, {
+					"thirstyCaves",
+					"Kittery",
 					"",
 					"Internal",
 					"0.0.1"
