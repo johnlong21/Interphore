@@ -134,7 +134,6 @@ namespace Writer {
 	void showButtonsIcons(Button *btn);
 
 	int timer(float delay, void (*onComplete)(void *), void *userdata);
-	void setBackground(int bgNum, const char *assetId);
 
 	void addNotif(const char *title, const char *body);
 	void destroyNotif(Notif *notif);
@@ -299,6 +298,7 @@ namespace Writer {
 //
 
 #include "images.cpp"
+#include "backgrounds.cpp"
 
 #include "desktop.cpp"
 #include "graph.cpp"
@@ -1154,33 +1154,7 @@ namespace Writer {
 			}
 		}
 
-		{ /// Backgrounds
-			for (int i = 0; i < BGS_MAX; i++) {
-				if (writer->nextBgs[i] && writer->bgs[i]) {
-					writer->bgs[i]->alpha -= 0.05;
-
-					if (writer->bgs[i]->alpha <= 0) {
-						writer->bgs[i]->destroy();
-						writer->bgs[i] = NULL;
-					}
-				}
-
-				if (writer->nextBgs[i] && writer->bgs[i] == NULL) {
-					if (writer->nextBgs[i][0] != '\0') {
-						writer->bgs[i] = createMintSprite(writer->nextBgs[i]);
-						writer->bgs[i]->alpha = 0;
-						writer->bgs[i]->layer = lowestLayer + BG1_LAYER;
-					}
-
-					Free(writer->nextBgs[i]);
-					writer->nextBgs[i] = NULL;
-				}
-
-				if (writer->nextBgs[i] == NULL && writer->bgs[i]) {
-					writer->bgs[i]->alpha += 0.05;
-				}
-			}
-		}
+		updateBackgrounds();
 
 		{ /// Notifs
 			Notif *notifs[NOTIFS_MAX];
@@ -1903,10 +1877,6 @@ namespace Writer {
 			MintSprite *spr = btn->icons[i];
 			spr->visible = true;
 		}
-	}
-
-	void setBackground(int bgNum, const char *assetId) {
-		writer->nextBgs[bgNum] = stringClone(assetId);
 	}
 
 	void addNotif(const char *title, const char *body) {
