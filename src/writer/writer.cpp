@@ -878,7 +878,6 @@ namespace Writer {
 
 	void updateWriter() {
 		execJs(interUpdateFn);
-		if (keyIsJustPressed('M')) msg("This is a test", MSG_ERROR);
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
@@ -1215,6 +1214,20 @@ namespace Writer {
 				if (notif->sprite->justPressed) {
 					playSound("audio/ui/newChoiceClick/");
 					destroyNotif(notif);
+				}
+			}
+		}
+
+		{ /// Input text
+			if (writer->inputField) {
+				if (keyIsJustPressed(' ')) writer->inputField->append(" ");
+				if (keyIsJustPressed(KEY_BACKSPACE)) writer->inputField->unAppend(1);
+
+				for (int i = 'A'; i <= 'Z'; i++) {
+					if (keyIsJustPressed(i)) {
+						if (keyIsPressed(KEY_SHIFT)) writer->inputField->appendChar(i);
+						else writer->inputField->appendChar(i + 'a' - 'A');
+					}
 				}
 			}
 		}
@@ -2030,7 +2043,7 @@ namespace Writer {
 
 		MintSprite *spr = createMintSprite();
 		spr->setupEmpty(engine->width, 50);
-		spr->setText("This is some text");
+		spr->setText("");
 		spr->y = engine->height / 2;
 
 		writer->inputField = spr;
