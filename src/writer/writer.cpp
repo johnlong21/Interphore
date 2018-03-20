@@ -116,6 +116,8 @@ namespace Writer {
 	void destroyMsg(Msg *msg);
 
 	void playAudio(const char *path, const char *name);
+	void stopAudio(const char *name);
+	void setAudioLooping(const char *name, int loopingBool);
 	void clear();
 
 	void showTooltipCursor(const char *str);
@@ -332,6 +334,8 @@ namespace Writer {
 		if (streq(name, "rotateImage")) return (void *)rotateImage;
 		if (streq(name, "tintImage")) return (void *)tintImage;
 		if (streq(name, "playAudio")) return (void *)playAudio;
+		if (streq(name, "setAudioLooping")) return (void *)setAudioLooping;
+		if (streq(name, "stopAudio")) return (void *)stopAudio;
 		if (streq(name, "submitAudio")) return (void *)submitAudio;
 		if (streq(name, "clear")) return (void *)clear;
 
@@ -1849,6 +1853,26 @@ namespace Writer {
 
 	void playAudio(const char *path, const char *name) {
 		playSound(path, name);
+	}
+
+	void stopAudio(const char *name) {
+		Channel *channel = getChannel(name);
+		if (!channel) {
+			msg("No channel named %s", MSG_ERROR, name);
+			return;
+		}
+
+		channel->destroy();
+	}
+
+	void setAudioLooping(const char *name, int loopingBool) {
+		Channel *channel = getChannel(name);
+		if (!channel) {
+			msg("No channel named %s", MSG_ERROR, name);
+			return;
+		}
+
+		channel->looping = loopingBool;
 	}
 
 	void submitAudio(const char *audioData) {
