@@ -1,11 +1,12 @@
 namespace Writer {
-	void setBackground(int bgNum, const char *assetId);
+	void setBackground(int bgNum, const char *assetId, BackgroundType bgType);
 	void updateBackgrounds();
 
 	void resetBackgroundMode(int bgNum);
 	void setBackgroundBob(int bgNum, float bobX, float bobY);
 
-	void setBackground(int bgNum, const char *assetId) {
+	void setBackground(int bgNum, const char *assetId, BackgroundType bgType) {
+		writer->bgModes[bgNum].type = bgType;
 		writer->nextBgs[bgNum] = stringClone(assetId);
 	}
 
@@ -22,9 +23,28 @@ namespace Writer {
 
 			if (writer->nextBgs[i] && writer->bgs[i] == NULL) {
 				if (writer->nextBgs[i][0] != '\0') {
-					writer->bgs[i] = createMintSprite(writer->nextBgs[i]);
-					writer->bgs[i]->alpha = 0;
-					writer->bgs[i]->layer = lowestLayer + BG1_LAYER;
+					MintSprite *spr = NULL;
+					if (writer->bgModes[i].type == BG_NORMAL) {
+						spr = createMintSprite(writer->nextBgs[i]);
+					} else if (writer->bgModes[i].type == BG_TILED) {
+						spr = createMintSprite();
+						spr->setupCanvas(writer->nextBgs[i], engine->width, engine->height);
+
+						Asset *textureAsset = getTextureAsset(writer->nextBgs[i]);
+						int imgWidth = textureAsset->width;
+						int imgHeight = textureAsset->height;
+						int rows = (engine->width / textureAsset->width) + 1;
+						int cols = (engine->height / textureAsset->height) + 1;
+						// printf("r/c: %d %d\n", rows, cols);
+						for (int row = 0; row < rows; row++) {
+							for (int col = 0; col < cols; col++) {
+								spr->copyPixels(0, 0, imgWidth, imgHeight, row * imgWidth, col * imgHeight);
+							}
+						}
+					}
+					spr->alpha = 0;
+					spr->layer = lowestLayer + BG1_LAYER;
+					writer->bgs[i] = spr;
 				}
 
 				Free(writer->nextBgs[i]);

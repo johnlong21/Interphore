@@ -211,7 +211,9 @@ namespace Writer {
 		char *body;
 	};
 
+	enum BackgroundType { BG_NORMAL=0, BG_TILED=1 };
 	struct BackgroundMode {
+		BackgroundType type;
 		float bobX;
 		float bobY;
 	};
