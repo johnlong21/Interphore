@@ -298,6 +298,7 @@ namespace Writer {
 		MintSprite *titleSprite;
 
 		MintSprite *inputField;
+		MintSprite *inputFieldBg;
 	};
 
 	mjs *mjs;
@@ -969,7 +970,7 @@ namespace Writer {
 				if (writer->nextTitle[0] != '\0' && writer->nextTitle[0] != ' ') {
 					MintSprite *bg = createMintSprite();
 					bg->setupRect(engine->width, 50, 0x111111);
-					bg->y = engine->height * 0.75;
+					bg->y = engine->height * 0.25;
 					bg->alpha = 0;
 
 					MintSprite *tf = createMintSprite();
@@ -1232,6 +1233,10 @@ namespace Writer {
 			if (writer->inputField) {
 				if (keyIsJustPressed(' ')) writer->inputField->append(" ");
 				if (keyIsJustPressed(KEY_BACKSPACE)) writer->inputField->unAppend(1);
+				if (writer->inputFieldBg->justPressed) {
+					playSound("audio/ui/newChoiceClick/");
+					setTitle("Yes, that box.");
+				}
 
 				for (int i = 'A'; i <= 'Z'; i++) {
 					if (keyIsJustPressed(i)) {
@@ -1563,7 +1568,9 @@ namespace Writer {
 		if (writer->inputField) {
 			execJs("lastInput = '%s';", writer->inputField->rawText);
 			writer->inputField->destroy();
+			writer->inputFieldBg->destroy();
 			writer->inputField = NULL;
+			writer->inputFieldBg = NULL;
 		}
 	}
 
@@ -2071,11 +2078,19 @@ namespace Writer {
 	void addInputField() {
 		if (writer->inputField) return;
 
-		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(engine->width, 50);
-		spr->setText("");
-		spr->y = engine->height / 2;
+		//@note-fallow: lazy quick copy paste, sorry
+		MintSprite *sprBg = createMintSprite();
+		sprBg->setupRect(engine->width/3, 40, 0x000000);
+		sprBg->x = engine->width/2 - sprBg->getWidth()/2;
+		sprBg->y = engine->height - 200; //@hardcode padding
 
+		MintSprite *spr = createMintSprite();
+		spr->setupEmpty(engine->width/3, 40);
+		spr->setText("");
+		spr->x = engine->width/2 - spr->getWidth()/2;
+		spr->y = engine->height - 200; //@hardcode padding
+
+		writer->inputFieldBg = sprBg;
 		writer->inputField = spr;
 	}
 }
