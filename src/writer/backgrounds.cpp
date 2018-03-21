@@ -51,7 +51,7 @@ namespace Writer {
 						spr->copyPixels(0, 0, imgWidth, imgHeight, (spr->width - imgWidth)/2, (spr->height - imgHeight)/2);
 					}
 					spr->alpha = 0;
-					spr->layer = lowestLayer + BG1_LAYER;
+					spr->layer = lowestLayer + BG_LAYER + i;
 					writer->bgs[i] = spr;
 				}
 
