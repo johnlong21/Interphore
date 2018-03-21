@@ -6,6 +6,7 @@ info/introMod.phore
 info/mudPies.phore
 info/mainMenu.phore
 info/main.phore
+info/testFucker.phore
 info/thirstyCaves.phore
 info/scratch.phore
 info/utils.js
