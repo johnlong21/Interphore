@@ -17,8 +17,7 @@
 #define ENTRY_LIST_MAX 64
 #define VERSION_STR_MAX 16
 
-#define BG1_LAYER 10
-#define BG2_LAYER 20
+#define BG_LAYER 10
 #define DEFAULT_LAYER 30
 #define TOOLTIP_BG_LAYER 40
 #define TOOLTIP_TEXT_LAYER 50
