@@ -965,7 +965,7 @@ namespace Writer {
 				if (writer->nextTitle[0] != '\0' && writer->nextTitle[0] != ' ') {
 					MintSprite *bg = createMintSprite();
 					bg->setupRect(engine->width, 50, 0x111111);
-					bg->y = engine->height * 0.75;
+					bg->y = engine->height * 0.25;
 					bg->alpha = 0;
 
 					MintSprite *tf = createMintSprite();
