@@ -636,6 +636,10 @@ namespace Writer {
 			Free(curUrl);
 #endif
 
+#ifndef INTER_DEV_MENU
+			strcpy(autoRunMod, "Main");
+#endif
+
 			for (int i = 0; i < strlen(autoRunMod); i++)
 				if (autoRunMod[i] == '-')
 					autoRunMod[i] = ' ';
