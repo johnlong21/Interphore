@@ -448,6 +448,12 @@ namespace Writer {
 					"Story",
 					"0.0.1"
 				}, {
+					"testFucker",
+					"Kittery",
+					"",
+					"Internal",
+					"0.0.1"
+				}, {
 					"False Moon",
 					"Kittery",
 					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
@@ -1257,6 +1263,11 @@ namespace Writer {
 
 		if (streq(entry->name, "Scratch")) {
 			loadMod((char *)getAsset("scratch.phore")->data);
+			return;
+		}
+
+		if (streq(entry->name, "mudPies")) {
+			loadMod((char *)getAsset("mudPies.phore")->data);
 			return;
 		}
 
