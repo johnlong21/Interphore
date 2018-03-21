@@ -41,6 +41,10 @@ namespace Writer {
 								spr->copyPixels(0, 0, imgWidth, imgHeight, row * imgWidth, col * imgHeight);
 							}
 						}
+					} else if (writer->bgModes[i].type == BG_CENTERED) {
+						spr = createMintSprite(writer->nextBgs[i]);
+						spr->x = engine->width/2 - spr->width/2;
+						spr->y = engine->height/2 - spr->height/2;
 					}
 					spr->alpha = 0;
 					spr->layer = lowestLayer + BG1_LAYER;
