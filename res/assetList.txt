@@ -38,6 +38,8 @@ img/writer/mynt/bg/myntBg.png
 img/writer/mynt/bg/myntBg.spr
 img/writer/mynt/bg/myntBg2.png
 img/writer/mynt/bg/myntBg2.spr
+img/writer/mynt/bg/myntBg3.png
+img/writer/mynt/bg/myntBg3.spr
 img/writer/mynt/face/mynt.png
 img/writer/mynt/face/mynt.spr
 
