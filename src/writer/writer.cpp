@@ -440,9 +440,9 @@ namespace Writer {
 
 			ModEntryDef defs[] = {
 				{
-					"Mud Pies",
+					"mudPies",
 					"Roxelle Devaunt",
-					"https://www.dropbox.com/s/ekf7dvnnglfxaul/Mud%20Pies.txt?dl=1",
+					"",
 					"Story",
 					"0.0.1"
 				}, {

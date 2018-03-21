@@ -3,6 +3,7 @@ font/bitmap/*
 
 info/interConfig.js
 info/introMod.phore
+info/mudPies.phore
 info/mainMenu.phore
 info/main.phore
 info/thirstyCaves.phore
