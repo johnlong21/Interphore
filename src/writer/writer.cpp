@@ -373,7 +373,6 @@ namespace Writer {
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
 		if (streq(name, "attachImageToProgram")) return (void *)WriterDesktop::attachImageToProgram;
 		if (streq(name, "startProgram")) return (void *)WriterDesktop::startProgram;
-		//@incomplete rndInt
 
 		return NULL;
 	}
