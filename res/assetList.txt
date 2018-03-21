@@ -9,6 +9,7 @@ info/main.phore
 info/testFucker.phore
 info/thirstyCaves.phore
 info/scratch.phore
+info/utils.phore
 info/utils.js
 
 img/writer/mainBg.png
