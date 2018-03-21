@@ -10,10 +10,16 @@ info/thirstyCaves.phore
 info/scratch.phore
 info/utils.js
 
+img/writer/mainBg.png
+img/writer/mainBg.spr
 img/writer/exit.png
 img/writer/exit.spr
 img/writer/restart.png
 img/writer/restart.spr
+img/writer/skip.png
+img/writer/skip.spr
+img/writer/randomize.png
+img/writer/randomize.spr
 img/writer/load.png
 img/writer/load.spr
 img/writer/save.png
