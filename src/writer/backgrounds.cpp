@@ -42,9 +42,13 @@ namespace Writer {
 							}
 						}
 					} else if (writer->bgModes[i].type == BG_CENTERED) {
-						spr = createMintSprite(writer->nextBgs[i]);
-						spr->x = engine->width/2 - spr->width/2;
-						spr->y = engine->height/2 - spr->height/2;
+						spr = createMintSprite();
+						spr->setupCanvas(writer->nextBgs[i], engine->width, engine->height);
+						Asset *textureAsset = getTextureAsset(writer->nextBgs[i]);
+						int imgWidth = textureAsset->width;
+						int imgHeight = textureAsset->height;
+
+						spr->copyPixels(0, 0, imgWidth, imgHeight, (spr->width - imgWidth)/2, (spr->height - imgHeight)/2);
 					}
 					spr->alpha = 0;
 					spr->layer = lowestLayer + BG1_LAYER;
