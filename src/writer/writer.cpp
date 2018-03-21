@@ -367,6 +367,7 @@ namespace Writer {
 		if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
 		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 		if (streq(name, "addInputField")) return (void *)addInputField;
+		if (streq(name, "clearNodes")) return (void *)clearNodes;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;

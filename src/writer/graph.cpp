@@ -11,6 +11,7 @@ namespace Writer {
 	void submitNode(const char *name, const char *passage);
 	void attachNode(const char *prev, const char *next, const char *dirStr);
 
+	void clearNodes();
 	void showGraph();
 	void updateGraph();
 	void hideGraph();
@@ -224,5 +225,9 @@ namespace Writer {
 		}
 
 		node->unlockVarName = stringClone(varName);
+	}
+
+	void clearNodes() {
+		graph->nodesNum = 0;
 	}
 }
