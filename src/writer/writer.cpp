@@ -863,6 +863,8 @@ namespace Writer {
 
 				writer->refreshButton = spr;
 			}
+
+			setBackground(0, "writer/mainBg", BG_NORMAL);
 		}
 
 		if (oldState == STATE_MOD) {
