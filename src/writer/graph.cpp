@@ -193,6 +193,10 @@ namespace Writer {
 			if (node->sprite) {
 				MintSprite *spr = node->sprite;
 
+				if (node->sprite->justHovered) {
+					playSound("audio/ui/hoverChoiceButtons/");
+				}
+
 				if (node->sprite->hoveredTime) {
 					spr->y = mathClampMap(engine->time, spr->hoveredTime, spr->hoveredTime+0.1, node->assignedPos.y - 5, node->assignedPos.y, QUAD_IN);
 				} else {
