@@ -777,15 +777,15 @@ namespace Writer {
 			}
 
 			{ /// Load button
-				Button *btn = createButton("Load your own", 256, 32);
+				Button *btn = createButton("Load Mod", 100, 64);
 				writer->bg->addChild(btn->sprite);
-				btn->sprite->alignInside(DIR8_DOWN_RIGHT, 0, 10);
+				btn->sprite->alignInside(DIR8_DOWN_RIGHT, 10, 10);
 
 				writer->loadButton = btn;
 			}
 
 			{ /// Nodes button
-				Button *btn = createButton("See nodes", 256, 32);
+				Button *btn = createButton("View Nodes", 100, 64);
 				writer->bg->addChild(btn->sprite);
 				btn->sprite->alignOutside(writer->loadButton->sprite, DIR8_LEFT, 10, 10);
 
