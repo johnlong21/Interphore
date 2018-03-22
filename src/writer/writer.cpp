@@ -1119,7 +1119,7 @@ namespace Writer {
 
 			if (writer->exitButton->justPressed) {
 				playSound("audio/ui/exit");
-				changeState(STATE_MENU);
+				gotoMap();
 			}
 
 			if (writer->exitButton->hovering) {
@@ -1871,7 +1871,7 @@ namespace Writer {
 
 	void exitMod() {
 		saveCheckpoint();
-		changeState(STATE_MENU);
+		gotoMap();
 	}
 
 	void playAudio(const char *path, const char *name) {
@@ -2027,7 +2027,7 @@ namespace Writer {
 	}
 
 	void gotoMap() {
-		if (writer->state == STATE_MOD) exitMod();
+		// if (writer->state == STATE_MOD) changeState(STATE_MENU);
 		changeState(STATE_GRAPH);
 	}
 
