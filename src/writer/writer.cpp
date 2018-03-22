@@ -105,7 +105,7 @@ namespace Writer {
 	void loadMod(char *serialData);
 	void execMod(char *serialData);
 
-	Button *createButton(const char *text, int width=256, int height=128);
+	Button *createButton(const char *text, int width=320, int height=128);
 	void destroyButton(Button *btn);
 
 	void gotoPassage(const char *passageName);
@@ -1119,11 +1119,12 @@ namespace Writer {
 
 			if (writer->exitButton->justPressed) {
 				playSound("audio/ui/exit");
-				changeState(STATE_MENU);
+				gotoMap();
+				//changeState(STATE_MENU);
 			}
 
 			if (writer->exitButton->hovering) {
-				showTooltipCursor("Main Menu");
+				showTooltipCursor("Back to Map");
 				if (writer->exitButton->scaleX < 2.3) writer->exitButton->scaleX += 0.07;
 			} else if (writer->exitButton->scaleX > 2) {
 				writer->exitButton->scaleX -= 0.07;
