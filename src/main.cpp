@@ -33,6 +33,7 @@ void initMain() {
 #if 1
 	MintSprite *bg = createMintSprite();
 	bg->setupRect(1, 1, 0x000000);
+	bg->alpha = 0;
 	bg->scale(engine->width, engine->height);
 
 	MintSprite *spr = createMintSprite();
