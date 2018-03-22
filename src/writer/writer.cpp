@@ -156,6 +156,7 @@ namespace Writer {
 
 	void enableExit();
 	void disableExit();
+	void gotoBrowser();
 
 	int qsortNotif(const void *a, const void *b);
 
@@ -373,6 +374,7 @@ namespace Writer {
 
 		if (streq(name, "enableExit")) return (void *)enableExit;
 		if (streq(name, "disableExit")) return (void *)disableExit;
+		if (streq(name, "gotoBrowser")) return (void *)gotoBrowser;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -2120,5 +2122,9 @@ namespace Writer {
 
 	void disableExit() {
 		writer->exitButton->alpha = writer->refreshButton->alpha = 0;
+	}
+
+	void gotoBrowser() {
+		changeState(STATE_MENU);
 	}
 }
