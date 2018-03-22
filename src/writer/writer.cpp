@@ -158,6 +158,8 @@ namespace Writer {
 	void disableExit();
 	void gotoBrowser();
 
+	void loadModFromDisk();
+
 	int qsortNotif(const void *a, const void *b);
 
 	struct Passage {
@@ -375,6 +377,7 @@ namespace Writer {
 		if (streq(name, "enableExit")) return (void *)enableExit;
 		if (streq(name, "disableExit")) return (void *)disableExit;
 		if (streq(name, "gotoBrowser")) return (void *)gotoBrowser;
+		if (streq(name, "loadModFromDisk")) return (void *)loadModFromDisk;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -1005,7 +1008,7 @@ namespace Writer {
 			if (writer->loadButton->sprite->justPressed) {
 				playSound("audio/ui/load");
 #ifdef SEMI_WIN32
-				loadMod((char *)jsTest);
+				msg("Can't load external mods on Windows", MSG_ERROR);
 #else
 				platformLoadFromDisk(loadMod);
 #endif
@@ -2126,5 +2129,13 @@ namespace Writer {
 
 	void gotoBrowser() {
 		changeState(STATE_MENU);
+	}
+
+	void loadModFromDisk() {
+#ifdef SEMI_WIN32
+		msg("Can't load external mods on Windows", MSG_ERROR);
+#else
+		platformLoadFromDisk(loadMod);
+#endif
 	}
 }
