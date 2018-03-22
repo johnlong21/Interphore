@@ -154,6 +154,9 @@ namespace Writer {
 
 	void addInputField();
 
+	void enableExit();
+	void disableExit();
+
 	int qsortNotif(const void *a, const void *b);
 
 	struct Passage {
@@ -367,6 +370,9 @@ namespace Writer {
 		if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 		if (streq(name, "addInputField")) return (void *)addInputField;
 		if (streq(name, "clearNodes")) return (void *)clearNodes;
+
+		if (streq(name, "enableExit")) return (void *)enableExit;
+		if (streq(name, "disableExit")) return (void *)disableExit;
 
 		if (streq(name, "addIcon")) return (void *)WriterDesktop::addIcon;
 		if (streq(name, "createDesktop")) return (void *)WriterDesktop::createDesktop;
@@ -1117,10 +1123,9 @@ namespace Writer {
 				}
 			}
 
-			if (writer->exitButton->justPressed) {
+			if (writer->exitButton->alpha >= 1 && writer->exitButton->justPressed) {
 				playSound("audio/ui/exit");
 				gotoMap();
-				//changeState(STATE_MENU);
 			}
 
 			if (writer->exitButton->hovering) {
@@ -1134,7 +1139,7 @@ namespace Writer {
 				playSound("audio/ui/hoverChoiceButtons/");
 			}
 
-			if (writer->refreshButton->justPressed) {
+			if (writer->refreshButton->alpha >= 1 && writer->refreshButton->justPressed) {
 				playSound("audio/ui/restart");
 				changeState(STATE_LOADING);
 				loadModEntry(writer->currentMod);
@@ -1872,7 +1877,7 @@ namespace Writer {
 
 	void exitMod() {
 		saveCheckpoint();
-		changeState(STATE_MENU);
+		gotoMap();
 	}
 
 	void playAudio(const char *path, const char *name) {
@@ -2028,7 +2033,7 @@ namespace Writer {
 	}
 
 	void gotoMap() {
-		if (writer->state == STATE_MOD) exitMod();
+		// if (writer->state == STATE_MOD) changeState(STATE_MENU);
 		changeState(STATE_GRAPH);
 	}
 
@@ -2105,5 +2110,13 @@ namespace Writer {
 
 		writer->inputFieldBg = sprBg;
 		writer->inputField = spr;
+	}
+
+	void enableExit() {
+		writer->exitButton->alpha = writer->refreshButton->alpha = 1;
+	}
+
+	void disableExit() {
+		writer->exitButton->alpha = writer->refreshButton->alpha = 0;
 	}
 }
