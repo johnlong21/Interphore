@@ -34,8 +34,8 @@ img/writer/writerChoice.png
 img/writer/writerChoice.spr
 img/writer/nodeChoice.png
 img/writer/nodeChoice.spr
-img/writer/mynt/bg/myntBg.png
-img/writer/mynt/bg/myntBg.spr
+img/writer/mynt/bg/myntBg1.png
+img/writer/mynt/bg/myntBg1.spr
 img/writer/mynt/bg/myntBg2.png
 img/writer/mynt/bg/myntBg2.spr
 img/writer/mynt/face/mynt.png
