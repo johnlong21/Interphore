@@ -26,6 +26,8 @@ namespace Writer {
 
 		Node *connectedTo;
 		Dir8 connectedDir;
+
+		Point assignedPos;
 	};
 
 	struct GraphStruct {
@@ -75,6 +77,8 @@ namespace Writer {
 				graph->bg->addChild(spr);
 				spr->layer = lowestLayer + NODES_LAYER;
 				spr->alignInside(DIR8_CENTER);
+				node->assignedPos.x = spr->x;
+				node->assignedPos.y = spr->y;
 
 				node->sprite = spr;
 			}
@@ -110,6 +114,8 @@ namespace Writer {
 			Node *other = node->connectedTo;
 			if (other) {
 				node->sprite->alignOutside(other->sprite, node->connectedDir, 50, 50);
+				node->assignedPos.x = node->sprite->x;
+				node->assignedPos.y = node->sprite->y;
 
 				{ /// Line
 					Point p1 = node->sprite->getCenterPoint();
@@ -184,9 +190,20 @@ namespace Writer {
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
 
-			if (node->sprite && node->sprite->justPressed) {
-				changeState(STATE_MOD);
-				gotoPassage(node->passage);
+			if (node->sprite) {
+				MintSprite *spr = node->sprite;
+
+				if (node->sprite->hoveredTime) {
+					spr->y = mathClampMap(engine->time, spr->hoveredTime, spr->hoveredTime+0.1, node->assignedPos.y - 5, node->assignedPos.y, QUAD_IN);
+				} else {
+					spr->x = node->assignedPos.x;
+					spr->y = node->assignedPos.y;
+				}
+
+				if (spr->justPressed) {
+					changeState(STATE_MOD);
+					gotoPassage(node->passage);
+				}
 			}
 		}
 	}
