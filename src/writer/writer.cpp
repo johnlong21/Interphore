@@ -1123,6 +1123,7 @@ namespace Writer {
 			}
 
 			if (writer->exitButton->hovering) {
+				showTooltipCursor("Main Menu");
 				if (writer->exitButton->scaleX < 2.3) writer->exitButton->scaleX += 0.07;
 			} else if (writer->exitButton->scaleX > 2) {
 				writer->exitButton->scaleX -= 0.07;
@@ -1139,6 +1140,7 @@ namespace Writer {
 			}
 
 			if (writer->refreshButton->hovering) {
+				showTooltipCursor("Restart Scene");
 				if (writer->refreshButton->scaleX < 2.3) writer->refreshButton->scaleX += 0.07;
 			} else if (writer->refreshButton->scaleX > 2) {
 				writer->refreshButton->scaleX -= 0.07;
