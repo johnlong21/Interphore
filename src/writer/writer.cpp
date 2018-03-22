@@ -105,7 +105,7 @@ namespace Writer {
 	void loadMod(char *serialData);
 	void execMod(char *serialData);
 
-	Button *createButton(const char *text, int width=320, int height=128);
+	Button *createButton(const char *text, int width=313, int height=128);
 	void destroyButton(Button *btn);
 
 	void gotoPassage(const char *passageName);
