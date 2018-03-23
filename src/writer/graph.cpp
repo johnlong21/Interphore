@@ -2,9 +2,6 @@
 #define LINES_MAX 128
 #define NODE_NAME_MAX SHORT_STR
 
-#define LINES_LAYER 40
-#define NODES_LAYER 50
-
 namespace Writer {
 
 	void initGraph();
@@ -65,6 +62,7 @@ namespace Writer {
 			spr->setupRect(2048, 2048, 0x222222);
 			spr->x = -spr->width/2 + engine->width/2;
 			spr->y = -spr->height/2 + engine->height/2;
+			spr->layer = lowestLayer + GRAPH_BG_LAYER;
 			graph->bg = spr;
 		}
 
