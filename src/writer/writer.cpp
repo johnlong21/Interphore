@@ -2139,9 +2139,13 @@ namespace Writer {
 	void loadModFromDisk() {
 #ifdef SEMI_WIN32
 		msg("Can't load local mods on Windows", MSG_ERROR);
-#elif SEMI_ANDROID
+#endif
+
+#ifdef	SEMI_ANDROID
 		msg("Can't load local mods on Android", MSG_ERROR);
-#else
+#endif
+
+#ifdef SEMI_FLASH
 		platformLoadFromDisk(loadMod);
 #endif
 	}
