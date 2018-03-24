@@ -1897,7 +1897,7 @@ namespace Writer {
 	void stopAudio(const char *name) {
 		Channel *channel = getChannel(name);
 		if (!channel) {
-			msg("No channel named %s", MSG_ERROR, name);
+			// msg("No channel named %s", MSG_ERROR, name);
 			return;
 		}
 
