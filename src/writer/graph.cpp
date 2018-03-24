@@ -39,6 +39,7 @@ namespace Writer {
 
 		MintSprite *saveButton;
 		MintSprite *loadButton;
+		MintSprite *exitButton;
 	};
 
 	GraphStruct *graph;
@@ -139,18 +140,31 @@ namespace Writer {
 			spr->scale(2, 2);
 			spr->x = engine->width - spr->getWidth() - 16; //@hardcode padding 16px
 			spr->y = 16; //@hardcode padding 16px
+			spr->layer = lowestLayer + NODES_LAYER;
 
 			graph->saveButton = spr;
 		}
 
-		{ /// load button
+		{ /// Load button
 			MintSprite *spr = createMintSprite("writer/load.png");
 			writer->bg->addChild(spr);
 			spr->scale(2, 2);
 			spr->x = graph->saveButton->x;
 			spr->y = graph->saveButton->y + graph->saveButton->getHeight() + 16; //@hardcode padding 16px
+			spr->layer = lowestLayer + NODES_LAYER;
 
 			graph->loadButton = spr;
+		}
+
+		{ /// Exit button
+			MintSprite *spr = createMintSprite("writer/exit.png");
+			writer->bg->addChild(spr);
+			spr->scale(2, 2);
+			spr->x = graph->loadButton->x;
+			spr->y = graph->loadButton->y + graph->loadButton->getHeight() + 16; //@hardcode padding 16px
+			spr->layer = lowestLayer + NODES_LAYER;
+
+			graph->exitButton = spr;
 		}
 
 		mjs_val_t onMapStartFn = mjs_get(mjs, mjs_get_global(mjs), "onMapStart", strlen("onMapStart"));
@@ -161,6 +175,7 @@ namespace Writer {
 		graph->bg->destroy();
 		graph->saveButton->destroy();
 		graph->loadButton->destroy();
+		graph->exitButton->destroy();
 
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
@@ -181,9 +196,11 @@ namespace Writer {
 
 		if (graph->saveButton->justPressed) saveGame();
 		if (graph->loadButton->justPressed) loadGame();
+		if (graph->exitButton->justPressed) loadMod((char *)getAsset("main.phore")->data);
 
 		if (graph->saveButton->hovering) showTooltipCursor("Save");
 		if (graph->loadButton->hovering) showTooltipCursor("Load");
+		if (graph->exitButton->hovering) showTooltipCursor("Exit to main menu");
 
 		for (int i = 0; i < graph->nodesNum; i++) {
 			Node *node = &graph->nodes[i];
