@@ -1673,8 +1673,7 @@ namespace Writer {
 	}
 
 	void append(const char *text) {
-		strcat(writer->mainText->rawText, text);
-		writer->mainText->setText(writer->mainText->rawText);
+		writer->mainText->deferAppend(text);
 	}
 
 	void addChoice(const char *text, void (*dest)(void *), void *userdata) {
