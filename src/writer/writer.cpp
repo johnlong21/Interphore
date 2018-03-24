@@ -868,6 +868,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite("writer/restart.png");
 				writer->bg->addChild(spr);
 				spr->scale(2, 2);
+				spr->alpha = 0;
 				spr->alignOutside(writer->exitButton, DIR8_DOWN, 10, 10);
 
 				writer->refreshButton = spr;
@@ -1150,6 +1151,7 @@ namespace Writer {
 				if (!exitDisabled) playSound("audio/ui/hoverChoiceButtons/");
 			}
 
+			/*
 			if (writer->refreshButton->alpha >= 1 && writer->refreshButton->justPressed) {
 				playSound("audio/ui/restart");
 				changeState(STATE_LOADING);
@@ -1165,7 +1167,7 @@ namespace Writer {
 
 			if (writer->refreshButton->justHovered) {
 				if (!exitDisabled) playSound("audio/ui/hoverChoiceButtons/");
-			}
+			}*/
 		}
 
 		if (writer->state == STATE_GRAPH) {
