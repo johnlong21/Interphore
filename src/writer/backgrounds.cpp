@@ -6,7 +6,7 @@ namespace Writer {
 	void setBackgroundBob(int bgNum, float bobX, float bobY);
 
 	void setBackground(int bgNum, const char *assetId, BackgroundType bgType) {
-		if (writer->bgs[bgNum] && strstr(writer->bgs[bgNum]->assetId, assetId)) return;
+		if (writer->bgs[bgNum] && strstr(writer->bgs[bgNum]->assetId, assetId) && assetId[0] != '\0') return;
 		writer->bgModes[bgNum].type = bgType;
 		writer->nextBgs[bgNum] = stringClone(assetId);
 	}
