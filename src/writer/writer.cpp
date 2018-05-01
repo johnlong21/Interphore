@@ -1378,11 +1378,11 @@ namespace Writer {
 	}
 
 	void execJs(mjs_val_t expr) {
-		mjs_err_t err = mjs_call(mjs, NULL, interUpdateFn, NULL, 0);
+		mjs_err_t err = mjs_call(mjs, NULL, interUpdateFn, 0, 0);
 		if (err) {
 			const char *errStr = mjs_strerror(mjs, err);
-			msg("JS error: %s", MSG_ERROR, errStr);
-			printf("JS error: %s\n", errStr);
+			msg("JS expr error: %s", MSG_ERROR, errStr);
+			printf("JS expr error: %s\n", errStr);
 			// assert(0);
 		}
 	}
@@ -1415,8 +1415,8 @@ namespace Writer {
 		mjs_err_t err = mjs_exec(mjs, buffer, NULL);
 		if (err) {
 			const char *errStr = mjs_strerror(mjs, err);
-			msg("JS error: %s", MSG_ERROR, errStr);
-			printf("JS error: %s\n", errStr);
+			msg("JS string error: %s", MSG_ERROR, errStr);
+			printf("JS string error: %s\n", errStr);
 			// assert(0);
 		}
 	}
