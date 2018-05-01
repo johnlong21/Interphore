@@ -24,6 +24,7 @@
 #define NODES_LAYER 60
 #define TOOLTIP_BG_LAYER 80
 #define TOOLTIP_TEXT_LAYER 90
+#define MSG_LAYER 100
 
 #define BUTTON_ICONS_MAX 16
 #define ICON_NAME_MAX MED_STR
@@ -913,6 +914,10 @@ namespace Writer {
 	void updateWriter() {
 		execJs(interUpdateFn);
 
+		// if (keyIsJustPressed('E')) {
+		// 	for (int i = 0; i < 10; i++) msg("Error\nTest", MSG_ERROR);
+		// }
+
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
 		// Streaming and exec have to happen here because they can't happen in the mjs call graph
@@ -1730,6 +1735,7 @@ namespace Writer {
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(writer->bg->width*0.5, writer->bg->height*0.5);
+			spr->layer = MSG_LAYER;
 			writer->bg->addChild(spr);
 
 			msg->sprite = spr;
@@ -1743,8 +1749,17 @@ namespace Writer {
 				msg->sprite->setText(buffer);
 				msg->sprite->y = writer->bg->height;
 			} else if (type == MSG_ERROR) {
+
+				float nextY = engine->height;
+				float errorPad = 10;
+				for (int i = 0; i < MSG_MAX; i++) {
+					Msg *iterMsg = &writer->msgs[i];
+					if (iterMsg->exists && iterMsg->type == MSG_ERROR) nextY -= iterMsg->sprite->textHeight - errorPad;
+				}
 				msg->sprite->setText("<ed38>%s</ed38>", buffer);
-				msg->sprite->alignInside(DIR8_DOWN, 0, 100);
+				msg->sprite->x = engine->width/2 - msg->sprite->textWidth/2;
+				msg->sprite->y = nextY - msg->sprite->textHeight;
+
 			}
 		}
 	}
