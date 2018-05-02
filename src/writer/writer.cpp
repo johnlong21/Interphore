@@ -438,7 +438,8 @@ namespace Writer {
 				mjs = mjs_create();
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-				execJs((char *)getAsset("info/interConfig.js")->data);
+				char *initCode = (char *)getAsset("info/interConfig.js")->data;
+				execJs(initCode);
 
 				mjs_val_t global = mjs_get_global(mjs);
 				interUpdateFn = mjs_get(mjs, global, "__update", strlen("__update"));
@@ -1417,7 +1418,7 @@ namespace Writer {
 			const char *errStr = mjs_strerror(mjs, err);
 			msg("JS string error: %s", MSG_ERROR, errStr);
 			printf("JS string error: %s\n", errStr);
-			// assert(0);
+			assert(0);
 		}
 	}
 
