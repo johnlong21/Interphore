@@ -1,7 +1,3 @@
-#ifndef STATIC_ASSETS
-#include "../bin/assetLib.cpp"
-#endif
-
 #define VERSION "0.0.1" //@cleanup I shouldn't have to do this
 #include "gameEngine.h"
 
