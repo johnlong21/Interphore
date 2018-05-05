@@ -1090,6 +1090,13 @@ namespace Writer {
 				if (maxScroll < minScroll) writer->scrollAmount = 0;
 
 				writer->mainText->y -= (writer->mainText->y - (-writer->scrollAmount*maxScroll+minScroll))/10;
+
+				/// Touch/mouse scrolling
+				if (writer->mainText->holding) {
+					writer->mainText->y = engine->mouseY - writer->mainText->holdPivot.y;
+					writer->mainText->y = Clamp(writer->mainText->y, -maxScroll, minScroll);
+					writer->scrollAmount = -(writer->mainText->y - minScroll) / maxScroll;
+				}
 			}
 
 			for (int i = 0; i < writer->choicesNum; i++) {
