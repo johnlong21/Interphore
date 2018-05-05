@@ -423,6 +423,12 @@ namespace Writer {
 		getTextureAsset("Espresso-Dolce_30")->level = 3;
 		getTextureAsset("Espresso-Dolce_38")->level = 3;
 
+		if (engine->platform == PLAT_ANDROID) {
+			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_40");
+		} else {
+			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
+		}
+
 		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
@@ -840,7 +846,8 @@ namespace Writer {
 				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
 				writer->bg->addChild(spr);
 				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
-				strcpy(spr->defaultFont, "Espresso-Dolce_22");
+				if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "Espresso-Dolce_44");
+				else strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->setText("");
 				spr->y += 30;
 				spr->x += 30;
@@ -997,14 +1004,16 @@ namespace Writer {
 
 			} else {
 				if (writer->nextTitle[0] != '\0' && writer->nextTitle[0] != ' ') {
+					float titleSize = engine->platform == PLAT_ANDROID ? 150 : 50;
+
 					MintSprite *bg = createMintSprite();
-					bg->setupRect(engine->width, 50, 0x111111);
+					bg->setupRect(engine->width, titleSize, 0x111111);
 					bg->y = engine->height * 0.25;
 					bg->alpha = 0;
 
 					MintSprite *tf = createMintSprite();
 					bg->addChild(tf);
-					tf->setupEmpty(engine->width, 50);
+					tf->setupEmpty(engine->width, titleSize);
 					tf->setText(writer->nextTitle);
 					tf->alignInside(DIR8_CENTER);
 
@@ -1081,6 +1090,13 @@ namespace Writer {
 				if (maxScroll < minScroll) writer->scrollAmount = 0;
 
 				writer->mainText->y -= (writer->mainText->y - (-writer->scrollAmount*maxScroll+minScroll))/10;
+
+				/// Touch/mouse scrolling
+				if (writer->mainText->holding) {
+					writer->mainText->y = engine->mouseY - writer->mainText->holdPivot.y;
+					writer->mainText->y = Clamp(writer->mainText->y, -maxScroll, minScroll);
+					writer->scrollAmount = -(writer->mainText->y - minScroll) / maxScroll;
+				}
 			}
 
 			for (int i = 0; i < writer->choicesNum; i++) {
@@ -1583,7 +1599,8 @@ namespace Writer {
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
 			// strcpy(spr->defaultFont, "OpenSans-Regular_20");
-			strcpy(spr->defaultFont, "Espresso-Dolce_22");
+			if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "Espresso-Dolce_44");
+			else strcpy(spr->defaultFont, "Espresso-Dolce_22");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
 			spr->alignInside(DIR8_CENTER);
@@ -1693,10 +1710,10 @@ namespace Writer {
 		Button *prevBtn = NULL;
 		if (writer->choicesNum > 0) prevBtn = writer->choices[writer->choicesNum-1];
 
-		Button *btn = createButton(text);
+		float buttonWidth = engine->platform == PLAT_ANDROID ? 313 : 313;
+		float buttonHeight = engine->platform == PLAT_ANDROID ? 256 : 128;
+		Button *btn = createButton(text, buttonWidth, buttonHeight);
 		if (!btn) return;
-		// btn->sprite->scaleX = 0;
-		// btn->tf->scaleX = 0;
 		writer->bg->addChild(btn->sprite);
 
 		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);

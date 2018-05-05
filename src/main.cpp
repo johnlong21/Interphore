@@ -38,7 +38,6 @@ void initMain() {
 	MintSprite *spr = createMintSprite();
 	spr->setupRect(engine->width, engine->height, 0x000000);
 #endif
-	strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20"); //@cleanup I shouldn't have to do this in every new project
 	Writer::initWriter(spr);
 }
 
