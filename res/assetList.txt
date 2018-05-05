@@ -1,5 +1,9 @@
 shader/*
-font/bitmap/*
+font/bitmap/Espresso-Dolce_22*
+font/bitmap/Espresso-Dolce_30*
+font/bitmap/Espresso-Dolce_38*
+font/bitmap/OpenSans-Regular_20*
+font/bitmap/OpenSans-Regular_40*
 
 info/interConfig.js
 info/introMod.phore

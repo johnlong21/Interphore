@@ -423,6 +423,12 @@ namespace Writer {
 		getTextureAsset("Espresso-Dolce_30")->level = 3;
 		getTextureAsset("Espresso-Dolce_38")->level = 3;
 
+		if (engine->platform == PLAT_ANDROID) {
+			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_40");
+		} else {
+			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
+		}
+
 		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
 		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
 		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
@@ -997,14 +1003,16 @@ namespace Writer {
 
 			} else {
 				if (writer->nextTitle[0] != '\0' && writer->nextTitle[0] != ' ') {
+					float titleSize = engine->platform == PLAT_ANDROID ? 100 : 50;
+
 					MintSprite *bg = createMintSprite();
-					bg->setupRect(engine->width, 50, 0x111111);
+					bg->setupRect(engine->width, titleSize, 0x111111);
 					bg->y = engine->height * 0.25;
 					bg->alpha = 0;
 
 					MintSprite *tf = createMintSprite();
 					bg->addChild(tf);
-					tf->setupEmpty(engine->width, 50);
+					tf->setupEmpty(engine->width, titleSize);
 					tf->setText(writer->nextTitle);
 					tf->alignInside(DIR8_CENTER);
 
