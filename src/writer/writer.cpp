@@ -166,6 +166,7 @@ namespace Writer {
 	void loadModFromDisk();
 
 	int qsortNotif(const void *a, const void *b);
+	int qsortInfoHeight(const void *a, const void *b);
 
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
@@ -911,8 +912,8 @@ namespace Writer {
 	void updateWriter() {
 		execJs(interUpdateFn);
 
-		// if (keyIsJustPressed('E')) {
-		// 	for (int i = 0; i < 10; i++) msg("Error\nTest", MSG_ERROR);
+		// if (keyIsJustPressed('I')) {
+		// 	for (int i = 0; i < 10; i++) msg("Info\nTest", MSG_INFO);
 		// }
 
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
@@ -1193,16 +1194,42 @@ namespace Writer {
 		}
 
 		{ /// Msgs
+			Msg *infos[MSG_MAX];
+			int infosNum = 0;
+
+			for (int i = 0; i < MSG_MAX; i++) {
+				Msg *msg = &writer->msgs[i];
+				if (msg->exists && msg->type == MSG_INFO) infos[infosNum++] = msg;
+			}
+
+			qsort(infos, infosNum, sizeof(Msg *), qsortInfoHeight);
+
+			for (int i = 0; i < infosNum; i++) {
+				Msg *msg = infos[i];
+				Msg *prevMsg = NULL;
+				if (i > 0) prevMsg = infos[i-1];
+
+				msg->sprite->y -= 3;
+
+				if (prevMsg) {
+					float minY = prevMsg->sprite->y + prevMsg->sprite->getHeight();
+					if (msg->sprite->y < minY) msg->sprite->y = minY;
+				}
+
+				if (msg->sprite->y <= 0) {
+					msg->sprite->y = 0;
+					msg->sprite->alpha -= 0.01;
+					if (msg->sprite->alpha <= 0) destroyMsg(msg);
+				}
+			}
+
 			for (int i = 0; i < MSG_MAX; i++) {
 				Msg *msg = &writer->msgs[i];
 				if (!msg->exists) continue;
 				msg->elapsed += engine->elapsed;
 
 				MintSprite *spr = msg->sprite;
-				if (msg->type == MSG_INFO) {
-					spr->y -= 3;
-					if (spr->y < -spr->getHeight()) destroyMsg(msg);
-				} else if (msg->type == MSG_WARNING) {
+				if (msg->type == MSG_WARNING) {
 					spr->y -= 3;
 					if (spr->y < -spr->getHeight()) destroyMsg(msg);
 				} else if (msg->type == MSG_ERROR) {
@@ -2125,6 +2152,16 @@ namespace Writer {
 
 		if (n1->sprite->index < n2->sprite->index) return -1;
 		if (n1->sprite->index > n2->sprite->index) return 1;
+
+		return 0;
+	}
+
+	int qsortInfoHeight(const void *a, const void *b) {
+		Msg *msg1 = *(Msg **)a;
+		Msg *msg2 = *(Msg **)b;
+
+		if (msg1->sprite->y < msg2->sprite->y) return -1;
+		if (msg1->sprite->y > msg2->sprite->y) return 1;
 
 		return 0;
 	}
