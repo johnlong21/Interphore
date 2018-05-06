@@ -849,17 +849,6 @@ namespace Writer {
 				if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "Espresso-Dolce_44");
 				else strcpy(spr->defaultFont, "Espresso-Dolce_22");
 				spr->setText("");
-				spr->y += 30;
-				spr->x += 30;
-
-				Rect startRect;
-				startRect.x = spr->x;
-				startRect.y = spr->y;
-				startRect.width = spr->width;
-				startRect.height = writer->bg->height - startRect.x - 128 - 16; //@hardcode Buttons are 128px, padding is 16px
-
-				writer->bg->localToGlobal(&startRect);
-				spr->clipRect.setTo(startRect.x, startRect.y, startRect.width, startRect.height);
 
 				writer->mainText = spr;
 			}
@@ -1076,7 +1065,21 @@ namespace Writer {
 
 		if (writer->state == STATE_MOD) {
 			{ /// Passage appear anim
-				writer->mainText->alpha = mathClampMap(engine->time, writer->passageStartTime, writer->passageStartTime+0.2, 0, 1, QUAD_IN);
+				MintSprite *mainText = writer->mainText;
+				mainText->alpha = mathClampMap(engine->time, writer->passageStartTime, writer->passageStartTime+0.2, 0, 1, QUAD_IN);
+
+				Rect startRect;
+				startRect.x = 30;
+				startRect.y = 30;
+				startRect.width = mainText->width;
+				startRect.height = writer->bg->height - startRect.x - 16; //@hardcode padding is 16px
+
+				if (writer->choicesNum > 0) startRect.height -= writer->choices[0]->sprite->getHeight();
+				if (writer->choicesNum > 2) startRect.height -= writer->choices[0]->sprite->getHeight();
+
+				mainText->x = 30;
+
+				mainText->clipRect.setTo(startRect.x, startRect.y, startRect.width, startRect.height);
 			}
 
 			{ /// Scrolling
@@ -1101,21 +1104,14 @@ namespace Writer {
 
 			for (int i = 0; i < writer->choicesNum; i++) {
 				Button *choiceButton = writer->choices[i];
+				MintSprite *spr = choiceButton->sprite;
 
-				float buttonY = engine->height - choiceButton->sprite->getHeight() - 5;
+				spr->x = (spr->getWidth()+5) * i;
+				spr->y = writer->bg->getHeight() - spr->getHeight();
 
-				{ /// Appear anim
-					choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->creationTime, choiceButton->sprite->creationTime+0.2, engine->height, buttonY, QUAD_OUT);
-				}
-
-				{ /// Hover anim
-					if (choiceButton->sprite->hoveredTime) {
-						choiceButton->sprite->y = mathClampMap(engine->time, choiceButton->sprite->hoveredTime, choiceButton->sprite->hoveredTime+0.2, buttonY-5, buttonY, QUAD_IN);
-					}
-
-					if (!choiceButton->sprite->hoveredTime && engine->time - choiceButton->sprite->creationTime > 1) {
-						choiceButton->sprite->y = buttonY;
-					}
+				if (writer->choicesNum > 2 && engine->portraitMode) {
+					if (i < 2) spr->y -= spr->getHeight() - 5;
+					if (i >= 2) spr->x = (spr->getWidth()+5) * (i - 2);
 				}
 
 				if (choiceButton->sprite->justHovered) {
@@ -1716,8 +1712,8 @@ namespace Writer {
 		if (!btn) return;
 		writer->bg->addChild(btn->sprite);
 
-		if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
-		else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
+		// if (!prevBtn) btn->sprite->alignInside(DIR8_DOWN_LEFT, 5, 5);
+		// else btn->sprite->alignOutside(prevBtn->sprite, DIR8_RIGHT, 5, 0);
 
 		btn->dest = dest;
 		btn->userdata = userdata;
