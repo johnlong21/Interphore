@@ -2083,10 +2083,12 @@ namespace Writer {
 
 	void saveGame() {
 		// printf("Saved: %s\n", writer->curSave);
+		msg("Game saved!", MSG_INFO);
 		platformSaveToDisk(writer->curSave);
 	}
 
 	void loadGame() {
+		msg("Game loaded!", MSG_INFO);
 		platformLoadFromDisk(gameLoaded);
 	}
 
