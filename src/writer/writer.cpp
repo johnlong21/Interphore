@@ -2088,17 +2088,23 @@ namespace Writer {
 	}
 
 	void loadGame() {
-		msg("Game loaded!", MSG_INFO);
 		platformLoadFromDisk(gameLoaded);
 	}
 
 	void gameLoaded(char *data) {
-		char *jsCommand = (char *)Malloc(strlen(data) + MED_STR);
-		sprintf(jsCommand, "data = JSON.parse('%s');", data);
-		// printf("Running: %s\n", jsCommand);
-		execJs(jsCommand);
-		Free(jsCommand);
+		// printf("Loaded: %s\n", data);
+		if (!streq(data, "none") && !streq(data, "(null)")) {
+			msg("Game loaded!", MSG_INFO);
+			char *jsCommand = (char *)Malloc(strlen(data) + MED_STR);
+			sprintf(jsCommand, "data = JSON.parse('%s');", data);
+			// printf("Running: %s\n", jsCommand);
+			execJs(jsCommand);
+			Free(jsCommand);
+		} else {
+			msg("No save game found", MSG_INFO);
+		}
 
+		Free(data);
 		saveCheckpoint();
 	}
 
