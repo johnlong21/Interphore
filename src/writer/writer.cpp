@@ -1103,6 +1103,10 @@ namespace Writer {
 				}
 			}
 
+			{ /// Queued command skipping
+				if (keyIsJustPressed(' ')) execJs("commandSkipped = true;");
+			}
+
 			for (int i = 0; i < writer->choicesNum; i++) {
 				Button *choiceButton = writer->choices[i];
 				MintSprite *spr = choiceButton->sprite;
