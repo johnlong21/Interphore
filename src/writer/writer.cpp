@@ -168,6 +168,9 @@ namespace Writer {
 	int qsortNotif(const void *a, const void *b);
 	int qsortInfoHeight(const void *a, const void *b);
 
+	int floor(float num);
+	int round(float num);
+
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
@@ -368,6 +371,9 @@ namespace Writer {
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
 		if (streq(name, "addNotif")) return (void *)addNotif;
+		if (streq(name, "rnd")) return (void *)rnd;
+		if (streq(name, "floor")) return (void *)floor;
+		if (streq(name, "round")) return (void *)round;
 
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
 		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
@@ -2228,5 +2234,13 @@ namespace Writer {
 #ifdef SEMI_FLASH
 		platformLoadFromDisk(loadMod);
 #endif
+	}
+
+	int floor(float num) {
+		return num;
+	}
+
+	int round(float num) {
+		return roundf(num);
 	}
 }
