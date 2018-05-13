@@ -1782,6 +1782,7 @@ namespace Writer {
 			vsprintf(buffer, str, argptr);
 			va_end(argptr);
 		}
+		printf("msg: %s\n", buffer);
 
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
@@ -1853,6 +1854,7 @@ namespace Writer {
 		const char *lineStart = data;
 
 		Passage *passage = (Passage *)zalloc(sizeof(Passage));
+		bool firstLine = true;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, delim);
 			if (!lineEnd) break;
@@ -1860,9 +1862,14 @@ namespace Writer {
 			char line[LARGE_STR] = {};
 			strncpy(line, lineStart, lineEnd-lineStart);
 
-			if (i == 0) {
+			if (firstLine) {
+				if (strlen(line) == 0) {
+					lineStart = lineEnd+1;
+					continue;
+				}
+				firstLine = false;
 				if (line[0] != ':') {
-					msg("Titles must start with a colon (%s)", MSG_ERROR, line);
+					msg("Titles must start with a colon (%s, %d)", MSG_ERROR, line, line[0]);
 					return;
 				}
 
