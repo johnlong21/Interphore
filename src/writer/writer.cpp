@@ -168,6 +168,9 @@ namespace Writer {
 	int qsortNotif(const void *a, const void *b);
 	int qsortInfoHeight(const void *a, const void *b);
 
+	int floor(float num);
+	int round(float num);
+
 	struct Passage {
 		char name[PASSAGE_NAME_MAX];
 		char appendData[HUGE_STR];
@@ -368,6 +371,9 @@ namespace Writer {
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
 		if (streq(name, "addNotif")) return (void *)addNotif;
+		if (streq(name, "rnd")) return (void *)rnd;
+		if (streq(name, "floor")) return (void *)floor;
+		if (streq(name, "round")) return (void *)round;
 
 		if (streq(name, "gotoMap")) return (void *)gotoMap;
 		if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
@@ -1776,6 +1782,7 @@ namespace Writer {
 			vsprintf(buffer, str, argptr);
 			va_end(argptr);
 		}
+		printf("msg: %s\n", buffer);
 
 		{ /// Msg body text
 			MintSprite *spr = createMintSprite();
@@ -1847,6 +1854,7 @@ namespace Writer {
 		const char *lineStart = data;
 
 		Passage *passage = (Passage *)zalloc(sizeof(Passage));
+		bool firstLine = true;
 		for (int i = 0;; i++) {
 			const char *lineEnd = strstr(lineStart, delim);
 			if (!lineEnd) break;
@@ -1854,9 +1862,14 @@ namespace Writer {
 			char line[LARGE_STR] = {};
 			strncpy(line, lineStart, lineEnd-lineStart);
 
-			if (i == 0) {
+			if (firstLine) {
+				if (strlen(line) == 0) {
+					lineStart = lineEnd+1;
+					continue;
+				}
+				firstLine = false;
 				if (line[0] != ':') {
-					msg("Titles must start with a colon (%s)", MSG_ERROR, line);
+					msg("Titles must start with a colon (%s, %d)", MSG_ERROR, line, line[0]);
 					return;
 				}
 
@@ -2228,5 +2241,13 @@ namespace Writer {
 #ifdef SEMI_FLASH
 		platformLoadFromDisk(loadMod);
 #endif
+	}
+
+	int floor(float num) {
+		return num;
+	}
+
+	int round(float num) {
+		return roundf(num);
 	}
 }
