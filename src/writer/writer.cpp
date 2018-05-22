@@ -478,7 +478,7 @@ namespace Writer {
 				}, {
 					"introModMynt",
 					"Kitt",
-					"https://www.dropbox.com/s/wem8kz8vgpwtzv7/introModMynt.phore?dl=1",
+					"assets/info/introModMynt.phore",
 					"Story",
 					"0.0.1"
 				}, {
