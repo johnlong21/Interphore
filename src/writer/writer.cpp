@@ -414,15 +414,15 @@ namespace Writer {
 		addSoundTweak("audio/ui/newChoiceClick/7", 0.2);
 		addSoundTweak("audio/ui/newChoiceClick/8", 0.2);
 		addSoundTweak("audio/ui/newChoiceClick/9", 0.2);
-		addSoundTweak("audio/ui/hoverChoiceButtons/1", 0.2);
-		addSoundTweak("audio/ui/hoverChoiceButtons/2", 0.2);
-		addSoundTweak("audio/ui/hoverChoiceButtons/3", 0.2);
+		addSoundTweak("audio/ui/hoverChoiceButtons/1", 0.1);
+		addSoundTweak("audio/ui/hoverChoiceButtons/2", 0.1);
+		addSoundTweak("audio/ui/hoverChoiceButtons/3", 0.1);
 		addSoundTweak("audio/ui/tooltip/1", 0.2);
 		addSoundTweak("audio/ui/tooltip/2", 0.2);
 		addSoundTweak("audio/ui/tooltip/3", 0.2);
-		addSoundTweak("audio/ui/hoverChoiceIcons/1", 0.5);
-		addSoundTweak("audio/ui/hoverChoiceIcons/2", 0.5);
-		addSoundTweak("audio/ui/hoverChoiceIcons/3", 0.5);
+		addSoundTweak("audio/ui/hoverChoiceIcons/1", 0.2);
+		addSoundTweak("audio/ui/hoverChoiceIcons/2", 0.2);
+		addSoundTweak("audio/ui/hoverChoiceIcons/3", 0.2);
 
 		addSoundTweak("audio/music/newVictim", 0.5);
 
@@ -473,6 +473,12 @@ namespace Writer {
 					"mudPies",
 					"Roxelle Devaunt",
 					"assets/info/mudPies.phore",
+					"Story",
+					"0.0.1"
+				}, {
+					"introModMynt",
+					"Kitt",
+					"",
 					"Story",
 					"0.0.1"
 				}, {
