@@ -476,6 +476,12 @@ namespace Writer {
 					"Story",
 					"0.0.1"
 				}, {
+					"introModMynt",
+					"Kitt",
+					"",
+					"Story",
+					"0.0.1"
+				}, {
 					"testFucker",
 					"Kittery",
 					"",
