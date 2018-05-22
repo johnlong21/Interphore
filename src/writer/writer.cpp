@@ -472,7 +472,7 @@ namespace Writer {
 				{
 					"mudPies",
 					"Roxelle Devaunt",
-					"",
+					"assets/info/mudPies.phore",
 					"Story",
 					"0.0.1"
 				}, {
@@ -586,7 +586,7 @@ namespace Writer {
 				}, {
 					"Main",
 					"John Johnson",
-					"",
+					"assets/info/main.phore",
 					"Internal",
 					"0.0.1"
 				}, {
@@ -622,7 +622,7 @@ namespace Writer {
 				}, {
 					"Scratch",
 					"FallowWing",
-					"",
+					"assets/info/scratch.phore",
 					"Internal",
 					"0.0.1"
 				}
@@ -1336,18 +1336,8 @@ namespace Writer {
 	}
 
 	void loadModEntry(ModEntry *entry) {
-		if (streq(entry->name, "Main")) {
-			loadMod((char *)getAsset("main.phore")->data);
-			return;
-		}
-
-		if (streq(entry->name, "Scratch")) {
-			loadMod((char *)getAsset("scratch.phore")->data);
-			return;
-		}
-
-		if (streq(entry->name, "mudPies")) {
-			loadMod((char *)getAsset("mudPies.phore")->data);
+		if (strstr(entry->url, "assets/")) {
+			loadMod((char *)getAsset(entry->url)->data);
 			return;
 		}
 
