@@ -1428,7 +1428,7 @@ namespace Writer {
 		if (err) {
 			const char *errStr = mjs_strerror(mjs, err);
 			msg("JS expr error: %s", MSG_ERROR, errStr);
-			printf("JS expr error: %s\n", errStr);
+			mjs_print_error(mjs, stdout, NULL, 1);
 			// assert(0);
 		}
 	}
@@ -1462,7 +1462,7 @@ namespace Writer {
 		if (err) {
 			const char *errStr = mjs_strerror(mjs, err);
 			msg("JS string error: %s", MSG_ERROR, errStr);
-			printf("JS string error: %s\n", errStr);
+			mjs_print_error(mjs, stdout, NULL, 1);
 			assert(0);
 		}
 	}
