@@ -68,6 +68,10 @@ img/writer/mynt/face/myntBod/9.png
 img/writer/mynt/face/myntBod/9.spr
 img/writer/mynt/face/myntBod/10.png
 img/writer/mynt/face/myntBod/10.spr
+img/writer/characters/cart.png
+img/writer/characters/cart.spr
+img/writer/characters/cart2.png
+img/writer/characters/cart2.spr
 
 img/ui/main.png
 img/ui/main.spr
