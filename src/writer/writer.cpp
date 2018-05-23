@@ -402,6 +402,7 @@ namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
 		exists = true;
+		engine->portraitMode = false; //@incomplete Make this automatic lol
 
 		addSoundTweak("audio/ui/exit", 0.1);
 		addSoundTweak("audio/ui/restart", 0.3);
@@ -1320,9 +1321,14 @@ namespace Writer {
 			if (writer->inputField) {
 				if (keyIsJustPressed(' ')) writer->inputField->append(" ");
 				if (keyIsJustPressed(KEY_BACKSPACE)) writer->inputField->unAppend(1);
-				if (writer->inputFieldBg->justPressed) {
+				if (writer->inputFieldBg->justReleased) {
 					playSound("audio/ui/newChoiceClick/");
 					setTitle("Yes, that box.");
+					displayKeyboard(true);
+
+					if (engine->platform == PLAT_ANDROID) {
+						writer->inputFieldBg->y = 0;
+					}
 				}
 
 				for (int i = 'A'; i <= 'Z'; i++) {
@@ -1650,7 +1656,6 @@ namespace Writer {
 
 		if (writer->inputField) {
 			execJs("lastInput = '%s';", writer->inputField->rawText);
-			writer->inputField->destroy();
 			writer->inputFieldBg->destroy();
 			writer->inputField = NULL;
 			writer->inputFieldBg = NULL;
@@ -2197,15 +2202,15 @@ namespace Writer {
 
 		//@note-fallow: lazy quick copy paste, sorry
 		MintSprite *sprBg = createMintSprite();
-		sprBg->setupRect(engine->width/3, 40, 0x000000);
+		sprBg->setupRect(engine->width/3, 40, 0x440000);
 		sprBg->x = engine->width/2 - sprBg->getWidth()/2;
+		sprBg->alpha = 0.5;
 		sprBg->y = engine->height - 200; //@hardcode padding
 
 		MintSprite *spr = createMintSprite();
 		spr->setupEmpty(engine->width/3, 40);
 		spr->setText("");
-		spr->x = engine->width/2 - spr->getWidth()/2;
-		spr->y = engine->height - 200; //@hardcode padding
+		sprBg->addChild(spr);
 
 		writer->inputFieldBg = sprBg;
 		writer->inputField = spr;
