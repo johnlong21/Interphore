@@ -26,7 +26,7 @@ void entryPoint() {
 void initMain() {
 	engine->exitCallback = exitMain;
 
-#if 1
+#if 0
 	MintSprite *bg = createMintSprite();
 	bg->setupRect(1, 1, 0x000000);
 	bg->alpha = 0;

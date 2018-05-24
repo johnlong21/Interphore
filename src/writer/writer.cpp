@@ -342,6 +342,7 @@ namespace Writer {
 		if (streq(name, "append")) return (void *)append;
 		if (streq(name, "exitMod")) return (void *)exitMod;
 		if (streq(name, "addImage")) return (void *)addImage;
+		if (streq(name, "addRectImage")) return (void *)addRectImage;
 		if (streq(name, "alignImage")) return (void *)alignImage;
 		if (streq(name, "moveImage")) return (void *)moveImage;
 		if (streq(name, "moveImagePx")) return (void *)moveImagePx;
@@ -531,9 +532,9 @@ namespace Writer {
 					"Examples",
 					"0.1.0"
 				}, {
-					"Image example",
+					"Demo",
 					"Fallowwing",
-					"https://www.dropbox.com/s/d38cai15jsyseif/Images%20Test.txt?dl=1",
+					"assets/info/scratch.phore",
 					"Examples",
 					"1.0.0"
 				}, {
