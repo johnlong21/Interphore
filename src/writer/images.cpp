@@ -1,5 +1,6 @@
 namespace Writer {
 	void addImage(const char *path, const char *name);
+	void addRectImage(const char *name, int width, int height, int colour);
 	Image *getImage(const char *name);
 	void removeImage(const char *name);
 	void removeImage(Image *img);
@@ -74,6 +75,26 @@ namespace Writer {
 		img->exists = true;
 		img->name = stringClone(name);
 		img->sprite = createMintSprite(path);
+		// img->sprite->centerPivot = true;
+		writer->bg->addChild(img->sprite);
+	}
+
+	void addRectImage(const char *name, int width, int height, int colour) {
+		int slot;
+		for (slot = 0; slot < IMAGES_MAX; slot++)
+			if (!writer->images[slot].exists)
+				break;
+
+		if (slot >= IMAGES_MAX) {
+			msg("Too many images", MSG_ERROR);
+			return;
+		}
+
+		Image *img = &writer->images[slot];
+		img->exists = true;
+		img->name = stringClone(name);
+		img->sprite = createMintSprite();
+		img->sprite->setupRect(width, height, colour);
 		// img->sprite->centerPivot = true;
 		writer->bg->addChild(img->sprite);
 	}
