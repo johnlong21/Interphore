@@ -72,6 +72,10 @@ img/writer/characters/cart.png
 img/writer/characters/cart.spr
 img/writer/characters/cart2.png
 img/writer/characters/cart2.spr
+img/writer/intro/titleBG.png
+img/writer/intro/titleBG.spr
+img/writer/intro/titleText.png
+img/writer/intro/titleText.spr
 
 img/ui/main.png
 img/ui/main.spr
