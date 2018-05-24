@@ -514,6 +514,12 @@ namespace Writer {
 					"Story",
 					"0.0.1"
 				}, {
+					"Demo",
+					"Fallowwing",
+					"assets/info/scratch.phore",
+					"Examples",
+					"1.0.0"
+				}, {
 					"Basic mod",
 					"Fallowwing",
 					"https://www.dropbox.com/s/ci9yidufa7zl69c/Basic%20Mod.txt?dl=1",
@@ -531,12 +537,6 @@ namespace Writer {
 					"https://www.dropbox.com/s/g0anhgehafkad9c/addChoiceExample.phore?dl=1",
 					"Examples",
 					"0.1.0"
-				}, {
-					"Demo",
-					"Fallowwing",
-					"assets/info/scratch.phore",
-					"Examples",
-					"1.0.0"
 				}, {
 					"Audio example",
 					"Fallowwing",
