@@ -930,6 +930,13 @@ namespace Writer {
 		// 	for (int i = 0; i < 10; i++) msg("Info\nTest", MSG_INFO);
 		// }
 
+#ifdef SEMI_INTERNAL
+		if (keyIsJustPressed('J')) {
+			printf("Starting new JS\n");
+			initJs();
+		}
+#endif
+
 		if (WriterDesktop::exists) WriterDesktop::updateDesktop();
 
 		// Streaming and exec have to happen here because they can't happen in the mjs call graph
