@@ -281,8 +281,20 @@ void msg(const char *str, ...) {
 }
 
 duk_ret_t append(duk_context *ctx) {
-	const char *str = duk_get_string(ctx, -1);
-	strcat(game->mainTextStr, str);
+	duk_int_t type = duk_get_type(ctx, -1);
+	if (type == DUK_TYPE_STRING) {
+		const char *str = duk_get_string(ctx, -1);
+		strcat(game->mainTextStr, str);
+	} else if (type == DUK_TYPE_NUMBER) {
+		double num = duk_get_number(ctx, -1);
+		char buf[64];
+		if (num == round(num)) {
+			sprintf(buf, "%.0f", num);
+		} else {
+			sprintf(buf, "%f", num);
+		}
+		strcat(game->mainTextStr, buf);
+	}
 
 	return 0;
 }
@@ -481,10 +493,10 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 	// 				std::string resultString;
 					if (printResult) {
 						char *evalLine = (char *)Malloc(strlen(codeLine) + 128);
-						strcpy(evalLine, "append(eval(");
+						strcpy(evalLine, "append(");
 						if (codeLine[strlen(codeLine)-1] == ';') codeLine[strlen(codeLine)-1] = '\0';
 						strcat(evalLine, codeLine);
-						strcat(evalLine, "));");
+						strcat(evalLine, ");");
 						printf("Gonna really eval: %s\n", evalLine);
 						runJs(evalLine);
 					} else {
