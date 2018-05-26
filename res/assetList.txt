@@ -7,6 +7,7 @@ font/bitmap/OpenSans-Regular_20*
 font/bitmap/OpenSans-Regular_40*
 
 info/interConfig.js
+info/newInterConfig.js
 info/introMod.phore
 info/introModMynt.phore
 info/mudPies.phore

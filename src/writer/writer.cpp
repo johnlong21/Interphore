@@ -404,7 +404,6 @@ namespace Writer {
 	void initWriter(MintSprite *bgSpr) {
 		printf("Init\n");
 		exists = true;
-		engine->portraitMode = false; //@incomplete Make this automatic lol
 
 		addSoundTweak("audio/ui/exit", 0.1);
 		addSoundTweak("audio/ui/restart", 0.3);
