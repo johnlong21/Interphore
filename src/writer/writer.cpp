@@ -368,6 +368,7 @@ namespace Writer {
 		if (streq(name, "getImageX")) return (void *)getImageX;
 		if (streq(name, "getImageY")) return (void *)getImageY;
 		if (streq(name, "removeImage")) return (void *)(void (*)(const char *))removeImage;
+		if (streq(name, "isImageReleasedOnce")) return (void *)isImageReleasedOnce;
 
 		if (streq(name, "timer")) return (void *)timer;
 		if (streq(name, "setBackground")) return (void *)setBackground;
@@ -932,7 +933,6 @@ namespace Writer {
 
 #ifdef SEMI_INTERNAL
 		if (keyIsJustPressed('J')) {
-			printf("Starting new JS\n");
 			initJs();
 		}
 #endif

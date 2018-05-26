@@ -15,6 +15,7 @@ namespace Writer {
 	void moveImagePx(const char *name, float x, float y);
 	void rotateImage(const char *name, float rotation);
 	void tintImage(const char *name, int tint);
+	bool isImageReleasedOnce(const char *name);
 
 	float getImageX(const char *name) {
 		Image *img = getImage(name);
@@ -215,5 +216,16 @@ namespace Writer {
 		}
 
 		img->permanent = true;
+	}
+
+	bool isImageReleasedOnce(const char *name) {
+		Image *img = getImage(name);
+
+		if (!img) {
+			msg("Can't test image named %s because it doesn't exist", MSG_ERROR, name);
+			return 0;
+		}
+
+		return img->sprite->justReleased;
 	}
 }
