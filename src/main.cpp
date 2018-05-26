@@ -1,7 +1,11 @@
 #define VERSION "0.0.1" //@cleanup I shouldn't have to do this
 #include "gameEngine.h"
 
+#ifdef NEW_WRITER
+#include "game.cpp"
+#else
 #include "writer/writer.cpp"
+#endif
 
 void updateMain();
 void initMain();
