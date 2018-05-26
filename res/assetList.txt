@@ -6,8 +6,10 @@ font/bitmap/Espresso-Dolce_44*
 font/bitmap/OpenSans-Regular_20*
 font/bitmap/OpenSans-Regular_40*
 
-info/interConfig.js
 info/newInterConfig.js
+info/temp.js
+
+info/interConfig.js
 info/introMod.phore
 info/introModMynt.phore
 info/mudPies.phore
