@@ -179,12 +179,10 @@ void runMod(char *serialData) {
 	// printf("Loaded data: %s\n", serialData);
 	char *inputData = (char *)zalloc(SERIAL_SIZE);
 
-	char *realData = (char *)zalloc(Megabytes(2));
-	memset(realData, 0, Megabytes(2));
-	realData[0] = '\0';
-	char *realDataEnd = fastStrcat(realData, "var __passage = \"\";\n\n");
-	realDataEnd = fastStrcat(realDataEnd, "var __image = \"\";\n\n");
-	realDataEnd = fastStrcat(realDataEnd, "var __audio = \"\";\n\n");
+	String *realData = newString();
+	realData->append("var __passage = \"\";\n");
+	realData->append("var __image = \"\";\n");
+	realData->append("var __audio = \"\";\n");
 
 	int serialLen = strlen(serialData);
 	int inputLen = 0;
@@ -210,58 +208,59 @@ void runMod(char *serialData) {
 
 		if (strstr(line, "START_IMAGES")) {
 			inImages = true;
-			realDataEnd = fastStrcat(realDataEnd, "__image = \"\";");
+			realData->append("var __image = \"\";\n");
 		} else if (strstr(line, "END_IMAGES")) {
 			inImages = false;
-			realDataEnd = fastStrcat(realDataEnd, "submitImage(__image);");
+			realData->append("submitImage(__image);");
 		} else if (strstr(line, "START_AUDIO")) {
 			inAudio = true;
-			realDataEnd = fastStrcat(realDataEnd, "__audio = \"\";");
+			realData->append("__audio = \"\";");
 		} else if (strstr(line, "END_AUDIO")) {
 			inAudio = false;
-			realDataEnd = fastStrcat(realDataEnd, "submitAudio(__audio);");
+			realData->append("submitAudio(__audio);");
 		} else if (strstr(line, "START_PASSAGES")) {
 			inPassage = true;
-			realDataEnd = fastStrcat(realDataEnd, "__passage = \"\";");
+			realData->append("__passage = \"\";");
 		} else if (strstr(line, "END_PASSAGES")) {
-			realDataEnd = fastStrcat(realDataEnd, "submitPassage(__passage);");
+			realData->append("submitPassage(__passage);");
 			inPassage = false;
 		} else if (strstr(line, "---")) {
 			if (inPassage) {
-				realDataEnd = fastStrcat(realDataEnd, "submitPassage(__passage);\n__passage = \"\";");
+				realData->append("submitPassage(__passage);\n__passage = \"\";");
 			} else if (inImages) {
-				realDataEnd = fastStrcat(realDataEnd, "submitImage(__image);\n__image = \"\";");
+				realData->append("submitImage(__image);\n__image = \"\";");
 			} else if (inAudio) {
-				realDataEnd = fastStrcat(realDataEnd, "submitAudio(__audio);\n__audio = \"\";");
+				realData->append("submitAudio(__audio);\n__audio = \"\";");
 			}
 		} else if (inPassage) {
-			realDataEnd = fastStrcat(realDataEnd, "__passage += \"");
+			realData->append("__passage += \"");
 
 			if (strstr(line, "\"")) {
 				for (int lineIndex = 0; lineIndex < strlen(line); lineIndex++) {
 					if (line[lineIndex] == '"') {
-						realDataEnd = fastStrcat(realDataEnd, "\\\"");
+						realData->append("\\\"");
 					} else {
-						*realDataEnd = line[lineIndex];
-						realDataEnd++;
+						char buf[2] = {};
+						buf[0] = line[lineIndex];
+						realData->append(buf);
 					}
 				}
 			} else {
-				realDataEnd = fastStrcat(realDataEnd, line);
+				realData->append(line);
 			}
-			realDataEnd = fastStrcat(realDataEnd, "\\n\";");
+			realData->append("\\n\";");
 		} else if (inImages) {
-			realDataEnd = fastStrcat(realDataEnd, "__image += \"");
-			realDataEnd = fastStrcat(realDataEnd, line);
-			realDataEnd = fastStrcat(realDataEnd, "\n\";");
+			realData->append("__image += \"");
+			realData->append(line);
+			realData->append("\n\";");
 		} else if (inAudio) {
-			realDataEnd = fastStrcat(realDataEnd, "__audio += \"");
-			realDataEnd = fastStrcat(realDataEnd, line);
-			realDataEnd = fastStrcat(realDataEnd, "\n\";");
+			realData->append("__audio += \"");
+			realData->append(line);
+			realData->append("\n\";");
 		} else {
-			realDataEnd = fastStrcat(realDataEnd, line);
+			realData->append(line);
 		}
-		realDataEnd = fastStrcat(realDataEnd, "\n");
+		realData->append("\n");
 
 		lineStart = lineEnd+1;
 	}
@@ -271,8 +270,8 @@ void runMod(char *serialData) {
 
 	Free(inputData);
 
-	runJs(realData);
-	Free(realData);
+	runJs(realData->get());
+	realData->destroy();
 }
 
 void msg(const char *str, ...) {
@@ -501,7 +500,7 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 						if (codeLine[strlen(codeLine)-1] == ';') codeLine[strlen(codeLine)-1] = '\0';
 						strcat(evalLine, codeLine);
 						strcat(evalLine, ");");
-						// printf("Gonna really eval: %s\n", evalLine);
+						printf("Gonna really eval: %s\n", evalLine);
 						runJs(evalLine);
 					} else {
 						runJs(codeLine);
