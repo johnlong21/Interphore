@@ -1,6 +1,7 @@
 // THIS FILE IS A TEST RE-WRITE OF THE GAME, NOTHING IN HERE IS IN USE CURRENTLY
 
 #define PASSAGE_MAX 1024
+#define IMAGES_MAX 256
 
 void initGame(MintSprite *bgSpr);
 void deinitGame();
@@ -44,6 +45,7 @@ struct Game {
 	MintSprite *mainText;
 	Passage *passages[PASSAGE_MAX];
 	int passagesNum;
+	MintSprite *images[IMAGES_MAX];
 
 	/// Graph
 };
@@ -59,7 +61,10 @@ duk_ret_t append(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
 duk_ret_t submitImage(duk_context *ctx);
 duk_ret_t submitAudio(duk_context *ctx);
+
 duk_ret_t gotoPassage(duk_context *ctx);
+
+duk_ret_t addImage(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -86,6 +91,7 @@ void initGame(MintSprite *bgSpr) {
 
 	addJsFunction("append", append, 1);
 	addJsFunction("gotoPassage", gotoPassage, 1);
+	addJsFunction("addImage_internal", addImage, 1);
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -270,7 +276,6 @@ void runMod(char *serialData) {
 }
 
 void msg(const char *str, ...) {
-	//@cleanup you can do this easier with vaprintf or whatever
 	char buffer[HUGE_STR];
 	va_list argptr;
 	va_start(argptr, str);
@@ -488,27 +493,21 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 					char *codeLine = (char *)Malloc(lineEnd-lineStart);
 					strncpy(codeLine, lineStart, lineEnd-lineStart);
 					codeLine[lineEnd-lineStart] = '\0';
-					printf("Gonna eval: %s\n", codeLine);
+					// printf("Gonna eval: %s\n", codeLine);
 
-	// 				std::string resultString;
 					if (printResult) {
 						char *evalLine = (char *)Malloc(strlen(codeLine) + 128);
 						strcpy(evalLine, "append(");
 						if (codeLine[strlen(codeLine)-1] == ';') codeLine[strlen(codeLine)-1] = '\0';
 						strcat(evalLine, codeLine);
 						strcat(evalLine, ");");
-						printf("Gonna really eval: %s\n", evalLine);
+						// printf("Gonna really eval: %s\n", evalLine);
 						runJs(evalLine);
 					} else {
 						runJs(codeLine);
 					}
 
 					Free(codeLine);
-	// 				if (game->state != STATE_MOD) return;
-	// 				if (printResult) {
-	// 					if (streq(resultString.c_str(), "undefined")) append("`");
-	// 					else append(resultString.c_str());
-	// 				}
 				}
 
 				printf("Would append: %s\n", line);
@@ -523,4 +522,21 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 	msg("Failed to find passage %s\n", passageName);
 	Free(passageName);
 	return 0;
+}
+
+duk_ret_t addImage(duk_context *ctx) {
+	const char *assetId = duk_get_string(ctx, -1);
+
+	int slot;
+	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
+
+	if (slot >= IMAGES_MAX) {
+		//@incomplete Too many images error
+	}
+
+	MintSprite *spr = createMintSprite(assetId);
+	game->images[slot] = spr;
+
+	duk_push_int(ctx, slot);
+	return 1;
 }
