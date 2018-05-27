@@ -65,6 +65,7 @@ duk_ret_t submitAudio(duk_context *ctx);
 duk_ret_t gotoPassage(duk_context *ctx);
 
 duk_ret_t addImage(duk_context *ctx);
+duk_ret_t setImageProps(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -92,6 +93,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("append", append, 1);
 	addJsFunction("gotoPassage", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
+	addJsFunction("setImageProps", setImageProps, 8);
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -148,6 +150,8 @@ void updateGame() {
 }
 
 void updateState() {
+	runJs("__update();");
+
 	if (game->state == STATE_PASSAGE) {
 		if (game->firstOfState) {
 		}
@@ -335,6 +339,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 			String *fixedSeg = segment->replace("\n", "\\n");
 			segment->destroy();
 			segment = fixedSeg;
+			//@incompelte Parse addChoice alias ([myTitle|myPass])
 
 			jsData->append(segment->cStr);
 			jsData->append("\");");
@@ -434,4 +439,26 @@ duk_ret_t addImage(duk_context *ctx) {
 
 	duk_push_int(ctx, slot);
 	return 1;
+}
+
+duk_ret_t setImageProps(duk_context *ctx) {
+	int tint = duk_get_number(ctx, -1);
+	double rotation = duk_get_number(ctx, -2);
+	double alpha = duk_get_number(ctx, -3);
+	double scaleY = duk_get_number(ctx, -4);
+	double scaleX = duk_get_number(ctx, -5);
+	double y = duk_get_number(ctx, -6);
+	double x = duk_get_number(ctx, -7);
+	int id = duk_get_number(ctx, -8);
+
+	MintSprite *img = game->images[id];
+	img->x = x;
+	img->y = y;
+	img->scaleX = scaleX;
+	img->scaleY = scaleY;
+	img->alpha = alpha;
+	img->rotation = rotation;
+	img->tint = tint;
+
+	return 0;
 }
