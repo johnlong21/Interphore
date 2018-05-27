@@ -1679,8 +1679,9 @@ namespace Writer {
 		// printf("Passages %d\n", writer->passagesNum);
 		for (int i = 0; i < writer->passagesNum; i++) {
 			Passage *passage = writer->passages[i];
-			// printf("Checking passage %s\n", passage->name);
+			// printf("Checking passage %s comp %s\n", passage->name, passageName);
 			if (streq(passage->name, passageName)) {
+				// printf("Found\n");
 				const char *lineStart = passage->appendData;
 				for (int i = 0;; i++) {
 					const char *lineEnd = strstr(lineStart, "`");
