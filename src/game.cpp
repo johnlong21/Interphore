@@ -65,6 +65,7 @@ duk_ret_t submitAudio(duk_context *ctx);
 duk_ret_t gotoPassage(duk_context *ctx);
 
 duk_ret_t addImage(duk_context *ctx);
+duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
 duk_ret_t getImageWidth(duk_context *ctx);
 duk_ret_t getImageHeight(duk_context *ctx);
@@ -95,6 +96,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("append", append, 1);
 	addJsFunction("gotoPassage", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
+	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("setImageProps", setImageProps, 8);
 	addJsFunction("getImageWidth", getImageWidth, 1);
 	addJsFunction("getImageHeight", getImageHeight, 1);
@@ -435,10 +437,38 @@ duk_ret_t addImage(duk_context *ctx) {
 	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
 
 	if (slot >= IMAGES_MAX) {
-		//@incomplete Too many images error
+		msg("Too many images");
+		duk_push_int(ctx, -1);
+		return 1;
 	}
 
 	MintSprite *spr = createMintSprite(assetId);
+	game->images[slot] = spr;
+
+	duk_push_int(ctx, slot);
+	return 1;
+}
+
+duk_ret_t add9SliceImage(duk_context *ctx) {
+	int y2 = duk_get_number(ctx, -1);
+	int x2 = duk_get_number(ctx, -2);
+	int y1 = duk_get_number(ctx, -3);
+	int x1 = duk_get_number(ctx, -4);
+	int height = duk_get_number(ctx, -5);
+	int width = duk_get_number(ctx, -6);
+	const char *assetId = duk_get_string(ctx, -7);
+
+	int slot;
+	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
+
+	if (slot >= IMAGES_MAX) {
+		msg("Too many images");
+		duk_push_int(ctx, -1);
+		return 1;
+	}
+
+	MintSprite *spr = createMintSprite();
+	spr->setup9Slice(assetId, width, height, x1, y1, x2, y2);
 	game->images[slot] = spr;
 
 	duk_push_int(ctx, slot);
