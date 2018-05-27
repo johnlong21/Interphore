@@ -66,6 +66,8 @@ duk_ret_t gotoPassage(duk_context *ctx);
 
 duk_ret_t addImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
+duk_ret_t getImageWidth(duk_context *ctx);
+duk_ret_t getImageHeight(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -94,6 +96,8 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("gotoPassage", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
 	addJsFunction("setImageProps", setImageProps, 8);
+	addJsFunction("getImageWidth", getImageWidth, 1);
+	addJsFunction("getImageHeight", getImageHeight, 1);
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -461,4 +465,22 @@ duk_ret_t setImageProps(duk_context *ctx) {
 	img->tint = tint;
 
 	return 0;
+}
+
+duk_ret_t getImageWidth(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+
+	MintSprite *img = game->images[id];
+	duk_push_int(ctx, img->width);
+
+	return 1;
+}
+
+duk_ret_t getImageHeight(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+
+	MintSprite *img = game->images[id];
+	duk_push_int(ctx, img->height);
+
+	return 1;
 }
