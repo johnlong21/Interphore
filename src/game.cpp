@@ -66,7 +66,9 @@ duk_ret_t gotoPassage(duk_context *ctx);
 
 duk_ret_t addImage(duk_context *ctx);
 duk_ret_t add9SliceImage(duk_context *ctx);
+duk_ret_t addEmptyImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
+duk_ret_t setImageText(duk_context *ctx);
 duk_ret_t getImageWidth(duk_context *ctx);
 duk_ret_t getImageHeight(duk_context *ctx);
 
@@ -97,7 +99,9 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("gotoPassage", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
+	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
 	addJsFunction("setImageProps", setImageProps, 8);
+	addJsFunction("setImageText_internal", setImageText, 2);
 	addJsFunction("getImageWidth", getImageWidth, 1);
 	addJsFunction("getImageHeight", getImageHeight, 1);
 
@@ -475,6 +479,27 @@ duk_ret_t add9SliceImage(duk_context *ctx) {
 	return 1;
 }
 
+duk_ret_t addEmptyImage(duk_context *ctx) {
+	int height = duk_get_number(ctx, -1);
+	int width = duk_get_number(ctx, -2);
+
+	int slot;
+	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
+
+	if (slot >= IMAGES_MAX) {
+		msg("Too many images");
+		duk_push_int(ctx, -1);
+		return 1;
+	}
+
+	MintSprite *spr = createMintSprite();
+	spr->setupEmpty(width, height);
+	game->images[slot] = spr;
+
+	duk_push_int(ctx, slot);
+	return 1;
+}
+
 duk_ret_t setImageProps(duk_context *ctx) {
 	int tint = duk_get_number(ctx, -1);
 	double rotation = duk_get_number(ctx, -2);
@@ -495,6 +520,17 @@ duk_ret_t setImageProps(duk_context *ctx) {
 	img->tint = tint;
 
 	return 0;
+}
+
+duk_ret_t setImageText(duk_context *ctx) {
+	const char *text = duk_get_string(ctx, -1);
+	int id = duk_get_number(ctx, -2);
+
+	MintSprite *img = game->images[id];
+	img->setText(text);
+
+	return 0;
+
 }
 
 duk_ret_t getImageWidth(duk_context *ctx) {
