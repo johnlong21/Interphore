@@ -428,9 +428,9 @@ namespace Writer {
 
 		addSoundTweak("audio/music/newVictim", 0.5);
 
-		getTextureAsset("Espresso-Dolce_22")->level = 3;
-		getTextureAsset("Espresso-Dolce_30")->level = 3;
-		getTextureAsset("Espresso-Dolce_38")->level = 3;
+		getTextureAsset("NunitoSans-Light_22")->level = 3;
+		getTextureAsset("NunitoSans-Light_30")->level = 3;
+		getTextureAsset("NunitoSans-Light_38")->level = 3;
 
 		if (engine->platform == PLAT_ANDROID) {
 			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_40");
@@ -438,9 +438,9 @@ namespace Writer {
 			strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_20");
 		}
 
-		engine->spriteData.tagMap->setString("ed22", "Espresso-Dolce_22");
-		engine->spriteData.tagMap->setString("ed30", "Espresso-Dolce_30");
-		engine->spriteData.tagMap->setString("ed38", "Espresso-Dolce_38");
+		engine->spriteData.tagMap->setString("ed22", "NunitoSans-Light_22");
+		engine->spriteData.tagMap->setString("ed30", "NunitoSans-Light_30");
+		engine->spriteData.tagMap->setString("ed38", "NunitoSans-Light_38");
 		oldDefaultLayer = engine->spriteData.defaultLayer;
 		engine->spriteData.defaultLayer = lowestLayer + DEFAULT_LAYER;
 
@@ -655,7 +655,7 @@ namespace Writer {
 				spr->alpha = 0;
 				spr->layer = lowestLayer + TOOLTIP_TEXT_LAYER;
 				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
-				strcpy(spr->defaultFont, "Espresso-Dolce_22");
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->zooms = false;
 
 				writer->tooltipTf = spr;
@@ -725,7 +725,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_20");
 				spr->setText("Interphore");
 				spr->alignInside(DIR8_UP_LEFT, 10, 10);
 
@@ -736,7 +736,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_20");
 
 				spr->setText("A Story Tool");
 				spr->alignOutside(writer->title, DIR8_DOWN, 0, 5);
@@ -823,7 +823,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width*0.5, writer->bg->height);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "OpenSans-Regular_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_20");
 				spr->setText("");
 				spr->x = writer->browserBg->x + writer->browserBg->getWidth() + 10;
 				spr->y = writer->browserBg->y;
@@ -861,8 +861,8 @@ namespace Writer {
 				spr->setupEmpty(writer->bg->width - 64, 2048); //@hardcode 64 should be refresh button pos
 				writer->bg->addChild(spr);
 				// strcpy(spr->defaultFont, "OpenSans-Regular_20");
-				if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "Espresso-Dolce_44");
-				else strcpy(spr->defaultFont, "Espresso-Dolce_22");
+				if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "NunitoSans-Light_44");
+				else strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->setText("");
 
 				writer->mainText = spr;
@@ -1641,8 +1641,8 @@ namespace Writer {
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(btn->sprite->getFrameWidth(), btn->sprite->getFrameHeight());
 			// strcpy(spr->defaultFont, "OpenSans-Regular_20");
-			if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "Espresso-Dolce_44");
-			else strcpy(spr->defaultFont, "Espresso-Dolce_22");
+			if (engine->platform == PLAT_ANDROID) strcpy(spr->defaultFont, "NunitoSans-Light_44");
+			else strcpy(spr->defaultFont, "NunitoSans-Light_22");
 			spr->setText(text);
 			btn->sprite->addChild(spr);
 			spr->alignInside(DIR8_CENTER);

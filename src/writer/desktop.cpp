@@ -124,7 +124,7 @@ namespace WriterDesktop {
 		{ /// Dialog text
 			MintSprite *spr = createMintSprite();
 			spr->setupEmpty(engine->width*0.8, engine->height*0.25);
-			strcpy(spr->defaultFont, "Espresso-Dolce_38");
+			strcpy(spr->defaultFont, "NunitoSans-Regular_38");
 			desktop->bg->addChild(spr);
 
 			desktop->dialogTf = spr;

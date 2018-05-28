@@ -78,9 +78,9 @@ void initGame(MintSprite *bgSpr) {
 	//@incomplete Copy sound tweaks
 	///
 
-	getTextureAsset("Espresso-Dolce_22")->level = 3;
-	getTextureAsset("Espresso-Dolce_30")->level = 3;
-	getTextureAsset("Espresso-Dolce_38")->level = 3;
+	getTextureAsset("NunitoSans-Light_22")->level = 3;
+	getTextureAsset("NunitoSans-Light_30")->level = 3;
+	getTextureAsset("NunitoSans-Light_38")->level = 3;
 
 	if (engine->platform == PLAT_ANDROID) {
 		strcpy(engine->spriteData.defaultFont, "OpenSans-Regular_40");

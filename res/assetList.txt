@@ -1,8 +1,16 @@
 shader/*
-font/bitmap/Espresso-Dolce_22*
-font/bitmap/Espresso-Dolce_30*
-font/bitmap/Espresso-Dolce_38*
-font/bitmap/Espresso-Dolce_44*
+font/bitmap/NunitoSans-Light_22*
+font/bitmap/NunitoSans-Bold_22*
+font/bitmap/NunitoSans-Italic_22*
+font/bitmap/NunitoSans-Light_30*
+font/bitmap/NunitoSans-Bold_30*
+font/bitmap/NunitoSans-Italic_30*
+font/bitmap/NunitoSans-Light_38*
+font/bitmap/NunitoSans-Bold_38*
+font/bitmap/NunitoSans-Italic_38*
+font/bitmap/NunitoSans-Light_44*
+font/bitmap/NunitoSans-Bold_44*
+font/bitmap/NunitoSans-Italic_44*
 font/bitmap/OpenSans-Regular_20*
 font/bitmap/OpenSans-Regular_40*
 
