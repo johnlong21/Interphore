@@ -72,6 +72,7 @@ duk_ret_t setImageProps(duk_context *ctx);
 duk_ret_t setImageText(duk_context *ctx);
 duk_ret_t getImageSize(duk_context *ctx);
 duk_ret_t getTextSize(duk_context *ctx);
+duk_ret_t getImageFlags(duk_context *ctx);
 
 /// Backgrounds
 duk_ret_t setBackground(duk_context *ctx);
@@ -115,6 +116,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setImageText_internal", setImageText, 2);
 	addJsFunction("getImageSize", getImageSize, 1);
 	addJsFunction("getTextSize", getTextSize, 1);
+	addJsFunction("getImageFlags", getImageFlags, 1);
 
 	addJsFunction("setBackground", setBackground, 3);
 	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
@@ -621,6 +623,33 @@ duk_ret_t getTextSize(duk_context *ctx) {
 
 	char buf[1024];
 	sprintf(buf, "images[%d].textWidth = %d;\nimages[%d].textHeight = %d;\n", id, img->textWidth, id, img->textHeight);
+	runJs(buf);
+
+	return 0;
+}
+
+duk_ret_t getImageFlags(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+	MintSprite *img = game->images[id];
+
+	char buf[1024];
+	sprintf(
+		buf,
+		"var curImg = images[%d];\n"
+		"curImg.justPressed = %d;\n"
+		"curImg.justReleased = %d;\n"
+		"curImg.pressing = %d;\n"
+		"curImg.justHovered = %d;\n"
+		"curImg.justUnHovered = %d;\n"
+		"curImg.hovering = %d;\n" ,
+		id,
+		img->justPressed,
+		img->justReleased,
+		img->pressing,
+		img->justHovered,
+		img->justUnHovered,
+		img->hovering
+	);
 	runJs(buf);
 
 	return 0;
