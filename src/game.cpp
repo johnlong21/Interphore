@@ -5,6 +5,8 @@
 #define STREAM_MAX 256
 #define ASSETS_MAX 256
 
+#define MAIN_TEXT_LAYER 10
+
 void initGame(MintSprite *bgSpr);
 void deinitGame();
 void updateGame();
@@ -74,8 +76,6 @@ void msg(const char *str, ...);
 duk_ret_t append(duk_context *ctx);
 duk_ret_t setMainText(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
-duk_ret_t submitImage(duk_context *ctx);
-duk_ret_t submitAudio(duk_context *ctx);
 duk_ret_t streamAsset(duk_context *ctx);
 void assetStreamed(char *serialData);
 
@@ -122,8 +122,6 @@ void initGame(MintSprite *bgSpr) {
 	runJs(buf);
 
 	addJsFunction("submitPassage", submitPassage, 1);
-	addJsFunction("submitImage", submitImage, 1);
-	addJsFunction("submitAudio", submitAudio, 1);
 	addJsFunction("streamAsset", streamAsset, 2);
 
 	addJsFunction("append", append, 1);
@@ -185,7 +183,8 @@ void initGame(MintSprite *bgSpr) {
 	char *initCode = (char *)getAsset("info/newInterConfig.js")->data;
 	runJs(initCode);
 
-	char *tempCode = (char *)getAsset("info/temp.js")->data;
+	// char *tempCode = (char *)getAsset("info/temp.js")->data;
+	char *tempCode = (char *)getAsset("info/scratch.phore")->data;
 	runMod(tempCode);
 
 	switchState(STATE_PASSAGE);
@@ -262,6 +261,7 @@ void updateState() {
 		}
 		game->mainText->x = engine->width/2 - game->mainText->width/2;
 		game->mainText->y = 20;
+		game->mainText->layer = MAIN_TEXT_LAYER;
 		game->mainText->setText(game->mainTextStr);
 	}
 
@@ -311,13 +311,13 @@ void runMod(char *serialData) {
 			realData->append("var __image = \"\";\n");
 		} else if (strstr(line, "END_IMAGES")) {
 			inImages = false;
-			realData->append("submitImage(__image);");
+			realData->append("print(\"Submitting images is deprecated\");");
 		} else if (strstr(line, "START_AUDIO")) {
 			inAudio = true;
 			realData->append("__audio = \"\";");
 		} else if (strstr(line, "END_AUDIO")) {
 			inAudio = false;
-			realData->append("submitAudio(__audio);");
+			realData->append("print(\"Submitting audio is deprecated\");");
 		} else if (strstr(line, "START_PASSAGES")) {
 			inPassage = true;
 			realData->append("__passage = \"\";");
@@ -328,9 +328,9 @@ void runMod(char *serialData) {
 			if (inPassage) {
 				realData->append("submitPassage(__passage);\n__passage = \"\";");
 			} else if (inImages) {
-				realData->append("submitImage(__image);\n__image = \"\";");
+			realData->append("print(\"Submitting images is deprecated\");");
 			} else if (inAudio) {
-				realData->append("submitAudio(__audio);\n__audio = \"\";");
+			realData->append("print(\"Submitting audio is deprecated\");");
 			}
 		} else if (inPassage) {
 			realData->append("__passage += \"");
@@ -525,22 +525,6 @@ duk_ret_t submitPassage(duk_context *ctx) {
 
 	data->destroy();
 	// exit(0);
-	return 0;
-}
-
-duk_ret_t submitImage(duk_context *ctx) {
-	const char *str = duk_get_string(ctx, -1);
-	printf("Submitted image: %s\n", str);
-	//@incomplete Stub
-
-	return 0;
-}
-
-duk_ret_t submitAudio(duk_context *ctx) {
-	const char *str = duk_get_string(ctx, -1);
-	printf("Submitted audio: %s\n", str);
-	//@incomplete Stub
-
 	return 0;
 }
 
