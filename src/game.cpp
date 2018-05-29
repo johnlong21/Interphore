@@ -320,9 +320,38 @@ duk_ret_t append(duk_context *ctx) {
 
 		for (int i = 0; i < linesNum; i++) {
 			// printf("Line is |%s|\n", lines[i]->cStr);
-			strcat(game->mainTextStr, lines[i]->cStr);
-			if (i < linesNum-1) strcat(game->mainTextStr, "\n");
-			lines[i]->destroy();
+			String *line = lines[i];
+			if (line->charAt(0) == '[') {
+				line->pop();
+				line->unshift();
+				String *label;
+				String *result;
+
+				int barIndex = line->indexOf("|");
+				if (barIndex != -1) {
+					label = line->subStrAbs(0, barIndex);
+					result = line->subStrAbs(barIndex+1, line->length);
+				} else {
+					label = line->clone();
+					result = line->clone();
+				}
+
+				String *code = newString();
+				code->set("addChoice(\"");
+				code->append(label->cStr);
+				code->append("\", \"");
+				code->append(result->cStr);
+				code->append("\");");
+				// printf("Gonna run %s\n", code->cStr);
+				runJs(code->cStr);
+				code->destroy();
+				label->destroy();
+				result->destroy();
+			} else {
+				strcat(game->mainTextStr, line->cStr);
+				if (i < linesNum-1) strcat(game->mainTextStr, "\n");
+			}
+			line->destroy();
 		}
 		Free(lines);
 
@@ -364,7 +393,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 		if (!isCode) {
 			if (segment->getLastChar() == '!') {
 				appendNextCode = false;
-				segment->unAppend(1);
+				segment->pop(1);
 			}
 			jsData->append("append(\"");
 
@@ -378,7 +407,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 		} else {
 			if (appendNextCode) {
 				jsData->append("append(");
-				if (segment->getLastChar() == ';') segment->unAppend(1);
+				if (segment->getLastChar() == ';') segment->pop(1);
 				jsData->append(segment->cStr);
 				jsData->append(");");
 			} else {
