@@ -307,8 +307,25 @@ void msg(const char *str, ...) {
 duk_ret_t append(duk_context *ctx) {
 	duk_int_t type = duk_get_type(ctx, -1);
 	if (type == DUK_TYPE_STRING) {
-		const char *str = duk_get_string(ctx, -1);
-		strcat(game->mainTextStr, str);
+		const char *data = duk_get_string(ctx, -1);
+		// printf("Appending |%s|\n", data);
+
+		String *str = newString();
+		str->set(data);
+
+		String **lines;
+		int linesNum;
+		str->split("\n", &lines, &linesNum);
+		str->destroy();
+
+		for (int i = 0; i < linesNum; i++) {
+			// printf("Line is |%s|\n", lines[i]->cStr);
+			strcat(game->mainTextStr, lines[i]->cStr);
+			if (i < linesNum-1) strcat(game->mainTextStr, "\n");
+			lines[i]->destroy();
+		}
+		Free(lines);
+
 	} else if (type == DUK_TYPE_NUMBER) {
 		double num = duk_get_number(ctx, -1);
 		char buf[64];
