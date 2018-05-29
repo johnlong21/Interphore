@@ -2,6 +2,10 @@
 
 #define PASSAGE_MAX 1024
 #define IMAGES_MAX 256
+#define STREAM_MAX 256
+#define ASSETS_MAX 256
+
+#define MAIN_TEXT_LAYER 10
 
 void initGame(MintSprite *bgSpr);
 void deinitGame();
@@ -40,6 +44,18 @@ struct Game {
 	bool lastOfState;
 	MintSprite *root;
 
+	/// Streaming
+	char *streamNames[STREAM_MAX];
+	int streamNamesNum;
+
+	char *streamUrls[STREAM_MAX];
+	int streamUrlsNum;
+
+	bool isStreaming;
+	int curStreamIndex;
+
+	Asset *loadedAssets[ASSETS_MAX];
+
 	/// Passage
 	char mainTextStr[HUGE_STR];
 	MintSprite *mainText;
@@ -58,19 +74,28 @@ void runMod(char *serialData);
 void msg(const char *str, ...);
 
 duk_ret_t append(duk_context *ctx);
+duk_ret_t setMainText(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
-duk_ret_t submitImage(duk_context *ctx);
-duk_ret_t submitAudio(duk_context *ctx);
+duk_ret_t streamAsset(duk_context *ctx);
+void assetStreamed(char *serialData);
 
 duk_ret_t gotoPassage(duk_context *ctx);
 
+/// Images
 duk_ret_t addImage(duk_context *ctx);
 duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t addEmptyImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
 duk_ret_t setImageText(duk_context *ctx);
-duk_ret_t getImageWidth(duk_context *ctx);
-duk_ret_t getImageHeight(duk_context *ctx);
+duk_ret_t getImageSize(duk_context *ctx);
+duk_ret_t getTextSize(duk_context *ctx);
+duk_ret_t getImageFlags(duk_context *ctx);
+duk_ret_t destroyImage(duk_context *ctx);
+
+/// Backgrounds
+duk_ret_t setBackground(duk_context *ctx);
+duk_ret_t resetBackgroundMode(duk_context *ctx);
+duk_ret_t setBackgroundBob(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -91,19 +116,63 @@ void initGame(MintSprite *bgSpr) {
 	}
 
 	initJs();
+
+	char buf[1024];
+	sprintf(buf, "var gameWidth = %d;\n var gameHeight = %d;\n", engine->width, engine->height);
+	runJs(buf);
+
 	addJsFunction("submitPassage", submitPassage, 1);
-	addJsFunction("submitImage", submitImage, 1);
-	addJsFunction("submitAudio", submitAudio, 1);
+	addJsFunction("streamAsset", streamAsset, 2);
 
 	addJsFunction("append", append, 1);
-	addJsFunction("gotoPassage", gotoPassage, 1);
+	addJsFunction("setMainText", setMainText, 1);
+	addJsFunction("gotoPassage_internal", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
-	addJsFunction("setImageProps", setImageProps, 8);
+	addJsFunction("setImageProps", setImageProps, 9);
 	addJsFunction("setImageText_internal", setImageText, 2);
-	addJsFunction("getImageWidth", getImageWidth, 1);
-	addJsFunction("getImageHeight", getImageHeight, 1);
+	addJsFunction("getImageSize", getImageSize, 1);
+	addJsFunction("getTextSize", getTextSize, 1);
+	addJsFunction("getImageFlags", getImageFlags, 1);
+	addJsFunction("destroyImage", destroyImage, 1);
+
+	addJsFunction("setBackground", setBackground, 3);
+	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
+	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
+
+	// if (streq(name, "exitMod")) return (void *)exitMod;
+	// if (streq(name, "addRectImage")) return (void *)addRectImage;
+	// if (streq(name, "playAudio")) return (void *)playAudio;
+	// if (streq(name, "setAudioLooping")) return (void *)setAudioLooping;
+	// if (streq(name, "stopAudio")) return (void *)stopAudio;
+
+	// if (streq(name, "permanentImage")) return (void *)permanentImage;
+
+	// if (streq(name, "submitNode")) return (void *)submitNode;
+	// if (streq(name, "attachNode")) return (void *)attachNode;
+	// if (streq(name, "getTime")) return (void *)getTime;
+	// if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
+
+	// if (streq(name, "timer")) return (void *)timer;
+	// if (streq(name, "addNotif")) return (void *)addNotif;
+	// if (streq(name, "rnd")) return (void *)rnd;
+	// if (streq(name, "floor")) return (void *)floor;
+	// if (streq(name, "round")) return (void *)round;
+
+	// if (streq(name, "gotoMap")) return (void *)gotoMap;
+	// if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
+
+	// if (streq(name, "streamAsset")) return (void *)streamAsset;
+	// if (streq(name, "execAsset")) return (void *)execAsset;
+	// if (streq(name, "setTitle")) return (void *)setTitle;
+	// if (streq(name, "addInputField")) return (void *)addInputField;
+	// if (streq(name, "clearNodes")) return (void *)clearNodes;
+
+	// if (streq(name, "enableExit")) return (void *)enableExit;
+	// if (streq(name, "disableExit")) return (void *)disableExit;
+	// if (streq(name, "gotoBrowser")) return (void *)gotoBrowser;
+	// if (streq(name, "loadModFromDisk")) return (void *)loadModFromDisk;
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -114,7 +183,8 @@ void initGame(MintSprite *bgSpr) {
 	char *initCode = (char *)getAsset("info/newInterConfig.js")->data;
 	runJs(initCode);
 
-	char *tempCode = (char *)getAsset("info/temp.js")->data;
+	// char *tempCode = (char *)getAsset("info/temp.js")->data;
+	char *tempCode = (char *)getAsset("info/scratch.phore")->data;
 	runMod(tempCode);
 
 	switchState(STATE_PASSAGE);
@@ -162,6 +232,19 @@ void updateGame() {
 void updateState() {
 	runJs("__update();");
 
+	{ /// Update streaming
+		if (!game->isStreaming && game->streamNamesNum > game->curStreamIndex) {
+			game->isStreaming = true;
+			platformLoadFromUrl(game->streamUrls[game->curStreamIndex], assetStreamed);
+		}
+
+		if (game->curStreamIndex == game->streamUrlsNum) {
+			game->streamUrlsNum = 0;
+			game->streamNamesNum = 0;
+			game->curStreamIndex = 0;
+		}
+	}
+
 	if (game->state == STATE_PASSAGE) {
 		if (game->firstOfState) {
 		}
@@ -170,12 +253,15 @@ void updateState() {
 			return;
 		}
 
+		//@incomplete Update backgrounds
+
 		if (!game->mainText) {
 			game->mainText = createMintSprite();
 			game->mainText->setupEmpty(engine->width - 64, 2048);
 		}
 		game->mainText->x = engine->width/2 - game->mainText->width/2;
 		game->mainText->y = 20;
+		game->mainText->layer = MAIN_TEXT_LAYER;
 		game->mainText->setText(game->mainTextStr);
 	}
 
@@ -225,13 +311,13 @@ void runMod(char *serialData) {
 			realData->append("var __image = \"\";\n");
 		} else if (strstr(line, "END_IMAGES")) {
 			inImages = false;
-			realData->append("submitImage(__image);");
+			realData->append("print(\"Submitting images is deprecated\");");
 		} else if (strstr(line, "START_AUDIO")) {
 			inAudio = true;
 			realData->append("__audio = \"\";");
 		} else if (strstr(line, "END_AUDIO")) {
 			inAudio = false;
-			realData->append("submitAudio(__audio);");
+			realData->append("print(\"Submitting audio is deprecated\");");
 		} else if (strstr(line, "START_PASSAGES")) {
 			inPassage = true;
 			realData->append("__passage = \"\";");
@@ -242,9 +328,9 @@ void runMod(char *serialData) {
 			if (inPassage) {
 				realData->append("submitPassage(__passage);\n__passage = \"\";");
 			} else if (inImages) {
-				realData->append("submitImage(__image);\n__image = \"\";");
+			realData->append("print(\"Submitting images is deprecated\");");
 			} else if (inAudio) {
-				realData->append("submitAudio(__audio);\n__audio = \"\";");
+			realData->append("print(\"Submitting audio is deprecated\");");
 			}
 		} else if (inPassage) {
 			realData->append("__passage += \"");
@@ -302,8 +388,54 @@ void msg(const char *str, ...) {
 duk_ret_t append(duk_context *ctx) {
 	duk_int_t type = duk_get_type(ctx, -1);
 	if (type == DUK_TYPE_STRING) {
-		const char *str = duk_get_string(ctx, -1);
-		strcat(game->mainTextStr, str);
+		const char *data = duk_get_string(ctx, -1);
+		// printf("Appending |%s|\n", data);
+
+		String *str = newString();
+		str->set(data);
+
+		String **lines;
+		int linesNum;
+		str->split("\n", &lines, &linesNum);
+		str->destroy();
+
+		for (int i = 0; i < linesNum; i++) {
+			// printf("Line is |%s|\n", lines[i]->cStr);
+			String *line = lines[i];
+			if (line->charAt(0) == '[') {
+				line->pop();
+				line->unshift();
+				String *label;
+				String *result;
+
+				int barIndex = line->indexOf("|");
+				if (barIndex != -1) {
+					label = line->subStrAbs(0, barIndex);
+					result = line->subStrAbs(barIndex+1, line->length);
+				} else {
+					label = line->clone();
+					result = line->clone();
+				}
+
+				String *code = newString();
+				code->set("addChoice(\"");
+				code->append(label->cStr);
+				code->append("\", \"");
+				code->append(result->cStr);
+				code->append("\");");
+				// printf("Gonna run %s\n", code->cStr);
+				runJs(code->cStr);
+				code->destroy();
+				label->destroy();
+				result->destroy();
+			} else {
+				strcat(game->mainTextStr, line->cStr);
+				if (i < linesNum-1) strcat(game->mainTextStr, "\n");
+			}
+			line->destroy();
+		}
+		Free(lines);
+
 	} else if (type == DUK_TYPE_NUMBER) {
 		double num = duk_get_number(ctx, -1);
 		char buf[64];
@@ -342,7 +474,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 		if (!isCode) {
 			if (segment->getLastChar() == '!') {
 				appendNextCode = false;
-				segment->unAppend(1);
+				segment->pop(1);
 			}
 			jsData->append("append(\"");
 
@@ -356,7 +488,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 		} else {
 			if (appendNextCode) {
 				jsData->append("append(");
-				if (segment->getLastChar() == ';') segment->unAppend(1);
+				if (segment->getLastChar() == ';') segment->pop(1);
 				jsData->append(segment->cStr);
 				jsData->append(");");
 			} else {
@@ -396,18 +528,36 @@ duk_ret_t submitPassage(duk_context *ctx) {
 	return 0;
 }
 
-duk_ret_t submitImage(duk_context *ctx) {
-	const char *str = duk_get_string(ctx, -1);
-	printf("Submitted image: %s\n", str);
+duk_ret_t streamAsset(duk_context *ctx) {
+	const char *url = duk_get_string(ctx, -1);
+	const char *assetName = duk_get_string(ctx, -2);
+
+	game->streamNames[game->streamNamesNum++] = stringClone(assetName);
+	game->streamUrls[game->streamUrlsNum++] = stringClone(url);
 
 	return 0;
 }
 
-duk_ret_t submitAudio(duk_context *ctx) {
-	const char *str = duk_get_string(ctx, -1);
-	printf("Submitted audio: %s\n", str);
+void assetStreamed(char *serialData) {
+	const char *name = game->streamNames[game->curStreamIndex];
+	const char *url = game->streamUrls[game->curStreamIndex];
 
-	return 0;
+	addAsset(name, serialData, platformLoadedStringSize);
+
+	for (int i = 0; i < ASSETS_MAX; i++) {
+		if (!game->loadedAssets[i]) {
+			game->loadedAssets[i] = getAsset(name);
+			break;
+		}
+	}
+
+	if (stringEndsWith(name, ".phore") || stringEndsWith(name, ".js")) runMod((char *)getAsset(name)->data);
+
+	game->curStreamIndex++;
+	game->isStreaming = false;
+
+	Free((void *)name);
+	Free((void *)url);
 }
 
 duk_ret_t gotoPassage(duk_context *ctx) {
@@ -433,6 +583,18 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 	msg("Failed to find passage %s\n", passageName);
 	return 0;
 }
+
+duk_ret_t setMainText(duk_context *ctx) {
+	const char *text = duk_get_string(ctx, -1);
+	strcpy(game->mainTextStr, text);
+	return 0;
+}
+
+//
+//
+//         IMAGES START
+//
+//
 
 duk_ret_t addImage(duk_context *ctx) {
 	const char *assetId = duk_get_string(ctx, -1);
@@ -501,14 +663,15 @@ duk_ret_t addEmptyImage(duk_context *ctx) {
 }
 
 duk_ret_t setImageProps(duk_context *ctx) {
-	int tint = duk_get_number(ctx, -1);
-	double rotation = duk_get_number(ctx, -2);
-	double alpha = duk_get_number(ctx, -3);
-	double scaleY = duk_get_number(ctx, -4);
-	double scaleX = duk_get_number(ctx, -5);
-	double y = duk_get_number(ctx, -6);
-	double x = duk_get_number(ctx, -7);
-	int id = duk_get_number(ctx, -8);
+	int layer = duk_get_number(ctx, -1);
+	int tint = duk_get_number(ctx, -2);
+	double rotation = duk_get_number(ctx, -3);
+	double alpha = duk_get_number(ctx, -4);
+	double scaleY = duk_get_number(ctx, -5);
+	double scaleX = duk_get_number(ctx, -6);
+	double y = duk_get_number(ctx, -7);
+	double x = duk_get_number(ctx, -8);
+	int id = duk_get_number(ctx, -9);
 
 	MintSprite *img = game->images[id];
 	img->x = x;
@@ -518,6 +681,7 @@ duk_ret_t setImageProps(duk_context *ctx) {
 	img->alpha = alpha;
 	img->rotation = rotation;
 	img->tint = tint;
+	img->layer = layer;
 
 	return 0;
 }
@@ -530,23 +694,106 @@ duk_ret_t setImageText(duk_context *ctx) {
 	img->setText(text);
 
 	return 0;
-
 }
 
-duk_ret_t getImageWidth(duk_context *ctx) {
+duk_ret_t getImageSize(duk_context *ctx) {
 	int id = duk_get_number(ctx, -1);
-
 	MintSprite *img = game->images[id];
-	duk_push_int(ctx, img->width);
 
-	return 1;
+	char buf[1024];
+	sprintf(buf, "images[%d].width = %d;\nimages[%d].height = %d;\n", id, img->width, id, img->height);
+	runJs(buf);
+
+	return 0;
 }
 
-duk_ret_t getImageHeight(duk_context *ctx) {
+duk_ret_t getTextSize(duk_context *ctx) {
 	int id = duk_get_number(ctx, -1);
-
 	MintSprite *img = game->images[id];
-	duk_push_int(ctx, img->height);
 
-	return 1;
+	char buf[1024];
+	sprintf(buf, "images[%d].textWidth = %d;\nimages[%d].textHeight = %d;\n", id, img->textWidth, id, img->textHeight);
+	runJs(buf);
+
+	return 0;
 }
+
+duk_ret_t getImageFlags(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+	MintSprite *img = game->images[id];
+
+	char buf[1024];
+	sprintf(
+		buf,
+		"var curImg = images[%d];\n"
+		"curImg.justPressed = %d;\n"
+		"curImg.justReleased = %d;\n"
+		"curImg.pressing = %d;\n"
+		"curImg.justHovered = %d;\n"
+		"curImg.justUnHovered = %d;\n"
+		"curImg.hovering = %d;\n" ,
+		id,
+		img->justPressed,
+		img->justReleased,
+		img->pressing,
+		img->justHovered,
+		img->justUnHovered,
+		img->hovering
+	);
+	runJs(buf);
+
+	return 0;
+}
+
+duk_ret_t destroyImage(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+	MintSprite *img = game->images[id];
+	game->images[id] = NULL;
+	img->destroy();
+
+	return 0;
+}
+
+//
+//
+//         IMAGES END
+//
+//
+
+//
+//
+//         BACKGROUNDS START
+//
+//
+
+
+duk_ret_t setBackground(duk_context *ctx) {
+	int bgType = duk_get_number(ctx, -1);
+	const char *assetId = duk_get_string(ctx, -2);
+	int bgId = duk_get_number(ctx, -3);
+	//@incomplete Stub
+
+	return 0;
+}
+
+duk_ret_t resetBackgroundMode(duk_context *ctx) {
+	int bgId = duk_get_number(ctx, -1);
+	//@incomplete Stub
+
+	return 0;
+}
+
+duk_ret_t setBackgroundBob(duk_context *ctx) {
+	int bobY = duk_get_number(ctx, -1);
+	int bobX = duk_get_number(ctx, -2);
+	int bgId = duk_get_number(ctx, -3);
+	//@incomplete Stub
+
+	return 0;
+}
+
+//
+//
+//         BACKGROUNDS END
+//
+//
