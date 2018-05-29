@@ -58,6 +58,7 @@ void runMod(char *serialData);
 void msg(const char *str, ...);
 
 duk_ret_t append(duk_context *ctx);
+duk_ret_t setMainText(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
 duk_ret_t submitImage(duk_context *ctx);
 duk_ret_t submitAudio(duk_context *ctx);
@@ -73,6 +74,7 @@ duk_ret_t setImageText(duk_context *ctx);
 duk_ret_t getImageSize(duk_context *ctx);
 duk_ret_t getTextSize(duk_context *ctx);
 duk_ret_t getImageFlags(duk_context *ctx);
+duk_ret_t destroyImage(duk_context *ctx);
 
 /// Backgrounds
 duk_ret_t setBackground(duk_context *ctx);
@@ -108,7 +110,8 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("submitAudio", submitAudio, 1);
 
 	addJsFunction("append", append, 1);
-	addJsFunction("gotoPassage", gotoPassage, 1);
+	addJsFunction("setMainText", setMainText, 1);
+	addJsFunction("gotoPassage_internal", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
@@ -117,10 +120,44 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("getImageSize", getImageSize, 1);
 	addJsFunction("getTextSize", getTextSize, 1);
 	addJsFunction("getImageFlags", getImageFlags, 1);
+	addJsFunction("destroyImage", destroyImage, 1);
 
 	addJsFunction("setBackground", setBackground, 3);
 	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
 	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
+
+	// if (streq(name, "exitMod")) return (void *)exitMod;
+	// if (streq(name, "addRectImage")) return (void *)addRectImage;
+	// if (streq(name, "playAudio")) return (void *)playAudio;
+	// if (streq(name, "setAudioLooping")) return (void *)setAudioLooping;
+	// if (streq(name, "stopAudio")) return (void *)stopAudio;
+
+	// if (streq(name, "permanentImage")) return (void *)permanentImage;
+
+	// if (streq(name, "submitNode")) return (void *)submitNode;
+	// if (streq(name, "attachNode")) return (void *)attachNode;
+	// if (streq(name, "getTime")) return (void *)getTime;
+	// if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
+
+	// if (streq(name, "timer")) return (void *)timer;
+	// if (streq(name, "addNotif")) return (void *)addNotif;
+	// if (streq(name, "rnd")) return (void *)rnd;
+	// if (streq(name, "floor")) return (void *)floor;
+	// if (streq(name, "round")) return (void *)round;
+
+	// if (streq(name, "gotoMap")) return (void *)gotoMap;
+	// if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
+
+	// if (streq(name, "streamAsset")) return (void *)streamAsset;
+	// if (streq(name, "execAsset")) return (void *)execAsset;
+	// if (streq(name, "setTitle")) return (void *)setTitle;
+	// if (streq(name, "addInputField")) return (void *)addInputField;
+	// if (streq(name, "clearNodes")) return (void *)clearNodes;
+
+	// if (streq(name, "enableExit")) return (void *)enableExit;
+	// if (streq(name, "disableExit")) return (void *)disableExit;
+	// if (streq(name, "gotoBrowser")) return (void *)gotoBrowser;
+	// if (streq(name, "loadModFromDisk")) return (void *)loadModFromDisk;
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -464,6 +501,7 @@ duk_ret_t submitPassage(duk_context *ctx) {
 duk_ret_t submitImage(duk_context *ctx) {
 	const char *str = duk_get_string(ctx, -1);
 	printf("Submitted image: %s\n", str);
+	//@incomplete Stub
 
 	return 0;
 }
@@ -471,6 +509,7 @@ duk_ret_t submitImage(duk_context *ctx) {
 duk_ret_t submitAudio(duk_context *ctx) {
 	const char *str = duk_get_string(ctx, -1);
 	printf("Submitted audio: %s\n", str);
+	//@incomplete Stub
 
 	return 0;
 }
@@ -499,6 +538,11 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 	return 0;
 }
 
+duk_ret_t setMainText(duk_context *ctx) {
+	const char *text = duk_get_string(ctx, -1);
+	strcpy(game->mainTextStr, text);
+	return 0;
+}
 
 //
 //
@@ -651,6 +695,15 @@ duk_ret_t getImageFlags(duk_context *ctx) {
 		img->hovering
 	);
 	runJs(buf);
+
+	return 0;
+}
+
+duk_ret_t destroyImage(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+	MintSprite *img = game->images[id];
+	game->images[id] = NULL;
+	img->destroy();
 
 	return 0;
 }
