@@ -2,6 +2,8 @@
 
 #define PASSAGE_MAX 1024
 #define IMAGES_MAX 256
+#define STREAM_MAX 256
+#define ASSETS_MAX 256
 
 void initGame(MintSprite *bgSpr);
 void deinitGame();
@@ -40,6 +42,18 @@ struct Game {
 	bool lastOfState;
 	MintSprite *root;
 
+	/// Streaming
+	char *streamNames[STREAM_MAX];
+	int streamNamesNum;
+
+	char *streamUrls[STREAM_MAX];
+	int streamUrlsNum;
+
+	bool isStreaming;
+	int curStreamIndex;
+
+	Asset *loadedAssets[ASSETS_MAX];
+
 	/// Passage
 	char mainTextStr[HUGE_STR];
 	MintSprite *mainText;
@@ -62,6 +76,8 @@ duk_ret_t setMainText(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
 duk_ret_t submitImage(duk_context *ctx);
 duk_ret_t submitAudio(duk_context *ctx);
+duk_ret_t streamAsset(duk_context *ctx);
+void assetStreamed(char *serialData);
 
 duk_ret_t gotoPassage(duk_context *ctx);
 
@@ -108,6 +124,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("submitPassage", submitPassage, 1);
 	addJsFunction("submitImage", submitImage, 1);
 	addJsFunction("submitAudio", submitAudio, 1);
+	addJsFunction("streamAsset", streamAsset, 2);
 
 	addJsFunction("append", append, 1);
 	addJsFunction("setMainText", setMainText, 1);
@@ -215,6 +232,19 @@ void updateGame() {
 
 void updateState() {
 	runJs("__update();");
+
+	{ /// Update streaming
+		if (!game->isStreaming && game->streamNamesNum > game->curStreamIndex) {
+			game->isStreaming = true;
+			platformLoadFromUrl(game->streamUrls[game->curStreamIndex], assetStreamed);
+		}
+
+		if (game->curStreamIndex == game->streamUrlsNum) {
+			game->streamUrlsNum = 0;
+			game->streamNamesNum = 0;
+			game->curStreamIndex = 0;
+		}
+	}
 
 	if (game->state == STATE_PASSAGE) {
 		if (game->firstOfState) {
@@ -512,6 +542,38 @@ duk_ret_t submitAudio(duk_context *ctx) {
 	//@incomplete Stub
 
 	return 0;
+}
+
+duk_ret_t streamAsset(duk_context *ctx) {
+	const char *url = duk_get_string(ctx, -1);
+	const char *assetName = duk_get_string(ctx, -2);
+
+	game->streamNames[game->streamNamesNum++] = stringClone(assetName);
+	game->streamUrls[game->streamUrlsNum++] = stringClone(url);
+
+	return 0;
+}
+
+void assetStreamed(char *serialData) {
+	const char *name = game->streamNames[game->curStreamIndex];
+	const char *url = game->streamUrls[game->curStreamIndex];
+
+	addAsset(name, serialData, platformLoadedStringSize);
+
+	for (int i = 0; i < ASSETS_MAX; i++) {
+		if (!game->loadedAssets[i]) {
+			game->loadedAssets[i] = getAsset(name);
+			break;
+		}
+	}
+
+	if (stringEndsWith(name, ".phore") || stringEndsWith(name, ".js")) runMod((char *)getAsset(name)->data);
+
+	game->curStreamIndex++;
+	game->isStreaming = false;
+
+	Free((void *)name);
+	Free((void *)url);
 }
 
 duk_ret_t gotoPassage(duk_context *ctx) {
