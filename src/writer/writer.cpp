@@ -725,7 +725,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "NunitoSans-Light_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->setText("Interphore");
 				spr->alignInside(DIR8_UP_LEFT, 10, 10);
 
@@ -736,7 +736,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width, 100);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "NunitoSans-Light_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 
 				spr->setText("A Story Tool");
 				spr->alignOutside(writer->title, DIR8_DOWN, 0, 5);
@@ -748,6 +748,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->bg->width*0.1, writer->bg->height*0.5, 0x111111);
 				writer->bg->addChild(spr);
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->alignInside(DIR8_LEFT, 20, 0);
 
 				writer->categoryBg = spr;
@@ -757,6 +758,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupRect(writer->bg->width*0.5, writer->bg->height*0.70, 0x111111);
 				writer->bg->addChild(spr);
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->alignOutside(writer->categoryBg, DIR8_RIGHT, 20, 0);
 
 				writer->browserBg = spr;
@@ -823,7 +825,7 @@ namespace Writer {
 				MintSprite *spr = createMintSprite();
 				spr->setupEmpty(writer->bg->width*0.5, writer->bg->height);
 				writer->bg->addChild(spr);
-				strcpy(spr->defaultFont, "NunitoSans-Light_20");
+				strcpy(spr->defaultFont, "NunitoSans-Light_22");
 				spr->setText("");
 				spr->x = writer->browserBg->x + writer->browserBg->getWidth() + 10;
 				spr->y = writer->browserBg->y;
@@ -1003,9 +1005,9 @@ namespace Writer {
 			if (writer->titleSprite) {
 
 				if (writer->nextTitle[0] == '\0') {
-					writer->titleSprite->alpha += 0.07;
+					writer->titleSprite->alpha += 0.09;
 				} else {
-					writer->titleSprite->alpha -= 0.07;
+					writer->titleSprite->alpha -= 0.09;
 					if (writer->titleSprite->alpha <= 0) {
 						writer->titleSprite->destroy();
 						writer->titleSprite = NULL;
@@ -1018,12 +1020,13 @@ namespace Writer {
 
 					MintSprite *bg = createMintSprite();
 					bg->setupRect(engine->width, titleSize, 0x111111);
-					bg->y = engine->height * 0.25;
+					bg->y = engine->height * 0.65;
 					bg->alpha = 0;
 
 					MintSprite *tf = createMintSprite();
 					bg->addChild(tf);
 					tf->setupEmpty(engine->width, titleSize);
+					strcpy(tf->defaultFont, "NunitoSans-Light_22");
 					tf->setText(writer->nextTitle);
 					tf->alignInside(DIR8_CENTER);
 
@@ -1330,7 +1333,7 @@ namespace Writer {
 				if (keyIsJustPressed(KEY_BACKSPACE)) writer->inputField->unAppend(1);
 				if (writer->inputFieldBg->justReleased) {
 					playSound("audio/ui/newChoiceClick/");
-					setTitle("Yes, that box.");
+					setTitle("Type away.");
 					displayKeyboard(true);
 
 					if (engine->platform == PLAT_ANDROID) {
@@ -2212,11 +2215,11 @@ namespace Writer {
 		MintSprite *sprBg = createMintSprite();
 		sprBg->setupRect(engine->width/3, 40, 0x440000);
 		sprBg->x = engine->width/2 - sprBg->getWidth()/2;
-		sprBg->alpha = 0.5;
+		sprBg->alpha = 0.8;
 		sprBg->y = engine->height - 200; //@hardcode padding
 
 		MintSprite *spr = createMintSprite();
-		spr->setupEmpty(engine->width/3, 40);
+		spr->setupEmpty(engine->width/3 + 5, 40); //@hardcode padding
 		spr->setText("");
 		sprBg->addChild(spr);
 
