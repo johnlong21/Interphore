@@ -69,8 +69,8 @@ duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t addEmptyImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
 duk_ret_t setImageText(duk_context *ctx);
-duk_ret_t getImageWidth(duk_context *ctx);
-duk_ret_t getImageHeight(duk_context *ctx);
+duk_ret_t getImageSize(duk_context *ctx);
+duk_ret_t getTextSize(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -91,6 +91,11 @@ void initGame(MintSprite *bgSpr) {
 	}
 
 	initJs();
+
+	char buf[1024];
+	sprintf(buf, "var gameWidth = %d;\n var gameHeight = %d;\n", engine->width, engine->height);
+	runJs(buf);
+
 	addJsFunction("submitPassage", submitPassage, 1);
 	addJsFunction("submitImage", submitImage, 1);
 	addJsFunction("submitAudio", submitAudio, 1);
@@ -100,10 +105,10 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("addImage_internal", addImage, 1);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
-	addJsFunction("setImageProps", setImageProps, 8);
+	addJsFunction("setImageProps", setImageProps, 9);
 	addJsFunction("setImageText_internal", setImageText, 2);
-	addJsFunction("getImageWidth", getImageWidth, 1);
-	addJsFunction("getImageHeight", getImageHeight, 1);
+	addJsFunction("getImageSize", getImageSize, 1);
+	addJsFunction("getTextSize", getTextSize, 1);
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -501,14 +506,15 @@ duk_ret_t addEmptyImage(duk_context *ctx) {
 }
 
 duk_ret_t setImageProps(duk_context *ctx) {
-	int tint = duk_get_number(ctx, -1);
-	double rotation = duk_get_number(ctx, -2);
-	double alpha = duk_get_number(ctx, -3);
-	double scaleY = duk_get_number(ctx, -4);
-	double scaleX = duk_get_number(ctx, -5);
-	double y = duk_get_number(ctx, -6);
-	double x = duk_get_number(ctx, -7);
-	int id = duk_get_number(ctx, -8);
+	int layer = duk_get_number(ctx, -1);
+	int tint = duk_get_number(ctx, -2);
+	double rotation = duk_get_number(ctx, -3);
+	double alpha = duk_get_number(ctx, -4);
+	double scaleY = duk_get_number(ctx, -5);
+	double scaleX = duk_get_number(ctx, -6);
+	double y = duk_get_number(ctx, -7);
+	double x = duk_get_number(ctx, -8);
+	int id = duk_get_number(ctx, -9);
 
 	MintSprite *img = game->images[id];
 	img->x = x;
@@ -518,6 +524,7 @@ duk_ret_t setImageProps(duk_context *ctx) {
 	img->alpha = alpha;
 	img->rotation = rotation;
 	img->tint = tint;
+	img->layer = layer;
 
 	return 0;
 }
@@ -530,23 +537,26 @@ duk_ret_t setImageText(duk_context *ctx) {
 	img->setText(text);
 
 	return 0;
-
 }
 
-duk_ret_t getImageWidth(duk_context *ctx) {
+duk_ret_t getImageSize(duk_context *ctx) {
 	int id = duk_get_number(ctx, -1);
-
 	MintSprite *img = game->images[id];
-	duk_push_int(ctx, img->width);
 
-	return 1;
+	char buf[1024];
+	sprintf(buf, "images[%d].width = %d;\nimages[%d].height = %d;\n", id, img->width, id, img->height);
+	runJs(buf);
+
+	return 0;
 }
 
-duk_ret_t getImageHeight(duk_context *ctx) {
+duk_ret_t getTextSize(duk_context *ctx) {
 	int id = duk_get_number(ctx, -1);
-
 	MintSprite *img = game->images[id];
-	duk_push_int(ctx, img->height);
 
-	return 1;
+	char buf[1024];
+	sprintf(buf, "images[%d].textWidth = %d;\nimages[%d].textHeight = %d;\n", id, img->textWidth, id, img->textHeight);
+	runJs(buf);
+
+	return 0;
 }
