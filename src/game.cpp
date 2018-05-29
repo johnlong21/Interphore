@@ -64,6 +64,7 @@ duk_ret_t submitAudio(duk_context *ctx);
 
 duk_ret_t gotoPassage(duk_context *ctx);
 
+/// Images
 duk_ret_t addImage(duk_context *ctx);
 duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t addEmptyImage(duk_context *ctx);
@@ -71,6 +72,11 @@ duk_ret_t setImageProps(duk_context *ctx);
 duk_ret_t setImageText(duk_context *ctx);
 duk_ret_t getImageSize(duk_context *ctx);
 duk_ret_t getTextSize(duk_context *ctx);
+
+/// Backgrounds
+duk_ret_t setBackground(duk_context *ctx);
+duk_ret_t resetBackgroundMode(duk_context *ctx);
+duk_ret_t setBackgroundBob(duk_context *ctx);
 
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
@@ -109,6 +115,10 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setImageText_internal", setImageText, 2);
 	addJsFunction("getImageSize", getImageSize, 1);
 	addJsFunction("getTextSize", getTextSize, 1);
+
+	addJsFunction("setBackground", setBackground, 3);
+	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
+	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -174,6 +184,8 @@ void updateState() {
 		if (game->lastOfState) {
 			return;
 		}
+
+		//@incomplete Update backgrounds
 
 		if (!game->mainText) {
 			game->mainText = createMintSprite();
@@ -485,6 +497,13 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 	return 0;
 }
 
+
+//
+//
+//         IMAGES START
+//
+//
+
 duk_ret_t addImage(duk_context *ctx) {
 	const char *assetId = duk_get_string(ctx, -1);
 
@@ -606,3 +625,47 @@ duk_ret_t getTextSize(duk_context *ctx) {
 
 	return 0;
 }
+
+//
+//
+//         IMAGES END
+//
+//
+
+//
+//
+//         BACKGROUNDS START
+//
+//
+
+
+duk_ret_t setBackground(duk_context *ctx) {
+	int bgType = duk_get_number(ctx, -1);
+	const char *assetId = duk_get_string(ctx, -2);
+	int bgId = duk_get_number(ctx, -3);
+	//@incomplete Stub
+
+	return 0;
+}
+
+duk_ret_t resetBackgroundMode(duk_context *ctx) {
+	int bgId = duk_get_number(ctx, -1);
+	//@incomplete Stub
+
+	return 0;
+}
+
+duk_ret_t setBackgroundBob(duk_context *ctx) {
+	int bobY = duk_get_number(ctx, -1);
+	int bobX = duk_get_number(ctx, -2);
+	int bgId = duk_get_number(ctx, -3);
+	//@incomplete Stub
+
+	return 0;
+}
+
+//
+//
+//         BACKGROUNDS END
+//
+//
