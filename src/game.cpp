@@ -163,7 +163,6 @@ void initGame(MintSprite *bgSpr) {
 	// if (streq(name, "gotoMap")) return (void *)gotoMap;
 	// if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
 
-	// if (streq(name, "streamAsset")) return (void *)streamAsset;
 	// if (streq(name, "execAsset")) return (void *)execAsset;
 	// if (streq(name, "setTitle")) return (void *)setTitle;
 	// if (streq(name, "addInputField")) return (void *)addInputField;
