@@ -83,6 +83,7 @@ duk_ret_t gotoPassage(duk_context *ctx);
 
 /// Images
 duk_ret_t addImage(duk_context *ctx);
+duk_ret_t addRectImage(duk_context *ctx);
 duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t addEmptyImage(duk_context *ctx);
 duk_ret_t setImageProps(duk_context *ctx);
@@ -128,6 +129,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setMainText", setMainText, 1);
 	addJsFunction("gotoPassage_internal", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
+	addJsFunction("addRectImage_internal", addRectImage, 3);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
 	addJsFunction("setImageProps", setImageProps, 9);
@@ -142,7 +144,6 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
 
 	// if (streq(name, "exitMod")) return (void *)exitMod;
-	// if (streq(name, "addRectImage")) return (void *)addRectImage;
 	// if (streq(name, "playAudio")) return (void *)playAudio;
 	// if (streq(name, "setAudioLooping")) return (void *)setAudioLooping;
 	// if (streq(name, "stopAudio")) return (void *)stopAudio;
@@ -608,6 +609,28 @@ duk_ret_t addImage(duk_context *ctx) {
 	}
 
 	MintSprite *spr = createMintSprite(assetId);
+	game->images[slot] = spr;
+
+	duk_push_int(ctx, slot);
+	return 1;
+}
+
+duk_ret_t addRectImage(duk_context *ctx) {
+	int colour = duk_get_number(ctx, -1);
+	int height = duk_get_number(ctx, -2);
+	int width = duk_get_number(ctx, -3);
+
+	int slot;
+	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
+
+	if (slot >= IMAGES_MAX) {
+		msg("Too many images");
+		duk_push_int(ctx, -1);
+		return 1;
+	}
+
+	MintSprite *spr = createMintSprite();
+	spr->setupRect(width, height, colour);
 	game->images[slot] = spr;
 
 	duk_push_int(ctx, slot);
