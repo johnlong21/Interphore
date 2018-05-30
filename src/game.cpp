@@ -2,6 +2,7 @@
 
 #define PASSAGE_MAX 1024
 #define IMAGES_MAX 256
+#define AUDIOS_MAX 256
 #define STREAM_MAX 256
 #define ASSETS_MAX 256
 
@@ -61,7 +62,9 @@ struct Game {
 	MintSprite *mainText;
 	Passage *passages[PASSAGE_MAX];
 	int passagesNum;
+
 	MintSprite *images[IMAGES_MAX];
+	Channel *audios[AUDIOS_MAX];
 
 	/// Graph
 };
@@ -92,6 +95,11 @@ duk_ret_t getImageSize(duk_context *ctx);
 duk_ret_t getTextSize(duk_context *ctx);
 duk_ret_t getImageFlags(duk_context *ctx);
 duk_ret_t destroyImage(duk_context *ctx);
+
+/// Audio
+duk_ret_t playAudio(duk_context *ctx);
+duk_ret_t destroyAudio(duk_context *ctx);
+duk_ret_t setAudioFlags(duk_context *ctx);
 
 /// Backgrounds
 duk_ret_t setBackground(duk_context *ctx);
@@ -138,6 +146,10 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("getTextSize", getTextSize, 1);
 	addJsFunction("getImageFlags", getImageFlags, 1);
 	addJsFunction("destroyImage", destroyImage, 1);
+
+	addJsFunction("playAudio_internal", playAudio, 1);
+	addJsFunction("destroyAudio", destroyAudio, 1);
+	addJsFunction("setAudioFlags", setAudioFlags, 3);
 
 	addJsFunction("setBackground", setBackground, 3);
 	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
@@ -242,6 +254,19 @@ void updateState() {
 			game->streamUrlsNum = 0;
 			game->streamNamesNum = 0;
 			game->curStreamIndex = 0;
+		}
+	}
+
+	{ /// Check for ended audios
+		for (int i = 0; i < AUDIOS_MAX; i++) {
+			Channel *channel = game->audios[i];
+			if (!channel) continue;
+			if (!channel->exists) {
+				game->audios[i] = NULL;
+				char buf[1024];
+				sprintf(buf, "audios[%d].exists = false;", i);
+				runJs(buf);
+			}
 		}
 	}
 
@@ -779,6 +804,61 @@ duk_ret_t destroyImage(duk_context *ctx) {
 //
 //
 //         IMAGES END
+//
+//
+
+
+//
+//
+//         AUDIO START
+//
+//
+
+duk_ret_t playAudio(duk_context *ctx) {
+	const char *assetId = duk_get_string(ctx, -1);
+
+	int slot;
+	for (slot = 0; slot < AUDIOS_MAX; slot++) if (!game->audios[slot]) break;
+
+	if (slot >= AUDIOS_MAX) {
+		msg("Too many audios");
+		duk_push_int(ctx, -1);
+		return 1;
+	}
+
+	Channel *channel = playEffect(assetId);
+	game->audios[slot] = channel;
+
+	duk_push_int(ctx, slot);
+
+	return 1;
+}
+
+duk_ret_t destroyAudio(duk_context *ctx) {
+	int id = duk_get_number(ctx, -1);
+
+	if (!game->audios[id]) return 0;
+
+	game->audios[id]->destroy();
+	game->audios[id] = NULL;
+
+	return 0;
+}
+
+duk_ret_t setAudioFlags(duk_context *ctx) {
+	int volume = duk_get_number(ctx, -1);
+	int looping = duk_get_boolean(ctx, -2);
+	int id = duk_get_number(ctx, -3);
+
+	Channel *channel = game->audios[id];
+	channel->looping = looping;
+	channel->userVolume = volume;
+	return 0;
+}
+
+//
+//
+//         AUDIO END
 //
 //
 
