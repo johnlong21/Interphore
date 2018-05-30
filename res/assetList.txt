@@ -16,6 +16,7 @@ font/bitmap/OpenSans-Regular_40*
 
 info/newInterConfig.js
 info/temp.js
+info/nodeGraph.phore
 
 info/interConfig.js
 info/introMod.phore

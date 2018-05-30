@@ -81,6 +81,7 @@ duk_ret_t setMainText(duk_context *ctx);
 duk_ret_t submitPassage(duk_context *ctx);
 duk_ret_t streamAsset(duk_context *ctx);
 void assetStreamed(char *serialData);
+duk_ret_t execAsset(duk_context *ctx);
 
 duk_ret_t gotoPassage(duk_context *ctx);
 
@@ -132,6 +133,7 @@ void initGame(MintSprite *bgSpr) {
 
 	addJsFunction("submitPassage", submitPassage, 1);
 	addJsFunction("streamAsset", streamAsset, 2);
+	addJsFunction("execAsset", execAsset, 1);
 
 	addJsFunction("append", append, 1);
 	addJsFunction("setMainText", setMainText, 1);
@@ -163,7 +165,6 @@ void initGame(MintSprite *bgSpr) {
 	// if (streq(name, "getTime")) return (void *)getTime;
 	// if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
 
-	// if (streq(name, "timer")) return (void *)timer;
 	// if (streq(name, "addNotif")) return (void *)addNotif;
 	// if (streq(name, "rnd")) return (void *)rnd;
 	// if (streq(name, "floor")) return (void *)floor;
@@ -579,6 +580,14 @@ void assetStreamed(char *serialData) {
 
 	Free((void *)name);
 	Free((void *)url);
+}
+
+duk_ret_t execAsset(duk_context *ctx) {
+	const char *assetId = duk_get_string(ctx, -1);
+
+	runMod((char *)getAsset(assetId)->data);
+
+	return 0;
 }
 
 duk_ret_t gotoPassage(duk_context *ctx) {
