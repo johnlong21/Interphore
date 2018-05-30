@@ -149,7 +149,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("getTextSize", getTextSize, 1);
 	addJsFunction("getImageFlags", getImageFlags, 1);
 	addJsFunction("destroyImage", destroyImage, 1);
-	addJsFunction("addChild", addChild, 2);
+	addJsFunction("addChild_internal", addChild, 2);
 
 	addJsFunction("playAudio_internal", playAudio, 1);
 	addJsFunction("destroyAudio", destroyAudio, 1);
