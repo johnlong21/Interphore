@@ -156,10 +156,6 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
 
 	// if (streq(name, "exitMod")) return (void *)exitMod;
-	// if (streq(name, "playAudio")) return (void *)playAudio;
-	// if (streq(name, "setAudioLooping")) return (void *)setAudioLooping;
-	// if (streq(name, "stopAudio")) return (void *)stopAudio;
-
 	// if (streq(name, "permanentImage")) return (void *)permanentImage;
 
 	// if (streq(name, "submitNode")) return (void *)submitNode;
