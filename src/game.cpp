@@ -241,7 +241,9 @@ void updateGame() {
 }
 
 void updateState() {
-	runJs("__update();");
+	char buf[1024];
+	sprintf(buf, "mouseX = %d; mouseY = %d; __update();", engine->mouseX, engine->mouseY);
+	runJs(buf);
 
 	{ /// Update streaming
 		if (!game->isStreaming && game->streamNamesNum > game->curStreamIndex) {
