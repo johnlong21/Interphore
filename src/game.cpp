@@ -96,6 +96,7 @@ duk_ret_t getImageSize(duk_context *ctx);
 duk_ret_t getTextSize(duk_context *ctx);
 duk_ret_t getImageFlags(duk_context *ctx);
 duk_ret_t destroyImage(duk_context *ctx);
+duk_ret_t addChild(duk_context *ctx);
 
 /// Audio
 duk_ret_t playAudio(duk_context *ctx);
@@ -148,6 +149,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("getTextSize", getTextSize, 1);
 	addJsFunction("getImageFlags", getImageFlags, 1);
 	addJsFunction("destroyImage", destroyImage, 1);
+	addJsFunction("addChild", addChild, 2);
 
 	addJsFunction("playAudio_internal", playAudio, 1);
 	addJsFunction("destroyAudio", destroyAudio, 1);
@@ -802,6 +804,17 @@ duk_ret_t destroyImage(duk_context *ctx) {
 	MintSprite *img = game->images[id];
 	game->images[id] = NULL;
 	img->destroy();
+
+	return 0;
+}
+
+duk_ret_t addChild(duk_context *ctx) {
+	int otherId = duk_get_number(ctx, -1);
+	int id = duk_get_number(ctx, -2);
+
+	MintSprite *img = game->images[id];
+	MintSprite *otherImg = game->images[otherId];
+	img->addChild(otherImg);
 
 	return 0;
 }
