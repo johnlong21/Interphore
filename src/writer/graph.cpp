@@ -228,8 +228,8 @@ namespace Writer {
 	}
 
 	void attachNode(const char *prev, const char *next, const char *dirStr) {
-		Node *node1 = NULL;
-		Node *node2 = NULL;
+		Node *nextNode = NULL;
+		Node *prevNode = NULL;
 
 		Dir8 dir = DIR8_CENTER;
 		if (streq(dirStr, LEFT)) dir = DIR8_LEFT;
@@ -239,17 +239,17 @@ namespace Writer {
 
 		for (int i = 0; i < graph->nodesNum; i++)
 			if (streq(graph->nodes[i].name, next))
-				node1 = &graph->nodes[i];
+				nextNode = &graph->nodes[i];
 
 		for (int i = 0; i < graph->nodesNum; i++)
 			if (streq(graph->nodes[i].name, prev))
-				node2 = &graph->nodes[i];
+				prevNode = &graph->nodes[i];
 
-		Assert(node1);
-		Assert(node2);
+		Assert(nextNode);
+		Assert(prevNode);
 
-		node1->connectedTo = node2;
-		node1->connectedDir = dir;
+		nextNode->connectedTo = prevNode;
+		nextNode->connectedDir = dir;
 	}
 
 	void setNodeLocked(char *nodeName, char *varName) {

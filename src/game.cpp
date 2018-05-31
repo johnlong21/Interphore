@@ -159,11 +159,6 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
 	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
 
-	// if (streq(name, "exitMod")) return (void *)exitMod;
-	// if (streq(name, "permanentImage")) return (void *)permanentImage;
-
-	// if (streq(name, "submitNode")) return (void *)submitNode;
-	// if (streq(name, "attachNode")) return (void *)attachNode;
 	// if (streq(name, "getTime")) return (void *)getTime;
 	// if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
 
