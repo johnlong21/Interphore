@@ -108,11 +108,6 @@ duk_ret_t playAudio(duk_context *ctx);
 duk_ret_t destroyAudio(duk_context *ctx);
 duk_ret_t setAudioFlags(duk_context *ctx);
 
-/// Backgrounds
-duk_ret_t setBackground(duk_context *ctx);
-duk_ret_t resetBackgroundMode(duk_context *ctx);
-duk_ret_t setBackgroundBob(duk_context *ctx);
-
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
 
@@ -165,19 +160,16 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("saveGame_internal", saveGame, 1);
 	addJsFunction("loadGame_internal", loadGame, 0);
 
-	addJsFunction("setBackground", setBackground, 3);
-	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
-	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
+		// if (streq(name, "setBackground")) return (void *)setBackground;
+		// if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
+		// if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 
 	// if (streq(name, "getTime")) return (void *)getTime;
 
 	// if (streq(name, "addNotif")) return (void *)addNotif;
 
-	// if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
-
 	// if (streq(name, "setTitle")) return (void *)setTitle;
 	// if (streq(name, "addInputField")) return (void *)addInputField;
-	// if (streq(name, "clearNodes")) return (void *)clearNodes;
 
 	// if (streq(name, "enableExit")) return (void *)enableExit;
 	// if (streq(name, "disableExit")) return (void *)disableExit;
@@ -933,43 +925,5 @@ duk_ret_t setAudioFlags(duk_context *ctx) {
 //
 //
 //         AUDIO END
-//
-//
-
-//
-//
-//         BACKGROUNDS START
-//
-//
-
-
-duk_ret_t setBackground(duk_context *ctx) {
-	int bgType = duk_get_number(ctx, -1);
-	const char *assetId = duk_get_string(ctx, -2);
-	int bgId = duk_get_number(ctx, -3);
-	//@incomplete Stub
-
-	return 0;
-}
-
-duk_ret_t resetBackgroundMode(duk_context *ctx) {
-	int bgId = duk_get_number(ctx, -1);
-	//@incomplete Stub
-
-	return 0;
-}
-
-duk_ret_t setBackgroundBob(duk_context *ctx) {
-	int bobY = duk_get_number(ctx, -1);
-	int bobX = duk_get_number(ctx, -2);
-	int bgId = duk_get_number(ctx, -3);
-	//@incomplete Stub
-
-	return 0;
-}
-
-//
-//
-//         BACKGROUNDS END
 //
 //
