@@ -160,9 +160,9 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("saveGame_internal", saveGame, 1);
 	addJsFunction("loadGame_internal", loadGame, 0);
 
-		// if (streq(name, "setBackground")) return (void *)setBackground;
-		// if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
-		// if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
+	// if (streq(name, "setBackground")) return (void *)setBackground;
+	// if (streq(name, "setBackgroundBob")) return (void *)setBackgroundBob;
+	// if (streq(name, "resetBackgroundMode")) return (void *)resetBackgroundMode;
 
 	// if (streq(name, "getTime")) return (void *)getTime;
 
