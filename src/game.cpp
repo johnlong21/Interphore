@@ -84,6 +84,9 @@ void assetStreamed(char *serialData);
 duk_ret_t execAsset(duk_context *ctx);
 
 duk_ret_t gotoPassage(duk_context *ctx);
+duk_ret_t saveGame(duk_context *ctx);
+duk_ret_t loadGame(duk_context *ctx);
+void gameLoaded(char *data);
 
 /// Images
 duk_ret_t addImage(duk_context *ctx);
@@ -159,22 +162,19 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("destroyAudio", destroyAudio, 1);
 	addJsFunction("setAudioFlags", setAudioFlags, 3);
 
+	addJsFunction("saveGame_internal", saveGame, 1);
+	addJsFunction("loadGame_internal", loadGame, 0);
+
 	addJsFunction("setBackground", setBackground, 3);
 	addJsFunction("resetBackgroundMode", resetBackgroundMode, 1);
 	addJsFunction("setBackgroundBob", setBackgroundBob, 3);
 
 	// if (streq(name, "getTime")) return (void *)getTime;
-	// if (streq(name, "addButtonIcon")) return (void *)addButtonIcon;
 
 	// if (streq(name, "addNotif")) return (void *)addNotif;
-	// if (streq(name, "rnd")) return (void *)rnd;
-	// if (streq(name, "floor")) return (void *)floor;
-	// if (streq(name, "round")) return (void *)round;
 
-	// if (streq(name, "gotoMap")) return (void *)gotoMap;
 	// if (streq(name, "setNodeLocked")) return (void *)setNodeLocked;
 
-	// if (streq(name, "execAsset")) return (void *)execAsset;
 	// if (streq(name, "setTitle")) return (void *)setTitle;
 	// if (streq(name, "addInputField")) return (void *)addInputField;
 	// if (streq(name, "clearNodes")) return (void *)clearNodes;
@@ -615,6 +615,36 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 
 	msg("Failed to find passage %s\n", passageName);
 	return 0;
+}
+
+duk_ret_t saveGame(duk_context *ctx) {
+	const char *data = duk_get_string(ctx, -1);
+	msg("Game saved!");
+	platformSaveToDisk(data);
+	return 0;
+}
+
+duk_ret_t loadGame(duk_context *ctx) {
+	platformLoadFromDisk(gameLoaded);
+	return 0;
+}
+
+void gameLoaded(char *data) {
+	// printf("Loaded: %s\n", data);
+
+	if (!streq(data, "none") && !streq(data, "(null)")) {
+		msg("Game loaded!");
+		char *buf = (char *)Malloc(strlen(data) + 1024);
+		sprintf(buf, "checkpointStr = '%s'; data = JSON.parse(checkpointStr);", data);
+		// printf("Running: %s\n", jsCommand);
+		runJs(buf);
+		Free(buf);
+	} else {
+		msg("No save game found");
+	}
+
+	Free(data);
+	// saveCheckpoint();
 }
 
 duk_ret_t setMainText(duk_context *ctx) {
