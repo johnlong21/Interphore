@@ -90,6 +90,7 @@ void gameLoaded(char *data);
 
 /// Images
 duk_ret_t addImage(duk_context *ctx);
+duk_ret_t addCanvasImage(duk_context *ctx);
 duk_ret_t addRectImage(duk_context *ctx);
 duk_ret_t add9SliceImage(duk_context *ctx);
 duk_ret_t addEmptyImage(duk_context *ctx);
@@ -102,6 +103,10 @@ duk_ret_t destroyImage(duk_context *ctx);
 duk_ret_t addChild(duk_context *ctx);
 duk_ret_t gotoFrameNamed(duk_context *ctx);
 duk_ret_t gotoFrameNum(duk_context *ctx);
+duk_ret_t copyPixels(duk_context *ctx);
+
+duk_ret_t getTextureWidth(duk_context *ctx);
+duk_ret_t getTextureHeight(duk_context *ctx);
 
 /// Audio
 duk_ret_t playAudio(duk_context *ctx);
@@ -140,6 +145,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setMainText", setMainText, 1);
 	addJsFunction("gotoPassage_internal", gotoPassage, 1);
 	addJsFunction("addImage_internal", addImage, 1);
+	addJsFunction("addCanvasImage_internal", addCanvasImage, 3);
 	addJsFunction("addRectImage_internal", addRectImage, 3);
 	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
@@ -152,6 +158,9 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("addChild_internal", addChild, 2);
 	addJsFunction("gotoFrameNamed", gotoFrameNamed, 2);
 	addJsFunction("gotoFrameNum", gotoFrameNum, 2);
+	addJsFunction("copyPixels_internal", copyPixels, 7);
+	addJsFunction("getTextureWidth_internal", getTextureWidth, 1);
+	addJsFunction("getTextureHeight_internal", getTextureHeight, 1);
 
 	addJsFunction("playAudio_internal", playAudio, 1);
 	addJsFunction("destroyAudio", destroyAudio, 1);
@@ -669,6 +678,28 @@ duk_ret_t addImage(duk_context *ctx) {
 	return 1;
 }
 
+duk_ret_t addCanvasImage(duk_context *ctx) {
+	int height = duk_get_number(ctx, -1);
+	int width = duk_get_number(ctx, -2);
+	const char *assetId = duk_get_string(ctx, -3);
+
+	int slot;
+	for (slot = 0; slot < IMAGES_MAX; slot++) if (!game->images[slot]) break;
+
+	if (slot >= IMAGES_MAX) {
+		msg("Too many images");
+		duk_push_int(ctx, -1);
+		return 1;
+	}
+
+	MintSprite *spr = createMintSprite();
+	spr->setupCanvas(assetId, width, height);
+	game->images[slot] = spr;
+
+	duk_push_int(ctx, slot);
+	return 1;
+}
+
 duk_ret_t addRectImage(duk_context *ctx) {
 	int colour = duk_get_number(ctx, -1);
 	int height = duk_get_number(ctx, -2);
@@ -869,6 +900,34 @@ duk_ret_t gotoFrameNum(duk_context *ctx) {
 	return 0;
 }
 
+duk_ret_t copyPixels(duk_context *ctx) {
+	int dy = duk_get_number(ctx, -1);
+	int dx = duk_get_number(ctx, -2);
+	int sh = duk_get_number(ctx, -3);
+	int sw = duk_get_number(ctx, -4);
+	int sy = duk_get_number(ctx, -5);
+	int sx = duk_get_number(ctx, -6);
+	int id = duk_get_number(ctx, -7);
+
+	MintSprite *img = game->images[id];
+	img->copyPixels(sx, sy, sw, sh, dx, dy);
+
+	return 0;
+}
+
+duk_ret_t getTextureWidth(duk_context *ctx) {
+	const char *assetId = duk_get_string(ctx, -1);
+	Asset *textureAsset = getTextureAsset(assetId);
+	duk_push_int(ctx, textureAsset->width);
+	return 1;
+}
+
+duk_ret_t getTextureHeight(duk_context *ctx) {
+	const char *assetId = duk_get_string(ctx, -1);
+	Asset *textureAsset = getTextureAsset(assetId);
+	duk_push_int(ctx, textureAsset->height);
+	return 1;
+}
 //
 //
 //         IMAGES END
