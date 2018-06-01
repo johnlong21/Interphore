@@ -184,7 +184,8 @@ void initGame(MintSprite *bgSpr) {
 	runJs(initCode);
 
 	// char *tempCode = (char *)getAsset("info/temp.js")->data;
-	char *tempCode = (char *)getAsset("info/scratch.phore")->data;
+	// char *tempCode = (char *)getAsset("info/scratch.phore")->data;
+	char *tempCode = (char *)getAsset("info/main.phore")->data;
 	runMod(tempCode);
 
 	switchState(STATE_PASSAGE);
