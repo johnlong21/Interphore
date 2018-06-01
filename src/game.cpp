@@ -171,10 +171,6 @@ void initGame(MintSprite *bgSpr) {
 
 	// if (streq(name, "addNotif")) return (void *)addNotif;
 
-	// if (streq(name, "addInputField")) return (void *)addInputField;
-
-	// if (streq(name, "enableExit")) return (void *)enableExit;
-	// if (streq(name, "disableExit")) return (void *)disableExit;
 	// if (streq(name, "gotoBrowser")) return (void *)gotoBrowser;
 	// if (streq(name, "loadModFromDisk")) return (void *)loadModFromDisk;
 
