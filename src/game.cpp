@@ -242,7 +242,7 @@ void updateGame() {
 
 void updateState() {
 	char buf[1024];
-	sprintf(buf, "mouseX = %d; mouseY = %d; __update();", engine->mouseX, engine->mouseY);
+	sprintf(buf, "time = %f; mouseX = %d; mouseY = %d; __update();", engine->time, engine->mouseX, engine->mouseY);
 	runJs(buf);
 
 	{ /// Update streaming

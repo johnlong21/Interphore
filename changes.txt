@@ -1,0 +1,1 @@
+setBackgroundBob becomes setting backgrounds[0].bobX
