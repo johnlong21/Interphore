@@ -171,7 +171,6 @@ void initGame(MintSprite *bgSpr) {
 
 	// if (streq(name, "addNotif")) return (void *)addNotif;
 
-	// if (streq(name, "setTitle")) return (void *)setTitle;
 	// if (streq(name, "addInputField")) return (void *)addInputField;
 
 	// if (streq(name, "enableExit")) return (void *)enableExit;
