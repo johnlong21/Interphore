@@ -6,7 +6,7 @@
 #define STREAM_MAX 256
 #define ASSETS_MAX 256
 
-#define MAIN_TEXT_LAYER 10
+#define MAIN_TEXT_LAYER 20
 
 void initGame(MintSprite *bgSpr);
 void deinitGame();
@@ -147,7 +147,7 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("setImageText_internal", setImageText, 2);
 	addJsFunction("getImageSize", getImageSize, 1);
 	addJsFunction("getTextSize", getTextSize, 1);
-	addJsFunction("getImageProps", getImageProps, 1);
+	addJsFunction("getImageProps", getImageProps, 2);
 	addJsFunction("destroyImage", destroyImage, 1);
 	addJsFunction("addChild_internal", addChild, 2);
 	addJsFunction("gotoFrameNamed", gotoFrameNamed, 2);
@@ -636,7 +636,6 @@ void gameLoaded(char *data) {
 	}
 
 	Free(data);
-	// saveCheckpoint();
 }
 
 duk_ret_t setMainText(duk_context *ctx) {
@@ -796,7 +795,8 @@ duk_ret_t getTextSize(duk_context *ctx) {
 }
 
 duk_ret_t getImageProps(duk_context *ctx) {
-	int id = duk_get_number(ctx, -1);
+	int arrayIndex = duk_get_number(ctx, -1);
+	int id = duk_get_number(ctx, -2);
 	MintSprite *img = game->images[id];
 
 	char buf[1024];
@@ -810,7 +810,7 @@ duk_ret_t getImageProps(duk_context *ctx) {
 		"curImg.justUnHovered = %d;\n"
 		"curImg.hovering = %d;\n"
 		"curImg.totalFrames = %d;\n",
-		id,
+		arrayIndex,
 		img->justPressed,
 		img->justReleased,
 		img->pressing,
