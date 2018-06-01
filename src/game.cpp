@@ -145,8 +145,8 @@ void initGame(MintSprite *bgSpr) {
 	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
 	addJsFunction("setImageProps", setImageProps, 9);
 	addJsFunction("setImageText_internal", setImageText, 2);
-	addJsFunction("getImageSize", getImageSize, 1);
-	addJsFunction("getTextSize", getTextSize, 1);
+	addJsFunction("getImageSize", getImageSize, 2);
+	addJsFunction("getTextSize", getTextSize, 2);
 	addJsFunction("getImageProps", getImageProps, 2);
 	addJsFunction("destroyImage", destroyImage, 1);
 	addJsFunction("addChild_internal", addChild, 2);
@@ -773,22 +773,24 @@ duk_ret_t setImageText(duk_context *ctx) {
 }
 
 duk_ret_t getImageSize(duk_context *ctx) {
-	int id = duk_get_number(ctx, -1);
+	int arrayIndex = duk_get_number(ctx, -1);
+	int id = duk_get_number(ctx, -2);
 	MintSprite *img = game->images[id];
 
 	char buf[1024];
-	sprintf(buf, "images[%d].width = %d;\nimages[%d].height = %d;\n", id, img->width, id, img->height);
+	sprintf(buf, "images[%d].width = %d;\nimages[%d].height = %d;\n", arrayIndex, img->width, arrayIndex, img->height);
 	runJs(buf);
 
 	return 0;
 }
 
 duk_ret_t getTextSize(duk_context *ctx) {
-	int id = duk_get_number(ctx, -1);
+	int arrayIndex = duk_get_number(ctx, -1);
+	int id = duk_get_number(ctx, -2);
 	MintSprite *img = game->images[id];
 
 	char buf[1024];
-	sprintf(buf, "images[%d].textWidth = %d;\nimages[%d].textHeight = %d;\n", id, img->textWidth, id, img->textHeight);
+	sprintf(buf, "images[%d].textWidth = %d;\nimages[%d].textHeight = %d;\n", arrayIndex, img->textWidth, arrayIndex, img->textHeight);
 	runJs(buf);
 
 	return 0;
