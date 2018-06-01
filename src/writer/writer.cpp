@@ -236,7 +236,6 @@ namespace Writer {
 
 	struct WriterStruct {
 		GameState state;
-		ModEntry *currentMod;
 		StringMap *saveData;
 
 		Button buttons[BUTTON_MAX];
@@ -703,12 +702,7 @@ namespace Writer {
 				writer->modSourceText = spr;
 			}
 
-			if (writer->currentMod) {
-				enableCategory(writer->currentMod->category);
-				writer->currentMod = NULL;
-			} else {
-				enableCategory("Story");
-			}
+			enableCategory("Story");
 		}
 
 		if (oldState == STATE_MENU) {
@@ -1227,7 +1221,6 @@ namespace Writer {
 			return;
 		}
 
-		writer->currentMod = entry;
 		platformLoadFromUrl(entry->url, urlModLoaded);
 	}
 
@@ -1462,18 +1455,6 @@ namespace Writer {
 		// exit(1);
 
 		Free(inputData);
-
-		if (!writer->currentMod) {
-			ModEntry *entry = &writer->urlMods[writer->urlModsNum++];
-			memset(entry, 0, sizeof(ModEntry));
-
-			strcpy(entry->name, "unnamed");
-			strcpy(entry->author, "unknown");
-			strcpy(entry->url, "local");
-			strcpy(entry->category, "unknown");
-			strcpy(entry->version, "unknown");
-			writer->currentMod = entry;
-		}
 
 		execJs(realData);
 		Free(realData);
