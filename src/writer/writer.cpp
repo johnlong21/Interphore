@@ -472,45 +472,9 @@ namespace Writer {
 
 			ModEntryDef defs[] = {
 				{
-					"mudPies",
-					"Roxelle Devaunt",
-					"assets/info/mudPies.phore",
-					"Story",
-					"0.0.1"
-				}, {
 					"introModMynt",
 					"Kitt",
 					"assets/info/introModMynt.phore",
-					"Story",
-					"0.0.1"
-				}, {
-					"testFucker",
-					"Kittery",
-					"",
-					"Internal",
-					"0.0.1"
-				}, {
-					"False Moon",
-					"Kittery",
-					"https://www.dropbox.com/s/0dtce66wclhjcdo/False%20Moon.txt?dl=1",
-					"Story",
-					"0.0.1"
-				}, {
-					"Origin Story",
-					"Kittery",
-					"https://www.dropbox.com/s/2hrse6oyzxcfe64/Origin%20Story.txt?dl=1",
-					"Story",
-					"0.0.1"
-				}, {
-					"Waking up",
-					"Kittery",
-					"https://www.dropbox.com/s/5aa2isiqii5w0q2/Waking%20up.txt?dl=1",
-					"Story",
-					"0.0.1"
-				}, {
-					"Sexy Time",
-					"Kittery",
-					"https://www.dropbox.com/s/xse6y2hp6eve4jp/Sexy%20time.txt?dl=1",
 					"Story",
 					"0.0.1"
 				}, {
@@ -519,114 +483,18 @@ namespace Writer {
 					"assets/info/scratch.phore",
 					"Examples",
 					"1.0.0"
-				}, {
-					"Basic mod",
-					"Fallowwing",
-					"https://www.dropbox.com/s/ci9yidufa7zl69c/Basic%20Mod.txt?dl=1",
-					"Examples",
-					"1.0.0"
-				}, {
-					"Variables",
-					"Fallowwing",
-					"https://www.dropbox.com/s/3wf5gj4v013z8kc/Variables.txt?dl=1",
-					"Examples",
-					"1.0.0"
-				}, {
-					"Add choice example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/g0anhgehafkad9c/addChoiceExample.phore?dl=1",
-					"Examples",
-					"0.1.0"
-				}, {
-					"Audio example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/mkboihcsw38y077/Audio%20Test.txt?dl=1",
-					"Examples",
-					"1.0.0"
-				}, {
-					"Icon Example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/sg83wwjz7l8ocd9/Icon%20Example.txt?dl=1",
-					"Examples",
-					"0.0.1"
-				}, {
-					"Background Example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/x3g5ulva5wae922/backgroundExample.phore?dl=1",
-					"Examples",
-					"0.1.0"
-				}, {
-					"Notif Example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/cgdd03hx1tdc3i3/notifExample.phore?dl=1",
-					"Examples",
-					"0.1.0"
-				}, {
-					"Title Example",
-					"Fallowwing",
-					"https://www.dropbox.com/s/gjmcnr18smhkavh/titleExample.phore?dl=1",
-					"Examples",
-					"0.1.0"
-				}, {
-					"Gryphon Fight",
-					"Cade",
-					"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
-					"Ports",
-					"1.0.0"
-				}, {
-					"Brightforest Googirl",
-					"Silver",
-					"https://www.dropbox.com/s/xfwaqwd38krh04k/Silver%20Mod.txt?dl=1",
-					"Ports",
-					"1.0.0"
-				}, {
-					"Morphious86's Test",
-					"Morphious86",
-					"https://pastebin.com/raw/0MBv7bpK",
-					"Tests",
-					"0.0.1"
-				}, {
-					"Main",
-					"John Johnson",
-					"assets/info/main.phore",
-					"Internal",
-					"0.0.1"
-				}, {
-					"thirstyCaves",
-					"Kittery",
-					"",
-					"Internal",
-					"0.0.1"
-				}, {
-					"Cade's Test",
-					"Cade",
-					"https://www.dropbox.com/s/8la0k6c12u5ozc7/testMod.txt?dl=1",
-					"Tests",
-					"0.0.1"
-				}, {
-					"Desktop Test",
-					"Fallowwing",
-					"https://www.dropbox.com/s/aselaeb3htueck3/Desktop%20Test.phore?dl=1",
-					"Internal",
-					"0.1.0"
-				}, {
-					"Test Nodes",
-					"Fallowwing",
-					"https://www.dropbox.com/s/c15v66k0opzr5dt/Test%20Nodes.phore?dl=1",
-					"Internal",
-					"0.0.1"
-				}, {
-					"Loader Test",
-					"Fallowwing",
-					"https://www.dropbox.com/s/9og995zimh0vpee/loaderTest.phore?dl=1",
-					"Internal",
-					"0.0.1"
-				}, {
-					"Scratch",
-					"FallowWing",
-					"assets/info/scratch.phore",
-					"Internal",
-					"0.0.1"
+				// }, {
+				// 	"Gryphon Fight",
+				// 	"Cade",
+				// 	"https://www.dropbox.com/s/x72pgxgol5zi3ba/Gryphon%20Fight.txt?dl=1",
+				// 	"Ports",
+				// 	"1.0.0"
+				// }, {
+				// 	"Brightforest Googirl",
+				// 	"Silver",
+				// 	"https://www.dropbox.com/s/xfwaqwd38krh04k/Silver%20Mod.txt?dl=1",
+				// 	"Ports",
+				// 	"1.0.0"
 				}
 			};
 
@@ -681,27 +549,29 @@ namespace Writer {
 #endif
 
 #ifndef INTER_DEV_MENU
-			strcpy(autoRunMod, "Main");
+			strcpy(autoRunMod, "main.phore");
 #endif
 
 			for (int i = 0; i < strlen(autoRunMod); i++)
 				if (autoRunMod[i] == '-')
 					autoRunMod[i] = ' ';
 
-			bool found = true;
-			if (autoRunMod[0] != '\0') {
-				found = false;
-				for (int i = 0; i < writer->urlModsNum; i++) {
-					ModEntry *entry = &writer->urlMods[i];
-					if (strSimilar(autoRunMod, entry->name)) {
-						found = true;
-						loadModEntry(entry);
-						break;
-					}
-				}
-			}
+			execAsset(autoRunMod);
 
-			if (!found) msg("Failed to autorun mod named %s", MSG_ERROR, autoRunMod);
+			// bool found = true;
+			// if (autoRunMod[0] != '\0') {
+			// 	found = false;
+			// 	for (int i = 0; i < writer->urlModsNum; i++) {
+			// 		ModEntry *entry = &writer->urlMods[i];
+			// 		if (strSimilar(autoRunMod, entry->name)) {
+			// 			found = true;
+			// 			loadModEntry(entry);
+			// 			break;
+			// 		}
+			// 	}
+			// }
+
+			// if (!found) msg("Failed to autorun mod named %s", MSG_ERROR, autoRunMod);
 		}
 	}
 
