@@ -180,10 +180,9 @@ void initGame(MintSprite *bgSpr) {
 	//@incomplete Setup mod repo
 	///
 
-	char *initCode = (char *)getAsset("info/newInterConfig.js")->data;
+	char *initCode = (char *)getAsset("info/interConfig.js")->data;
 	runJs(initCode);
 
-	// char *tempCode = (char *)getAsset("info/temp.js")->data;
 	// char *tempCode = (char *)getAsset("info/scratch.phore")->data;
 	char *tempCode = (char *)getAsset("info/main.phore")->data;
 	runMod(tempCode);
@@ -268,8 +267,6 @@ void updateState() {
 		if (game->lastOfState) {
 			return;
 		}
-
-		//@incomplete Update backgrounds
 
 		if (!game->mainText) {
 			game->mainText = createMintSprite();

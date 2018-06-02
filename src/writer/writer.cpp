@@ -452,7 +452,7 @@ namespace Writer {
 				mjs = mjs_create();
 				mjs_set_ffi_resolver(mjs, mjsResolver);
 
-				char *initCode = (char *)getAsset("info/interConfig.js")->data;
+				char *initCode = (char *)getAsset("info/oldInterConfig.js")->data;
 				execJs(initCode);
 
 				mjs_val_t global = mjs_get_global(mjs);
