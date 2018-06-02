@@ -231,7 +231,22 @@ void updateGame() {
 
 void updateState() {
 	char buf[1024];
-	sprintf(buf, "time = %f; mouseX = %d; mouseY = %d; __update();", engine->time, engine->mouseX, engine->mouseY);
+	sprintf(
+		buf,
+		"time = %f;"
+		"mouseX = %d;"
+		"mouseY = %d;"
+		"mouseJustDown = %d;"
+		"mouseJustUp = %d;"
+		"mouseDown = %d;"
+		"__update();",
+		engine->time,
+		engine->mouseX,
+		engine->mouseY,
+		engine->leftMouseJustPressed,
+		engine->leftMouseJustReleased,
+		engine->leftMousePressed
+		);
 	runJs(buf);
 
 	{ /// Update streaming
