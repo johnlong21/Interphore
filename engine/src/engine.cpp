@@ -247,7 +247,6 @@ void cleanupEngine() {
 		}
 	}
 
-	engine->spriteData.tagMap->destroy();
 	if (windowsDiskLoadPath) Free(windowsDiskLoadPath);
 	Free(engine);
 }

@@ -8,7 +8,7 @@ int getWidestFrame(MintSprite *spr);
 int getTallestFrame(MintSprite *spr);
 
 void initMintSprites(void *mintSpriteMemory) {
-	engine->spriteData.tagMap = stringMapCreate();
+  engine->spriteData.tagMap = std::make_unique<std::map<std::string, std::string>>();
 }
 
 bool textureInUse(Asset *asset) {

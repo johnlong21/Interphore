@@ -2,6 +2,9 @@
 #include "renderer.h"
 #include "mathTools.h"
 
+#include <map>
+#include <memory>
+
 struct Frame {
 	char name[SHORT_STR];
 	Rect data;
@@ -227,9 +230,9 @@ struct MintSpriteData {
 
 	int maxIndex;
 	int defaultLayer;
-	char defaultFont[PATH_LIMIT];
+  char defaultFont[PATH_LIMIT];
 
-	StringMap *tagMap;
+        std::unique_ptr<std::map<std::string, std::string>> tagMap;
 
 	char textBuffer[HUGE_STR];
 };
