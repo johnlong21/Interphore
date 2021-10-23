@@ -1,0 +1,227 @@
+#!/usr/bin/env jsish
+"use strict";
+require('Sys');
+
+/*
+ * Preprocess html, css and js within the webserver. Evaluates javascript between  <? ?> tags (like php).
+ * Evaluation occurs within a subinterp to which defines 2 new commands: include(file,...) and echo(str).
+ */
+
+var JsiHtmlpp_callback = null;
+
+function Jsi_Htmlpp(files:array|string=null, opts:object=undefined):string|object
+{
+    
+    var options = { // Preprocess html evaluating javascript code between  <? ?> tags (like php).
+        delInterp   :true,      // Delete interp when done.
+        incsMax     :1000,      // Maximum number of includes
+        interpOptStr:'',        // Options for subinterp as JSON string.
+        interp      :null,      // Interp to use (instead of creating one)
+        maxOpCnt    :10000000,  // Max opcnt in subinterp (to prevent infinite loop)
+        noCatch     :true,      // Do not use try/catch for includes
+        noCheck     :false,     // Disable typechecking for jsi functions.
+        noMark      :false      // Do not insert comments delimiting included files.
+    };
+    var that = {
+        package:"Jsi_Htmlpp",
+        intOpts:{},
+        rc:'', files:[], files:[], chpos:0, curdir:'', data:'', errs:'', dir:'',
+        jsifiles:[], cssfiles:[], mdfiles:[]
+    };
+    
+    
+    Jsi_Opts(that, options, opts);
+    if (that.interpOptStr.length)
+        that.intOpts = JSON.parse(that.interpOptStr);
+    that.intOpts.maxOpCnt = that.maxOptCnt;
+    
+    function callback(iname:string, cnt:number) {
+        //puts('callback: '+iname+' '+cnt);
+        Event.update();
+    }
+    
+    JsiHtmlpp_callback = callback;
+
+    function echo(s)    // Append string to output.
+    {
+        that.rc += s;
+    }
+    
+    function error(s)   // Format an error with file/line number.
+    {
+        var fn = that.files[that.files.length-1];
+        var line = that.data.split('\n').length;
+        return 'Error at '+fn+':'+line+': '+ s;
+    }
+
+    function reMethod(str:string) {
+        var nstr = '', code = str.substr(2, str.length-4);
+        code = code.trim();
+        if (code !== '') {
+            var odata = that.rc;
+            that.rc = '';
+            try {
+                that.interp.eval(code);
+            } catch(e) {;
+                puts(error('while evaling code:'+code+'\n'+e));
+            }
+            nstr = that.rc;
+            that.rc = odata;
+        }
+        return nstr;
+    }
+    
+    function include(args:array|string, debug=false)  // Include and evaluate files, recusively.
+    { 
+        var ai, fn;
+        var odata = that.data;
+        if (typeof args === 'string')
+            args = [args];
+        that.data = '';
+        for (ai=0; ai<args.length; ai++) {
+            if (that.files.length > that.incsMax)
+                throw error("recursive include");
+            var tfn = fn = args[ai];
+                        
+            if (that.files.length) {
+                var pfn = that.files[that.files.length-1];
+                fn = File.join(File.dirname(pfn), fn);
+            } else {
+                fn = File.realpath(fn);
+            }
+            if (!File.exists(fn)) {
+                that.data = odata;
+                throw error("file not found: "+fn);
+            }
+            
+            var pre = '';
+            var extn = File.extension(fn);
+            var tft = File.tail(fn)+' : '+File.dirname(fn);
+            var ispp = false;
+            var x = null;
+            var begin = "\n/*:BEGIN: "+tft+" */\n";
+            var end = "\n/*:END: "+tft+" */\n";
+            if (that.noMark)
+                begin = end = '';
+            var notMarked = false;
+            switch (extn) {
+                case '.jsi': 
+                    // Preprocess typed function in standard javascript for use within browsers.
+                    ispp = true;
+                    that.jsifiles.push(fn);
+                case '.js': 
+                    if (debug) {
+                        echo('<script src="'+tfn+'"></script>\n');
+                        continue;
+                    }
+                    pre += "<script>"+begin;
+                    if (!ispp) 
+                        pre += File.read(fn);
+                    else {
+                        if (that.jsifiles.length==1) {
+                            pre += File.read(that.dir+'/web/jsiweb.js');
+                            if (that.noCheck)
+                                pre += 'Jsi.conf({enable:false});\n';
+                        }
+                        pre += Jsi_Jspp([fn]);
+                    }
+                    pre += end + "</script>\n";
+                    echo(pre);
+                    continue;
+                    
+                case '.cssi':
+                    ispp = true;
+                case '.css':
+                    that.cssfiles.push(fn);
+                    if (debug && !ispp) {
+                        echo('<link rel="stylesheet" type="text/css" href="'+tfn+'">\n');
+                        continue;
+                    }
+                    pre += "<style>"+begin;
+                    if (!ispp)
+                        pre += File.read(fn);
+                    else {
+                        if (!that.cssipp)
+                            that.cssipp = Jsi_Csspp();
+                        pre += that.cssipp.parse([fn]);
+                    }
+                    pre += end+"\n</style>\n";
+                    if (ispp===false || pre.indexOf('<?')<0) {
+                        echo(pre);
+                        continue;
+                    }
+                    x = pre; // .cssi file contains a <? tags so preprocess it.
+                    break;
+                case '.md':
+                    that.mdfiles.push(fn);
+                    if (!that.mdpp)
+                        that.mdpp = Jsi_Markdown(null);
+                    pre += that.mdpp.parse([fn]);
+                    echo(pre);
+                    continue;
+                    break;
+                default:
+                    notMarked = true;
+            }
+            if (x===null)
+                x = File.read(fn);
+
+            var reg = /<\?(\?[^>]|[^?])*\?>/g;
+            that.files.push(fn);
+            if (notMarked && !that.noMark)
+                that.rc += "\n<!-- :BEGIN: "+tft+" -->\n";
+            that.rc += x.replace(reg, reMethod);                
+            if (notMarked && !that.noMark)
+                that.rc += "\n<!-- :END: "+tft+" -->\n";
+            that.files.pop();
+        }
+        that.data = odata;
+    }
+       
+    function parse(files:array|string) {
+        //debugger;
+        var oint = that.interp;
+        that.dir = File.dirname(require("Jsi_Htmlpp",0).loadFile);
+        
+        if (!that.intOpts.busyCallback)
+            that.intOpts.busyCallback = "JsiHtmlpp_callback";
+        if (!that.interp)
+            that.interp = new Interp(that.intOpts);
+            
+        if (!that.interp.alias('echo'))
+            that.interp.alias('echo', echo, null);
+        if (!that.interp.alias('include'))
+            that.interp.alias('include', include, null);
+
+        if (that.noCatch)
+            include(files);
+        else {
+            try {
+                include(files);
+            } catch(e) {
+                puts("include failed: "+e);
+                that.rc = "<h1 style='color:red'>JSI ERROR</h1><pre>";
+                    that.rc += e;
+                that.rc += '\n\n'+that.errs+"</pre>";
+            }
+        }
+        if (that.delInterp) {
+            delete that.interp;
+            that.interp = null;
+        }
+        return that.rc;
+    }
+    
+    if (files)
+        return parse(files);
+        
+    that.parse = parse;
+    return that;
+};
+
+provide("Jsi_Htmlpp");
+
+if (Info.isMain()) {
+    puts(Jsi_Main('Jsi_Htmlpp'));
+}
+

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <meta charset=utf-8 />
+    <title>Jsi_Websrv Admin</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="/jsi/web/wsadmin.css" type="text/css" media="screen" />
+
+    <script src="/jsi/web/jsiweb.js"></script>
+    <script src="/jsi/web/bind.js"></script>
+  </head>
+
+<body onload='DoInit()' >
+<!-- Admin interface accessed from webServ /admin url -->
+<h2>Jsi : Websrv Admin Interface</h2>
+
+<h3>WebSocket State</h3>
+
+<div id=main></div>
+
+<script>
+"use strict";
+var ws;
+function puts(str) { console.log(str); }
+console.log.bind(puts);
+
+function tablifyObj(cv, all) {
+    var rv = '<TR><TH>Name</TH><TH>Value</TH></TR>';
+    for (var i in cv) {
+        rv += '<TR><TD>'+i+'</TD><TD>'+JSON.stringify(cv[i])+'</TD></TR>';
+    }
+    if (all)
+        rv = '<TABLE border=1 class=cmdstbl>'+rv+'</TABLE>';
+    return rv;        
+}
+    
+function WebMsg(msg) {
+    puts("MMM: "+msg.data);
+    var s = JSON.parse(msg.data);
+    switch (s.cmd) {
+        case 'init':
+            var rv = tablifyObj(s.data.ws, true);
+            var id = $('#main')[0];
+            id.innerHTML = rv;
+            break;
+        case 'exit':
+            break;
+    }
+}
+
+function DoInit() {
+    var pcol= "ws://", url, u = document.URL;
+    if (u.substring(0, 5) == "https") {
+        pcol = "wss://";
+        u = u.substr(8);
+    } else {
+        if (u.substring(0, 4) == "http")
+            u = u.substr(7);
+    }
+    u = u.split('/');
+    url = pcol + u[0];
+    ws = new WebSocket(url, "jsi-protocol");
+    ws.onmessage = WebMsg;
+    ws.onopen = function() {
+        // Kick things off by sending an init msg.
+        ws.send('{"cmd":"init"}');
+    };
+}
+
+</script>
+</body>
+</html>

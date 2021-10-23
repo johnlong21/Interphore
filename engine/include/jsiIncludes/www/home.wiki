@@ -1,0 +1,99 @@
+<title>Home</title>
+
+<div id=wikitoc>
+<ul>
+<li>[./index.wiki|Index]</li>
+<li>[./reference.wiki|Reference]</li>
+</ul>
+</div>
+
+<b>Jsi</b> is a <b>C</b> ([./language.wiki#compat|+/-]) embeddable [./background.wiki#ecma|JavaScript] interpreter
+like Python, Lua, and Tcl, that:
+
+  *  can use typed functions,
+  *  has builtin support for web and database,
+  *  is easier to learn because the syntax is javascript.
+
+A Jsi [./functions.wiki|function] may have parameters with <b>types</b>
+and <b>default values</b>, eg:
+
+    <nowiki><pre class=verbatim>
+function foo (n<b>:number</b>, str<b>:string</b>=<i>''</i>)<b>:number</b> { return n+str.length; }
+</pre></nowiki>
+
+Types are also used in the generation of C extensions.
+<hr>
+
+<ol><li>Starting Out</li>
+<ul>
+<li>[./download.wiki|Getting Source]</li>
+<li>[./build.wiki|Building]</li>
+<li>[./usingjsi.wiki|Using Jsi]</li>
+<li>[./license.wiki|License]</li>
+</ul>
+<li>Development</li>
+<ul>
+<li>[./debug.wiki#strict|Strict Mode]</li>
+<li>[./functions.wiki|Type Checking]</li>
+<li>[./debug.wiki#debugui|Debugging]</li>
+<li>[./js-errors.wiki|Errors]</li>
+<li>[./js-logging.wiki|Logging]</li>
+</ul>
+<li>The Core</li>
+<ul>
+<li>[./js-system.wiki|System]</li>
+<li>[./js-info.wiki|Info]</li>
+<li>[./js-interp.wiki|Interp]</li>
+<li>[./js-format.wiki|Format]</li>
+<li>[./js-filesystem.wiki|File-System]</li>
+<li>[./js-events.wiki|Events]</li>
+</ul>
+<li>Integration</li>
+<ul>
+<li>[./js-modules.wiki|Modules]</li>
+<li>[./packages.wiki|Packages]</li>
+<li>[./packages.wiki#autoload|Auto-Load]</li>
+</ul>
+<li>The Web</li>
+<ul>
+<li>[web.wiki|Pre-processors]</li>
+<li>[./markdown.wiki|Markup]</li>
+<li>[./js-json.wiki|JSON]</li>
+</ul>
+<li>Miscellaneous</li>
+<ul>
+<li>[./js-threads.wiki|Threads]</li>
+<li>[./js-signal.wiki|Signal]</li>
+<li>[./js-sqilte.wiki|Sqlite]</li>
+<li>[./js-mysql.wiki|MySQL]</li>
+<li>[./js-zvfs.wiki|Zvfs]</li>
+<li>[./js-socket.wiki|Socket]</li>
+<li>[./js-websocket.wiki|WebSocket]</li>
+<li>[./language.wiki|Language]</li>
+</ul>
+<li>Code Quality</li>
+<ul>
+<li>[./profiler.wiki#tracing|Tracing]</li>
+<li>[./profiler.wiki#profile|Profiling]</li>
+<li>[./profiler.wiki#coverage|Coverage]</li>
+<li>[./testing.wiki|Unit Test]</li>
+</ul>
+<li>C/C++</li>
+<ul>
+<li>[./c-jsi_lite.wiki|Jsi-Lite]</li>
+<li>[./c-extensions.wiki|C Extension]</li>
+<li>[./c-dstring.wiki|DString]</li>
+<li>[./cdata.wiki|Cdata]</li>
+<li>[./c-options.wiki|Options]</li>
+<li>[./c-dbquery.wiki|Sqlite-C]</li>
+<li>[./c-json.wiki|JSON-C]</li>
+</ul>
+<li>Applications</li>
+<ul>
+<li>[./app/ledgerjs.wiki|Ledger]</li>
+<li>[./app/sqliteui.wiki|SqliteUI]</li>
+<li>[./app/websrv.wiki|Web Server]</li>
+</ul>
+</ol>
+
+

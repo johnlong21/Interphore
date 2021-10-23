@@ -1,0 +1,132 @@
+#!/usr/local/bin/jsish -u -echo true %s
+
+var res, input, ins, str, r, s, x, re;
+while (1) {
+    input = console.input();
+;   input;
+    if (input == undefined) break;
+    if ((res = input.match(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)\.com/))) {
+;       res[0];
+;       res[1];
+;       res[2];
+    } else {
+;       'invalid email!!!';
+    }
+}
+
+;'####Replace';
+;s = 'a b b c d b';
+;s.replace('b','c');
+;s.replace(/b/g,'c');
+;s.replace(/b/,'c');
+;res='There is a blue and white car by my blue house'.replace(/blue|house|car/gi, function(x){return x.toUpperCase();});
+
+
+;ins = '<<file.c>>!!fool.c!!';
+;res = ins.replace(/([[a-zA-Z0-9_]*)\.c/gi, 'cc -c $& -o $1.o');
+
+
+;'####Search';
+;str='The rain in SPAIN stays mainly in the plain'; 
+//;str.search(/ain/gi);
+;str.search(/AIN/);
+;str.search('ain');
+
+;'####Match';
+;str.match(/ain/gi);
+;s = 'pm@gm.com';
+;s.match(/^([a-z]*)@([a-z.]*)$/);
+;s.match(/^([t-z]*)@([a-z.]*)$/);
+
+
+;r = new RegExp('gm');
+;s.match(r);
+
+function reg(match,p1,p2,offset,str) {
+    //;[match,p1,p2,offset,str].join(', ');
+;   arguments.join(', ');
+    return '('+p2+','+p1+')';
+}
+
+;re=/^function=([a-z]+),([a-z]+)$/gm;
+;s = 'S\nfunction=a,b\nA,B\nfunction=c,d\nE';
+;'OUT='+s.replace(re,reg);
+
+;'####Exec';
+;r = /abc/g;
+;x = 'a abc def abc';
+while (s = r.exec(x)) {
+;   s;
+}
+
+/*
+=!INPUTSTART!=
+input
+test
+abc@gmail.com
+=!INPUTEND!=
+*/
+
+/*
+=!EXPECTSTART!=
+input ==>  input
+'invalid email!!!'
+input ==>  test
+'invalid email!!!'
+input ==>  abc@gmail.com
+res[0] ==>  abc@gmail.com
+res[1] ==>  abc
+res[2] ==>  gmail
+input ==>  undefined
+'####Replace'
+s = 'a b b c d b' ==>  a b b c d b
+s.replace('b','c') ==>  a c b c d b
+s.replace(/b/g,'c') ==>  a c c c d c
+s.replace(/b/,'c') ==>  a c b c d b
+res='There is a blue and white car by my blue house'.replace(/blue|house|car/gi, function(x){return x.toUpperCase();}) ==>  There is a BLUE and white CAR by my BLUE HOUSE
+ins = '<<file.c>>!!fool.c!!' ==>  <<file.c>>!!fool.c!!
+res = ins.replace(/([[a-zA-Z0-9_]*).c/gi, 'cc -c $& -o $1.o') ==>  <<cc -c file.c -o file.o>>!!cc -c fool.c -o fool.o!!
+'####Search'
+str.search(/AIN/) ==>  14
+str.search('ain') ==>  5
+'####Match'
+str.match(/ain/gi) ==>  [ "ain", "AIN", "ain", "ain" ]
+s = 'pm@gm.com' ==>  pm@gm.com
+s.match(/^([a-z]*)@([a-z.]*)$/) ==>  [ "pm@gm.com", "pm", "gm.com" ]
+s.match(/^([t-z]*)@([a-z.]*)$/) ==>  null
+r = new RegExp('gm') ==>  "/gm/"
+s.match(r) ==>  [ "gm" ]
+re=/^function=([a-z]+),([a-z]+)$/gm ==>  "/^function=([a-z]+),([a-z]+)$/gm"
+s = 'S
+function=a,b
+A,B
+function=c,d
+E' ==>  S
+function=a,b
+A,B
+function=c,d
+E
+arguments.join(', ') ==>  function=a,b, a, b, 2, S
+function=a,b
+A,B
+function=c,d
+E
+arguments.join(', ') ==>  function=c,d, c, d, 19, S
+function=a,b
+A,B
+function=c,d
+E
+'OUT='+s.replace(re,reg) ==>  OUT=S
+(b,a)
+A,B
+(d,c)
+E
+'####Exec'
+r = /abc/g ==>  "/abc/g"
+x = 'a abc def abc' ==>  a abc def abc
+s ==>  [ "abc" ]
+s ==>  [ "abc" ]
+=!EXPECTEND!=
+*/
+
+

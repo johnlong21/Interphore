@@ -1,0 +1,183 @@
+<title>Modules</title>
+
+<div id=wikitoc>
+<ul>
+<li>[./index.wiki|Index]</li>
+<li>[./reference.wiki|Reference]</li>
+</ul>
+<hr style="border-style:solid">
+<ul>
+<li>[#overview|Overview]</li>
+<li>[#sys|Sys]</li>
+<li>[#jsi_opts|Jsi_Opts]</li>
+<li>[#object|Programatic]</li>
+<li>[#parts|Sections]</li>
+<li>[#help|Help]</li>
+<li>[#helplimits|Help Limitations]</li>
+</ul>
+</div>
+
+<h3 id=overview>Overview</h3>
+
+A Jsi module is code that:
+
+  *  can be invoked from the command-line, accepting arguments and switches, or
+  *  can be called programatically by other modules as a [./packages.wiki|package].
+  *  can display it's available options when called with <b>-h</b>.
+
+Here is an example module <a href=../js-demos/fileSize.jsi>./fileSize.jsi</a>:
+
+    <nowiki><pre class=verbatim>
+#!/usr/bin/env jsish
+<b>require</b>(<i>'Sys'</i>); <i>// Optional</i>
+<b>function fileSize(fargs:array|string=void, opts:object=void)</b> {
+
+    <b>var options =</b> { <i>// Count bytes in files</i>
+        debug       :false, <i>// Debug output</i>
+        max         :10     <i>// Max number of files</i>
+    };
+    <b>var that =</b> {
+        package:<i>'fileSize'</i>, <i>// Note: "package" is used by Jsi_Opts to support "-h".</i>
+        cnt:0
+    };
+    
+    <b>function</b> getLength(fargs:array|string) {
+        if (typeof fargs === <i>'string'</i>)
+            fargs = [fargs];
+            
+        for (var i in fargs) {
+            if (i>=that.max) break;
+            if (that.debug)
+                puts('Count: '+fargs[i]);
+            that.cnt += File.size(fargs[i]);
+        }
+        <b>return</b> that.cnt;
+    }
+
+    <b>Jsi_Opts(that, options, opts)</b>;
+    
+    if (fargs)
+        <b>return</b> getLength(fargs);
+        
+    that.getLength = getLength; <i>// Return object-command</i>
+    <b>return</b> that;
+}
+
+<b>provide</b>(<i>'fileSize'</i>);
+
+if (<b>Info.isMain</b>()) {
+    puts(<b>Jsi_Main</b>(<i>'fileSize'</i>));
+}
+
+</pre></nowiki>
+
+
+Invoked as:
+
+    <nowiki><pre class=verbatim>
+./fileSize.jsi -debug true file1 file2 file3
+</pre></nowiki>
+
+Leading switches are passed in <b>opts</b> with
+the remaining arguments in <b>fargs</b>.
+
+Note that options coming in from the command-line must
+be primitives.
+
+<hr>
+
+<h3 id=sys>Sys</h3>
+
+The <b>Sys</b> package comprises the scripts zipped to the end of the <b>jsish</b>
+executable that implement command-line option/utilities such as the debugger
+and <b>Jsi_Opts</b>.
+
+<b>Sys</b> may be explicitly loaded with:
+
+    <nowiki><pre class=verbatim>
+<b>require</b>(<i>'Sys'</i>);
+</pre></nowiki>
+
+However, this is completely optional as the code therein implicitly
+loads on-demand.
+
+
+<hr>
+
+<h3 id=jsi_opts>Jsi_Opts</h3>
+
+<b>Jsi_Opts</b> is the option parser responsible processing options from <b>opts</b>
+validating them against <b>options</b>, and assigning them to <b>that</b>.
+
+From the command-line <b>Jsi_Main</b> does the marshelling of arguments.
+
+<hr>
+
+<h3 id=object>Programatic</h3>
+
+Calling a module with no arguments causes it to just return <b>that</b>.
+This allows the it to be called programatically:
+
+    <nowiki><pre class=verbatim>
+<b>require</b>(<i>'fileSize'</i>);
+<b>var</b> fcmd = fileSize();
+fcmd.getLength(<i>'Makefile'</i>);
+fcmd.getLength([<i>'a','b'</i>]);
+puts(fcmd.cnt);
+</pre></nowiki>
+
+
+<hr>
+<h3 id=parts>Sections</h3>
+
+The 7 parts of a module are:
+
+    <table border='1' class=cmdstbl>
+<tr><th>Section</th> <th>Description</th> </tr>
+<tr><td>function</td> <td>
+All code is wrapped in a function with the same name as the file basename, providing
+bindings for incoming arguments.
+</td><tr>
+<tr><td>options</td> <td>The <b>var options =</b> object itemizes the all options that can come in via
+the <b>opts</b> parameter.</td><tr>
+<tr><td>that</td> <td>Local object state is stored in the <b>that</b> object.
+All defined and incoming options will be copied into <b>that</b>.</td><tr>
+<tr><td>Jsi_Opts</td><td>The call <b>Jsi_Opts(that, options, opts)</b> performs option parsing
+as well as implementing <b>-h</b> help output</td><tr>
+<tr><td>provide</td><td>The <b>provide</b> statement makes the module available as a package.</td><tr>
+<tr><td>Info.isMain</td> <td>The <b>Info.isMain()</b> command returns true if the current file was the
+one invoked from the command-line.</td><tr>
+<tr><td>Jsi_Main</td> <td>
+The <b>Jsi_Main()</b> command parses command-line options and then invokes the current module.</td><tr>
+</table>
+
+<hr>
+
+<h3 id=help>Help</h3>
+
+Help is available for a module by calling it with the single argument <b>-h</b>
+
+    <nowiki><pre class=verbatim>
+/fileSize.jsi <b>-h</b>
+/zvfs/lib/JsiUtil.jsi:121: error: throw: 
+Count bytes in files
+
+Options/defaults:
+    -debug      0       // Debugging level
+    -max        10      // Max number of files
+
+ERROR
+</pre></nowiki>
+
+<hr>
+
+<h3 id=helplimits>Help Limitations</h3>
+
+Help information gets extracted from <b>options</b> by <b>Jsi_Opts</b>, with the following limitations:
+
+  *  The package name will be extracted from the file base name, except when:
+  *  <b>that.package</b> can be set to help locate the source files.
+  *  All comments must use the <b>//</b> form.
+  *  The first comment (which must be after the opening <b>{</b>) is the help title.
+  *  There can be no closing <b>}</b> anywhere in the body of the options or comments.
+  

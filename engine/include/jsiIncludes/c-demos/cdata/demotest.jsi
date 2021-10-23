@@ -1,0 +1,130 @@
+#!./demo
+throw("obsolete");
+"use strict";
+puts('====Getters====');
+puts(Cdata.get('foo', 'str8'));
+Cdata.set('bar', {foo:{bit2: 99}});
+var dlst = Cdata.names();
+if (!dlst.length) load('demo.so');
+dlst = Cdata.names();
+puts(dlst);
+puts(Cdata.names('carp'));
+//puts(Cdata.dump('carp'));
+puts("AA");
+
+puts('====Setters====');
+Cdata.set('carp', {sint: 8});
+Cdata.set('carp', {bit:3});
+puts(Cdata.struct.names());
+puts(Cdata.enum.names());
+//puts(Cdata.sig.names());
+puts(Cdata.get('foo', 'str8'));
+puts(Cdata.struct.conf('Carp'));
+puts(Cdata.enum.conf('Places'));
+puts(Cdata.sum('carp'));
+puts(Cdata.conf('carp'));
+puts(Cdata.conf('carp').type);
+Cdata.set('carp', {fld1:1, bit2:1});
+
+puts('====Struct Bar====');
+Cdata.set('bar', {foo:{bit2: 99}});
+puts(Cdata.get('bar'));
+
+puts(Cdata.get('bar'));
+var x = Cdata.get('bar', 'barr');
+puts(x);
+x[0]++;
+Cdata.set('bar', {barr:x});
+x = Cdata.get('bar', 'barr');
+puts(x);
+puts(Cdata.get('bar', 'barr[0]'));
+Cdata.set('bar', 'barr[0]', 2);
+puts(Cdata.get('bar', 'barr[0]'));
+//puts(Cdata.getN(null, 'bar'));
+//puts(Cdata.dump(null, 'bar'));
+
+puts('====CARRAY====');
+debugger;
+Cdata.setN(0, 'foos', {bit2:99});
+puts(Cdata.getN(1, 'foos'));
+puts(Cdata.getN(0, 'foos'));
+puts(Cdata.getN(0, 'foos', 'bit2'));
+puts(Cdata.getN(0, 'barss', 'foo.bit2'));
+
+puts(Cdata.names());  //CMAP
+puts('CMN: ', Cdata.names('bars'));
+//Cdata.add('bars', 1);
+
+puts('====Map-Tree with string-key====');
+puts(Cdata.conf('bars'));
+Cdata.setN("1", 'bars', {bfld1:2});
+//Cdata.conf('bars', {autoAdd:false});
+Cdata.setN("2", 'bars', {bfld1:3});
+puts(Cdata.names('bars'));
+puts(Cdata.getN("1", 'bars', "bfld1"));
+puts(Cdata.getN("1", 'bars'));
+puts('CMN2: ', Cdata.names('bars'));
+Cdata.setN('a', 'bars', 'bval1', 9);
+
+puts('====Map-Tree with number-key====');
+Cdata.setN(1, 'BN', {bfld1:2});
+Cdata.setN(2, 'BN', {bfld1:3});
+puts(Cdata.names('BN'));
+puts(Cdata.getN(1, 'BN', 'bfld1'));
+puts(Cdata.getN(1, 'BN'));
+puts('CMN2: ', Cdata.names('BN'));
+
+puts('====Map-Tree with struct-key====');
+var fidx = {key1:2, key2:1};
+Cdata.setN(fidx, 'Bs', {bbit:4});
+puts(Cdata.getN(fidx, 'Bs', 'bbit'));
+Cdata.setN(fidx, 'Bs', {bbit:3});
+puts(Cdata.getN(fidx, 'Bs', 'bbit'));
+
+
+
+puts(Cdata.conf('Bs'));
+puts(Cdata.names('Bs'));
+
+/*
+=!EXPECTSTART!=
+
+[ "BN", "BN2", "bb1", "Bs", "bb2", "Bs2a", "bars", "foos2", "barss", "foo", "bar", "carp", "Vimy_Data", "Bs2", "foos" ]
+[ "sig", "fld1", "val1", "arr", "bit", "bit2", "bv", "b", "sint", "str8" ]
+AA
+[ "BB", "BB1", "BB2", "sig", "Fidx", "Foo", "Vimy", "Bar", "Carp" ]
+[ "weather", "MyDefs", "Places" ]
+
+{ flags:0, help:"", name:"Carp", offset:10, size:80, ssig:15266625 }
+{ flags:0, help:"", name:"Places", offset:2, size:4 }
+d11107b2965e771635eed0b5c5d8a545
+{ arrSize:0, autoAdd:true, flags:0, help:"A Carp variable.", keyName:null, keyType:"number", mapType:"none", maxKeys:0, name:"carp", size:80, structName:"Carp", user:0, varParam:"null" }
+undefined
+{ barr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bbit:1, bfld1:0, bfoo:[ { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 } ], bval1:0, foo:{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:99, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, sig:1756855419 }
+{ barr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bbit:1, bfld1:0, bfoo:[ { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 } ], bval1:0, foo:{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:99, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, sig:1756855419 }
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+[ 1, 0, 0, 0, 0, 0, 0, 0, 0 ]
+1
+2
+Array of Foo structs
+{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:3, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }
+{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:99, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }
+99
+0
+[ "BN", "BN2", "bb1", "Bs", "bb2", "Bs2a", "bars", "foos2", "barss", "foo", "bar", "carp", "Vimy_Data", "Bs2", "foos" ]
+CMN:  [ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+{ arrSize:0, autoAdd:true, flags:8388608, help:"Map-Tree with string-key.", keyName:null, keyType:"string", mapType:"tree", maxKeys:0, name:"bars", size:496, structName:"Bar", user:0, varParam:"null" }
+[ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+2
+{ barr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bbit:0, bfld1:2, bfoo:[ { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 } ], bval1:0, foo:{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, sig:1756855419 }
+CMN2:  [ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+[ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+2
+{ barr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bbit:0, bfld1:2, bfoo:[ { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, { arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 } ], bval1:0, foo:{ arr:[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], bit:0, bit2:0, fld1:0, plac:"Away", place1:"Away", sig:0, sint:0, str8:"", val1:0 }, sig:1756855419 }
+CMN2:  [ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+4
+3
+{ arrSize:0, autoAdd:true, flags:8388608, help:"Map-Tree with struct-key.", keyName:"Fidx", keyType:"8", mapType:"tree", maxKeys:0, name:"Bs", size:496, structName:"Bar", user:0, varParam:"Fidx" }
+[ "sig", "bfld1", "bval1", "bbit", "barr", "bfoo", "foo" ]
+=!EXPECTEND!=
+*/

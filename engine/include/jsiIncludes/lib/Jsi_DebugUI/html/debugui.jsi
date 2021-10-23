@@ -1,0 +1,741 @@
+// Web browser side of the user interface communicating with Jsi_DebugUI.jsi.
+// This file is preprocessed to support function parameters with types.
+
+var that = {
+    autosel:true,
+    breakpoints:[],
+    curline:0, curfunc:null, curfile:null, curfdata:'',  // Current state info.
+    debug:0,
+    escFunc: null, showGuiCmds:false, // Cmds like print/eval show up in input.
+    fdata:{},  fnlst:[], // File data cache
+    isRunCmd:true,
+    lastCmd:'',
+    msg:null,
+    nullValue:'NULL',
+    queries:[],
+    qpos:-1,
+    sendLast:new Date(),
+    stackLast:new Date(),
+    status:null,
+    uioptions: { lineNumbers:true, verbose:false, autoSel:true, netDebug:false, varPrint:true, varTooltip:true },
+    uiddbfile:null,
+    varCache:{} // For var lookups. Cleared evertime we stop
+};
+
+// Value of var under cursor.
+function webVarGet(m) {
+    var str = m.name+' = '+JSON.stringify(m.value);
+    that.varCache[m.name] = m;
+    if (that.uioptions.varPrint)
+        AddOutput(str+'\n');
+    //that.dbfile.setAttribute('title', str); return;
+    if (!that.hoverId || !that.uioptions.varTooltip) return;
+    //that.hoverId.setAttribute('title', str); return;
+    that.hoverId.title = str;
+}
+
+function mouseStopped(ev) {
+    if (!that.uioptions.varPrint && !that.uioptions.varTooltip) return;
+    var word;
+    var id, ids = $(':hover');
+    if (ids.length<0) return;
+    that.hids = ids;
+    id = ids[ids.length-1];
+    if (!id || id.tagName !== 'SPAN' || id.id !== '' || id.innerText === '') return;
+    word = id.innerText;
+    that.mouseStop = {x:ev.clientX, y:ev.clientY, word:word};
+    //puts('mouse stop: '+ word);
+    if (!word) return;
+    that.hoverId = id;
+    if (that.varCache[word])
+        return webVarGet(that.varCache[word]);
+    if (that.uioptions.varTooltip)
+        id.title = '.';
+    //AddOutput('GET '+word+'\n');
+    webSend('varget', {name:word})
+}
+
+// Start function.
+function onload()
+{
+    // Cache the most common DOM lookups
+    that.dbfile = $$('#dbfile');
+    that.dbinput = $$('#dbinput');
+    that.dboutput = $$('#dboutput');
+    that.dbstatus = $$('#dbstatus');
+
+    // Use 'bind.js' 2-way form data bindings, sort of like Angular.
+    that.uioptions = Bind(
+        that.uioptions,
+        {
+            "verbose"       : '#uioptions input[name="verbose"]',
+            "varPrint"      : '#uioptions input[name="varPrint"]',
+            "netDebug"      : '#uioptions input[name="netDebug"]',
+            "autoSel"       : '#uioptions input[name="autoSelect"]',
+            "varTooltip"    : {
+                dom         : '#uioptions input[name="varTooltip"]',
+                callback    : RedrawFile
+            },
+            "lineNumbers"   : {
+                dom         : '#uioptions input[name="lineNumbers"]',
+                callback    : RedrawFile
+            }
+        }
+    );
+    
+    var pcol, url, u = document.URL;
+    if (u.substring(0, 5) == "https") {
+        pcol = "wss://";
+        u = u.substr(8);
+    } else {
+        pcol = "ws://";
+        if (u.substring(0, 4) == "http")
+            u = u.substr(7);
+    }
+    u = u.split('/');
+    url = pcol + u[0];
+    that.ws = new WebSocket(url, "jsi-protocol");
+    that.ws.onmessage = webRecv;
+    that.ws.onclose = webClose;
+    setTimeout(StartConn, 50);
+    window.addEventListener("keyup", function(e){ return EscPress(e);}, false);
+    that.dbinput.addEventListener("keyup", function(e){ return KeyPress(e);}, false);
+    that.dbfile.addEventListener("dblclick", function(e){ return ClickDble(e);}, false);
+    that.dbfile.onmousemove = function(e) {
+        if (that.uiddbfile) clearInterval(that.uiddbfile);
+        that.uiddbfile = setTimeout(function () { mouseStopped(e); }, 500);
+    }
+    TogglePanel("uibutton");
+}
+
+
+//$(function() { onload(); });
+function dputs(str) {
+    if (that.debug)
+        console.log(str);
+}
+
+function ClearSelection() {
+    if(document.selection && document.selection.empty) {
+        document.selection.empty();
+    } else if(window.getSelection) {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+    }
+}
+
+// Add or remove name from class
+function ClassAdd(id:any, name:string, add:boolean) {
+    var a = id.getAttribute('class');
+    if (!a) {
+        if (add)
+            id.setAttribute('class', name);
+        return;
+    }
+    a = a.split(' ');
+    var ii = a.indexOf(name);
+    if (add) {
+        if (ii>=0) return;
+        a.push(name);
+    } else {
+        if (ii<0) return;
+        a.splice(ii);
+    }
+    id.setAttribute('class', a.join(' '));
+}
+
+function inputSel(sched) {
+    if (!sched)
+        setTimeout(function() { inputSel(true); }, 500);
+    else {
+        that.dbinput.focus();
+        that.dbinput.select();
+    }
+}
+
+
+
+// Determine if this command requires moving the display.
+function IsRunCmd(str)
+{
+    var re = str.match(/^([a-z]+)/);
+    if (!re)
+        return false;
+    var val = re[1];
+    var cmds = [ 'continue', 'step', 'next', 'finish', 'up', 'down', 'stop'];
+    if (cmds.indexOf(val)>=0)
+        return true;
+    var len = val.length;
+    for (var i of cmds)
+        if (i.substr(0, len) === val) 
+            return true;
+    return false;
+}
+
+function DoCommand(str, noEcho) {
+    var thisCmd = str = str.trim();
+    if (str.length)
+        that.lastCmd = str;
+    else
+        thisCmd = str = that.lastCmd;
+    if (!noEcho)
+        that.dbinput.value = str;
+    thisCmd = str;
+    if (thisCmd.length && that.isRunCmd===false && IsRunCmd(thisCmd))
+        that.isRunCmd = true;
+    dputs("Sending: "+str);
+    webSend('command', {cmd:str});
+    if (that.uioptions.autoSel)
+        inputSel();
+    schedSendStack(true);
+}
+
+function getSelectionText() {
+    var text = "";
+    if (window.getSelection) {
+        text = window.getSelection().toString();
+    } else if (document.selection && document.selection.type != "Control") {
+        text = document.selection.createRange().text;
+    }
+    return text;
+}
+
+function GuiCommand(str, noSel) {
+    if (!noSel)
+        str += ' ' + getSelectionText();
+    if (that.showGuiCmds || that.uioptions.verbose) {
+        that.dbinput.value = str;
+        inputSel();
+    }
+    webSend('command', {cmd:str.trim()});
+}
+
+//Handle hitting enter
+function OLDDoEnter(e:any, inp:string)
+{
+    if (!e) e = window.event;
+    var keyCode = e.keyCode || e.which;
+    if (keyCode == '13'){
+        var id = that.dbinput;
+        var val = id.value.trim(' ');
+        DoCommand(val);
+        id.value = '';
+        return false;
+    }
+}
+
+// Key pressed in query input.
+function KeyPress(e:any)
+{
+    var key = e.key;
+    var id = that.dbinput;
+    switch (key) {
+        case 'Enter':
+            var val = id.value.trim(' ');
+            DoCommand(val, true);
+            if (that.queries.length==0 || that.queries[that.queries.length-1] !== val)
+                that.queries.push(val);
+            that.qpos = -1;
+            id.value = '';
+            return;
+        case 'ArrowUp':
+        case 'ArrowDown':
+            var len = that.queries.length;
+            var val = id.value.trim(' ');
+            that.qpos += (key=="ArrowUp"?1:-1);
+            if (that.qpos<0)
+                that.qpos = 0;
+            else if (that.qpos>=len)
+                that.qpos=len-1;
+            val = that.queries[len-1-that.qpos];
+            break;
+        default: return;
+    }
+    id.value = (val === undefined ? '' : val);
+}
+
+function ReloadFuncs() {
+    var id = $$('#uifuncs');
+    var rr = '<br>';
+    for (var r of that.fnlst.sort()) {
+        rr += "<button onclick='scrollToLine("+r[1]+")'>"+r[0]+ '</button>';
+    }
+    rr += '<br>';
+    id.innerHTML = rr;
+}
+
+// Toggle sub-display and change +/- suffix.
+function TogglePanel(cmd:string, parent:object) {
+    var id = $$('#'+cmd);
+    var och = '-', nch = '+';
+    var isvis = (id.style.display !== 'none');
+    if  (isvis) {
+        id.style.display = 'none';
+    } else {
+        nch = '-'; och = '+';
+        id.style.display = 'inline';
+        switch (cmd) {
+            case 'uibreak':
+                bpUpdate();
+                break;
+            case 'uistack':
+                webSend(cmd, {});
+                break;
+            case 'uifuncs':
+                ReloadFuncs();
+                break;
+        }
+    }
+    if (!parent) return;
+    var it = parent.innerText;
+    if (it.substr(it.length-1,1) == och)
+        parent.innerText = it.substr(0, it.length-1) + nch;
+    
+}
+
+
+function EscPress(e:any) {
+    if(e.keyCode == 27 && that.escFunc) that.escFunc();
+}
+
+function DoExit(m) {
+    AddOutput('Debugger has exited('+m.rc+'): tab may be closed!\n\n\n');
+    ClassAdd(that.dbinput,'shade',true);
+    ClassAdd($$('#mainbut'), 'bpline',true);
+    ClassAdd($$('#uibutton'), 'shade',true);
+}
+
+function webClose() {
+    DoExit({rc:-2});
+}
+
+// Generate html for the source-code view.
+function codeMarkup(instr) {
+    if (!instr)
+        return '';
+    var n = 0, rc = '', fnlst = [];
+    for (var lstr of instr.split('\n')) {
+        n++;
+        var re = lstr.match(/function\s+([_a-zA-Z0-9$]+)/);
+        if (re)
+            fnlst.push([re[1], n]);
+    }
+    n = 0;
+    that.fnlst = fnlst;
+    // Syntax highlighting and word wrapping.
+    if (!that.ilst) {
+        var bstrs =  'debugger|require|provide|delete|var|for|function|while|if|else|return|try|catch|finally|throw|exit|in|of|with|switch|case|default|new|with|typeof|instanceOf|continue|break|do';
+        var istrs = 'true|false|null|undefined|void|this|that|arguments|number|object|array|boolean|any|regexp|string|userobj|puts';
+        that.ilst = istrs.split('|');
+        that.blst = bstrs.split('|');
+    }
+
+    var str = instr.replace(/\b(&|<|>|\"|[a-zA-Z0-9_]+)\b/g, function(str) {
+        if (str === '&') return '&amp;';
+        if (str === '<') return '&lt;';
+        if (str === '>') return '&gt;';
+        if (str === '"') return '&quot;';
+        if (that.blst.indexOf(str)>=0) return "<b>"+str+"</b>"; 
+        if (that.ilst.indexOf(str)>=0) return "<i>"+str+"</i>"; 
+        if (that.uioptions.varTooltip)
+            return '<span title=".">'+str+'</span>'; 
+        return '<span>'+str+'</span>'; 
+    });
+    var lst = str.split('\n');
+    var visi = (that.uioptions.lineNumbers?"":" invisible");
+    for (var i=0; i<lst.length; i++) {
+        n++;
+        var pre = '<span id="fline_'+n+'"><span class="flineno'+visi+'">' + n;
+        var plen = n.toString().length;
+        while (plen<4) {
+            pre += ' ';
+            plen++;
+        }
+        var lstr = lst[i];
+        var lstrt = lstr.trim();
+        var re;
+        var cios = lstr.indexOf('//');
+        if (cios >= 0 && (cios==0 || lstr[cios-1] !== ':')) // Highlight comments, avoiding urls
+            lstr = lstr.substr(0, cios)+'<cite>'+lstr.substr(cios)+'</cite>';
+        rc += pre+': </span>' + lstr+'</span>\n';
+    }
+    ReloadFuncs();
+    return rc;
+}
+
+
+function DrawFile() {
+    var cm = '<div id="varvalue" class="tooltip" style="display:none"></div>';
+    cm += codeMarkup(that.curfdata);
+    that.dbfile.innerHTML = cm;
+    if (that.curline) {
+        selLine(that.curline);
+        bpLines();
+    }
+}
+
+function RedrawFile() {
+    dputs("REDRAW: "+that.uioptions.lineNumbers);
+    DrawFile();
+}
+
+function scrollToLine(n) {
+    if (n<1) n = 1;
+    var myElement = $$('#fline_'+n);
+    var topPos = myElement.offsetTop;
+    that.dbfile.scrollTop = topPos-that.dbfile.offsetTop;
+}
+
+
+function scrollToFunc(n) {
+    notify("unimplemented");
+}
+
+function selLine(n:number) {
+    dputs("SEL: "+n);
+    var ids = $('.curline');
+    for (var i=0; i<ids.length; i++)
+        ids[i].classList.remove('curline');
+    var fln = $('#fline_'+n);
+    if (fln.length)
+        fln[0].classList.add('curline');
+}
+
+
+function bpLines() {
+    var ids = $('.bpline');
+    for (var i=0; i<ids.length; i++)
+        ids[i].classList.remove('bpline');
+    var bps = that.breakpoints;
+    for (var i=0; i<bps.length; i++) {
+        if (bps[i].line && bps[i].enabled && bps[i].file === that.curfile)
+        $$('#fline_'+bps[i].line).classList.add('bpline');
+    }
+}
+
+function bpDisable() {
+    DoCommand('disable');
+}
+
+function bpToggle(n:number) {
+    var bps = that.breakpoints;
+    var id = bps[n].id;
+    if (bps[n].enabled)
+        DoCommand('disable '+id);
+    else
+        DoCommand('enable '+id);
+}
+
+function bpDelete(n:number) {
+    var bps = that.breakpoints;
+    var id = bps[n].id;
+    DoCommand('delete '+id);
+}
+
+// Update breakpoint info.
+function bpStopped(n:number) {
+    var bps = that.breakpoints;
+    n--;
+    if (!bps || !bps[n]) return;
+    bps[n].hits++;
+    if (bps[n].temporary)
+        bps[n].enabled = false;
+    bpUpdate();
+}
+
+function SetTitle(msg) {
+    var id = $$('title');
+    id.innerHTML = 'JsiDebug: '+msg;
+}
+
+function SetStatus(str) {
+    that.dbstatus.value = str;
+}
+
+function AddOutput(str) {
+    var oid = that.dboutput;
+    str += oid.value;
+    oid.value = str;
+}
+
+function webTextMsg(m) {
+    var msg = m.msg;
+    if (!msg) return;
+    msg = msg.trim();
+    var re = msg.match(/^Stopped at breakpoint #([0-9]+)/);
+    if (re)
+        bpStopped(parseInt(re[1]));
+    if (m.file && m.line !== undefined)
+        msg+=' in '+m.file+':'+m.line;
+    msg += '\n';
+    AddOutput(msg)
+}
+
+function webErrorMsg(m) {
+    webTextMsg(m);
+}
+
+
+function webPutsMsg(m) {
+    m.msg = '>'+m.msg;
+    if (m.isStderr)
+        m.msg = '>'+m.msg;
+    webTextMsg(m);
+}
+
+function DoLevel(n) {
+    DoCommand('up #'+n);
+}
+
+// Show stack backtrace table.
+function webStackList(m) {
+    dputs('webStackList: '+JSON.stringify(m.stks));
+    var stks = m.stks;
+    var rs = '<table class="tblconf">'; <!-- <caption><b>PROGRAM STACK</b></caption';-->
+    rs += '<tr><th>#</th><th>Func</th><th>Line</th><th>File</th><th>Dir</th></tr>\n';
+    for (var i = 0; i<stks.length; i++) {
+        rs += '<tr>'
+        + "<td><button title='Click to goto level #"+stks[i].level+"' onclick='DoLevel("+stks[i].level+")'>"+stks[i].level+'</button></td>'
+        + '<td>'+stks[i].funcName + (i<(stks.length-1)?('('+stks[i].scope+')'):'')+'</td>'
+        + '<td>'+stks[i].line+'</td><td>'+stks[i].file+'</td>'
+        + '<td>'+stks[i].dir+'</td>'
+        + '</tr>\n';
+    }
+    rs += '</table>';
+    $$('#uistack').innerHTML = rs;
+}
+
+function webBreakList(m) {
+    obps = that.breakpoints;
+    that.breakpoints = m.bps;    
+    bpLines();
+    if (obps != m.bps) // $$('#uibreak').style.display !== 'none')
+        bpUpdate();
+}
+
+// Show breakpoints table.
+function bpUpdate()
+{
+    var bps = that.breakpoints;
+    var rs = '<table class="tblconf"><caption><b>BREAKPOINTS</b></caption>\n';
+    rs += '<tr><th>#</th><th>Type</th><th>Where</th><th>';
+    rs += '<button class=hdrbut title="Click here to disable all breakpoints" onclick="bpDisable()">Enabled</button>';
+    rs += '</th><th>Hits</th><th>Temp</th><th>Delete</th></tr>\n';
+    for (var i = 0; i<bps.length; i++) {
+        rs += "<tr><td><button  title='Click to goto breakpoint #"+bps[i].id+"' onclick='";
+        if (bps[i].func && bps[i].line !== undefined)
+            rs += "scrollToFunc('"+bps[i].func+"')'>";
+        else
+            rs += "scrollToLine("+bps[i].line+")'>";
+        rs += bps[i].id+'</button></td><td>';
+        if (bps[i].func)
+            rs += 'func</td><td> '+bps[i].func;
+        else
+            rs += 'file</td><td>'+bps[i].file+':'+bps[i].line;
+        rs += '</td><td><input type=checkbox';
+        if (bps[i].enabled)
+            rs += ' checked';
+        rs += ' onclick="bpToggle('+i+')"></input>';
+        rs += '</td><td>'+bps[i].hits;
+        rs += '</td><td>'+(bps[i].temporary?'Y':'')+'</td><td>';
+        rs += '<button class=del onclick="bpDelete('+i+')" title="Click here to delete breakpoint">x</button></td></tr>';
+    }
+    rs += '</table>';
+    $$('#uibreak').innerHTML = rs;
+}
+
+function ToggleMe(id:object) {
+    id.value = (id.value=="1"?"0":"1");
+}
+
+function FileBrowse() {
+    flds = { files_dir:'/tmp' };
+    webSend('fileBrowse',flds);
+}
+
+
+/* Load file. */
+function webLoadAll(m:object)
+{
+    SetTitle(m.file);
+    var msg = "Debugging: "+m.file+' '+m.args.join(' ');
+    AddOutput(msg+'\n');
+    SetStatus(msg);
+}
+
+// Program running.
+function webRunning(m)     
+{
+    dputs('Running: ');
+    SetStatus("Running.... ("+that.lastCmd+')');
+}
+
+// Program stopped.
+function webStopped(m)     
+{
+    dputs('Stopped: '+m.fname+':'+m.line);
+    SetStatus(m.fname+':'+m.line);
+    var fdata = '';
+    if (m.fdata) {
+        that.fdata[m.fname] = m.fdata;
+        webSend('gotfile', {fname:m.fname});
+    }
+    fdata = that.fdata[m.fname];
+    var prevfile = that.curfile;
+    that.curline = m.line;
+    if (that.curfile === m.fname && !that.isRunCmd) {
+        dputs("Not a run command or file chng: "+that.isRunCmd);
+        return;
+    }
+    that.varCache = {};
+    that.isRunCmd = false;
+    that.curfile = m.fname;
+    if (that.curfdata !== fdata) {
+        that.curfdata = fdata;
+        DrawFile();
+    }
+    selLine(that.curline);
+    bpLines();
+    scrollToLine(that.curline-3);
+
+    
+    // AddOutput('stopped: '+m.fname+':'+m.line+'\n');
+    if (m.msg)
+        AddOutput(m.msg+'\n');
+    if (m.status)
+        SetStatus(m.status);
+    else if (prevfile !== m.fname)
+        SetStatus('File: '+m.fname);
+    if (prevfile !== m.fname)
+        SetTitle(m.fname);
+        
+    if ($$('#uistack').style.display !== 'none')
+        schedSendStack(false);
+}
+
+function schedSendStack(restart) {
+    if (that.uidsendUiStack)
+        clearInterval(that.uidsendUiStack);
+    else if (restart) return;
+    var d = new Date();
+    var delay = ((d-that.stackLast)<1000||(d-that.stackSend)<1000?1000:10);
+    that.uidsendUiStack = setTimeout(sendUiStack, delay);
+}
+
+function sendUiStack() {
+    that.uidsendUiStack = null;
+    that.stackLast = new Date();
+    webSend('uistack', {});
+}
+
+function webFileData(m)      // File contents.
+{
+    that.curfdata = fdata;
+    DrawFile();
+    that.dbstatus.value = "Loaded file: "+m.fname;
+}
+
+function webFileBrowse(d)      // File selector.
+{
+    dputs("fileBrowse: "+JSON.stringify(d));
+    var id = $$('#dlg_tool_files');
+    var tbl = $$('#tblfiles');
+    var tbody = $$('tbody',tbl);
+    var hid = $$('#tblfiles_th_0');
+    var th = $$('th',hid);
+    that.flist.data = d;
+    th.innerHTML = d.dir;
+    var files = d.files;
+    var dirs  = d.dirs;
+    var n = 1;
+    var rc = '<tr id=tblfiles_tr_0><td>../</td></tr>';
+     for (var i in dirs) {
+        rc += '<tr id=tblfiles_tr_'+ n++ +'><td>' + ConvChar(dirs[i]) + '/</td></tr>';
+     }
+     for (var j in files) {
+        rc += '<tr id=tblfiles_tr_'+ n++ +'><td>' + ConvChar(files[j]) + '</td></tr>';
+    }
+    tbody.innerHTML = rc;
+    DlgOpen('dlg_tool_files', true);
+}
+
+
+function ConvChar( str:any )
+{
+  if (str === undefined) return '';
+  if (str === null) {
+      if (that.nullValue !== null)
+        return that.nullValue;
+      return '';
+  }
+  var c = {'<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;', "'":'&#039;', '#':'&#035;'};
+  return str.toString().replace( /[<&>'"#]/g, function(s) { return c[s]; } );
+}
+
+function StartConn() {
+    if (that.ws.readyState == 1)
+        webSend("webLoadAll", {init:true});
+    else
+        setTimeout(StartConn, 50);
+}
+
+function ClickDble(event) { // Select row in current table.
+    dputs("click dbl");
+    var target = event.target || event.srcElement;
+    if (!target.id.match('fline_'))
+        return;
+    var n = parseInt(target.id.substr(6));
+    if (!n)
+        return;
+    if (that.breakpoints) {
+        var bps = that.breakpoints;
+        for (var i = 0; i<bps.length; i++) {
+            var bp = bps[i];
+            if (bp.type !== 'line') continue;
+            if (bp.line !== n) continue;
+            if (bp.file !== that.curfile) continue;
+            DoCommand('delete '+bp.id, true);
+            return;
+        }
+    }
+    DoCommand('break '+n, true);
+};
+
+function webSend(cmd:string, data:object, type:string='') {
+    data = { data:data, cmd:cmd, type:type };
+    data = JSON.stringify(data);
+    dputs("SENDING: "+data);
+    if (that.uioptions.netDebug)
+        AddOutput('SEND: '+data+'\n')
+    that.sendLast = new Date();
+    that.ws.send(data);
+}
+
+function webRecv(msg:any)
+{
+    dputs("RECV: "+msg.data);
+    if (that.uioptions.netDebug)
+        AddOutput('RECV: '+msg.data+'\n')
+    var ms=JSON.parse(msg.data);
+    that.msg = ms;       
+    var m = ms.data;
+    switch (ms.cmd) {
+        
+        case 'webLoadAll':  return webLoadAll(m);
+        case 'status':      that.status = m; break;
+        case 'stopped':     return webStopped(m);
+        case 'running':     return webRunning(m);
+        case 'breakList':   return webBreakList(m);
+        case 'stackList':   return webStackList(m);
+        case 'fileBrowse':  return webFileBrowse(m);
+        case 'fileData':    return webFileData(m);
+        case 'error':       alert(m); break;
+        case 'errorMsg':    return webErrorMsg(m);
+        case 'textMsg':     return webTextMsg(m);
+        case 'putsMsg':     return webPutsMsg(m);
+        case 'varget':      return webVarGet(m);
+        case 'exit':        DoExit(m); break;
+        default:            puts('Unknown webmsg: '+ms.cmd);
+    }
+}
+

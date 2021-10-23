@@ -1,0 +1,20 @@
+#!/usr/local/bin/jsish -u %s
+
+var a, b;
+;a = { 'x':[4,5,6], 'y':{a:1, b:2}};
+;b = { n:a, m:a.y };
+;b.n;
+;b.m;
+
+function a() { return {x:1, y:{a:1,b:[]}}; };
+;a().y.a;
+
+/*
+=!EXPECTSTART!=
+a = { 'x':[4,5,6], 'y':{a:1, b:2}} ==>  { x:[ 4, 5, 6 ], y:{ a:1, b:2 } }
+b = { n:a, m:a.y } ==>  { m:{ a:1, b:2 }, n:{ x:[ 4, 5, 6 ], y:{ a:1, b:2 } } }
+b.n ==>  { x:[ 4, 5, 6 ], y:{ a:1, b:2 } }
+b.m ==>  { a:1, b:2 }
+a().y.a ==>  1
+=!EXPECTEND!=
+*/

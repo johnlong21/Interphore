@@ -1,0 +1,44 @@
+jsiLexer.o: jsiLexer.c jsiInt.h jsi.h parser.h
+jsiFunc.o: jsiFunc.c jsiInt.h jsi.h parser.h
+jsiValue.o: jsiValue.c jsiInt.h jsi.h parser.h
+jsiRegexp.o: jsiRegexp.c jsiInt.h jsi.h parser.h
+jsiPstate.o: jsiPstate.c jsiInt.h jsi.h parser.h
+jsiInterp.o: jsiInterp.c jsiInt.h jsi.h parser.h
+jsiUtils.o: jsiUtils.c jsiInt.h jsi.h parser.h
+jsiProto.o: jsiProto.c jsiInt.h jsi.h parser.h
+jsiFilesys.o: jsiFilesys.c jsiInt.h jsi.h parser.h
+jsiChar.o: jsiChar.c jsiInt.h jsi.h parser.h
+jsiString.o: jsiString.c jsiInt.h jsi.h parser.h
+jsiBool.o: jsiBool.c jsiInt.h jsi.h parser.h
+jsiNumber.o: jsiNumber.c jsiInt.h jsi.h parser.h
+jsiArray.o: jsiArray.c jsiInt.h jsi.h parser.h
+jsiLoad.o: jsiLoad.c jsiInt.h jsi.h parser.h
+jsiHash.o: jsiHash.c jsiInt.h jsi.h parser.h
+jsiOptions.o: jsiOptions.c jsiInt.h jsi.h parser.h
+jsiStubs.o: jsiStubs.c jsiInt.h jsi.h parser.h jsiStubs.h
+jsiFormat.o: jsiFormat.c jsiInt.h jsi.h parser.h
+jsiJSON.o: jsiJSON.c jsiInt.h jsi.h parser.h
+jsiCmds.o: jsiCmds.c jsiInt.h jsi.h parser.h
+jsiFileCmds.o: jsiFileCmds.c jsiInt.h jsi.h parser.h
+jsiObj.o: jsiObj.c jsiInt.h jsi.h parser.h
+jsiSignal.o: jsiSignal.c jsiInt.h jsi.h parser.h
+jsiTree.o: jsiTree.c jsiInt.h jsi.h parser.h
+jsiCrypto.o: jsiCrypto.c jsiInt.h jsi.h parser.h
+jsiDString.o: jsiDString.c jsiInt.h jsi.h parser.h
+jsiMath.o: jsiMath.c jsiInt.h jsi.h parser.h
+jsmn.o: jsmn.c jsiInt.h jsi.h parser.h
+jsiZvfs.o: jsiZvfs.c jsiInt.h jsi.h parser.h \
+ miniz/zlib.h \
+ miniz/miniz.c
+jsiUtf8.o: jsiUtf8.c jsiInt.h jsi.h parser.h
+jsiUserObj.o: jsiUserObj.c jsiInt.h jsi.h parser.h
+jsiSocket.o: jsiSocket.c jsiInt.h jsi.h parser.h
+jsiSqlite.o: jsiSqlite.c jsi.h
+jsiWebSocket.o: jsiWebSocket.c jsi.h
+jsiMySql.o: jsiMySql.c jsi.h
+parser.o: parser.c jsiInt.h jsi.h parser.h jsiCode.c
+miniz.o: miniz/miniz.c
+jsiEval.o: jsiEval.c jsiInt.h jsi.h parser.h
+jsiCData.o: jsiCData.c jsiInt.h jsi.h parser.h
+jsiMarkdown.o: jsiMarkdown.c jsiInt.h jsi.h parser.h
+linenoise.o: linenoise.c linenoise.h jsiInt.h jsi.h parser.h

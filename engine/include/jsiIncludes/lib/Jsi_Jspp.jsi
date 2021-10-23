@@ -1,0 +1,144 @@
+#!/usr/bin/env jsish
+require('Sys');
+
+/* A JS preprocessor to convert "typed" functions out to web-browser compatible form, eg.
+ * 
+ *    function foo(s:string='', n:number=1):string {
+ * 
+ * becomes
+ * 
+ *    function foo(s, n) { s=Jsi.ArgCheck(...
+ * 
+ * Code to perform type checking/default values is provided by "web/jsiweb.js".
+ * 
+ * Limitation: Comments within function signatures are not supported.
+ */
+
+function Jsi_Jspp(files:array|string=null, opts:object=undefined):string|object
+{
+    var options = { // A JS preprocessor to convert "typed" functions out to web-browser compatible form
+        checkRet    :false,     // Check return code by creating wrapper functions
+        disable     :false,     // Preprocess to vanilla JS. WARNING: default values may break code.
+        noCheck     :false      // Disable argument type checking.
+    };
+    var that = {
+        package:"Jsi_Jspp",
+        funcIdx:0,          // Func idx.
+        curFile:'',         // Current file being processed.
+        tail:''             // Basename of file.
+    };
+ 
+    Jsi_Opts(that, options, opts);
+
+    that.typeNameStr = "number string boolean array function object regexp any userobj void null undefined";
+    that.typeNameList = that.typeNameStr.split(' ');
+    that.curFile = '';
+    
+    function typeValidate(typ) {
+        var tlst = typ.split('|');
+        var i = -1;
+        for (i = 0; i<tlst.length; i++)
+            if (that.typeNameList.indexOf(tlst[i]) < 0)
+                throw "type unknown '"+tlst[i]+'" not one of: '+that.typeNameStr;
+        return tlst;
+    }
+  
+    function reMethod(str:string) {
+        if (str.indexOf(':')<0 && str.indexOf('=')<0) // Skip functions with no types or defaults
+            return str;
+        var reg = /^function\s*([a-zA-Z0-9_]*)\s*\(([^)]*)\)(:[\|a-z]+|)\s*\{$/;
+        var vals = reg.exec(str);
+        if (!vals)
+            throw "invalid method: "+str;
+        //puts(vals);
+        var fnam = vals[1];
+        var res = 'function '+fnam+'(';
+    
+        var astr = vals[2].trim();
+        var cres = '/* '+astr+' */ ';
+        var acall = [];
+        if (astr !== '') {
+            var alst = astr.split(',');
+            var minargs = alst.length, maxargs = minargs;
+            var last = alst.length-1;
+            for (var i = 0; i<=last; i++) {
+                var aval = alst[i].trim();
+                if (aval === '...') {
+                    if (i != last)
+                        throw "expected ... to be at end";
+                    maxargs = -1;
+                    continue;
+                }
+                var rega = /^([a-zA-Z0-9_]+)(:[|a-z]+|)(=.+|)$/;
+                var avals = rega.exec(aval);
+                if (!avals)
+                    throw "invalid argument: "+aval;
+                //puts(avals);
+                if (i)
+                    res += ', ';
+                var afnam = avals[1];
+                if (afnam === '' || avals.length<3)
+                    afnam = aval;
+                res += afnam;
+                acall.push(afnam);
+                var atyp = '';
+                if (avals.length>2)
+                    atyp = avals[2].substr(1);
+                if (atyp !== '')
+                    typeValidate(atyp);
+                cres += '  '+afnam+'=Jsi.ArgCheck('+(i+1)+',"'+fnam+'","'+afnam+'",'+afnam+',"'+atyp+'"';
+                if (avals[3] && avals[3] !== '') { // Default value
+                    if (avals[3] !== '=void') {
+                        var defval = avals[3].substr(1);
+                        cres += ','+ defval;
+                    }
+                    if (minargs===alst.length)
+                        minargs = i;
+                }
+                else if (minargs!==alst.length)
+                    throw "non-default value follows default: "+aval+' in: '+str;
+                cres += ');';
+            }
+            cres += '  Jsi.ArgCount("'+fnam+'",'+minargs+','+maxargs+',arguments.length); ';
+        }
+        res += ') { ';
+        var rettyp = vals[3].substr(1);
+        if (fnam !== '' && rettyp !== '' && rettyp !== 'any' && that.checkRet) {
+            typeValidate(rettyp);
+            var wfn = '__Jsi_WrapRet_'+that.tail+'_'+fnam+'_'+ ++that.funcIdx;
+            cres += '  var __ret = '+wfn+'('+acall.join(',')+');\n';
+            cres += '  Jsi.RetCheck("'+fnam+'",'+' __ret,"'+rettyp+'");\n  return __ret;\n}\n';
+            cres += 'function '+wfn+'('+acall.join(', ')+') {';
+        }
+        if (!that.disable)
+            res += cres;
+        return res;
+    }
+
+    function parse(files:array|string) {
+        //debugger;
+        var rc = '';
+        if (typeof files === 'string')
+            files = [files];
+        var reg = /function\s*[a-zA-Z0-9_]*\s*\([^)]*\)(:[\|a-z]+|)\s*\{/g;
+        for (var i in files) {
+            that.curFile = files[i];
+            that.tail = File.tail(File.rootname(that.curFile));
+            var s = File.read(that.curFile);
+            rc += s.replace(reg, reMethod);
+        }
+        return rc;
+    }
+    if (files)
+        return parse(files);
+
+    that.parse = parse;
+    return that;
+}
+
+provide("Jsi_Jspp");
+
+if (Info.isMain()) {
+    puts(Jsi_Main('Jsi_Jspp'));
+}
+

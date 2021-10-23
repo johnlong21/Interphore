@@ -1,0 +1,56 @@
+#!/usr/local/bin/jsish -u %s
+
+var a, s, res;
+;a = 'the original string';
+
+;a.substr();
+;a.substr(1);
+;a.substr(-1, 1);
+
+;a.substr(2, -1);
+;a.substr(-5, 3);
+;a.substr(100, 0);
+;a.substr(10, 1);
+;a.substring(10, 11);
+
+;a.indexOf('ori');
+;a.indexOf('swer');
+;a.indexOf('i');
+;a.indexOf('i', 9);
+;Util.fromCharCode(65);
+;s = 'abcdabcd';
+;s.charAt(3);
+;s.indexOf('cd');
+;s.lastIndexOf('cd');
+
+;'NOTE: String.map is non-standard';
+;res = 'There is a BLUE and white CAR by my BLUE HOUSE';
+;res.map(['BLUE','RED','HOUSE','SHACK' ]);
+;res.map(['blue','Red','house','Shack' ], true);
+
+/*
+=!EXPECTSTART!=
+a = 'the original string' ==>  the original string
+a.substr() ==>  the original string
+a.substr(1) ==>  he original string
+a.substr(-1, 1) ==>  g
+a.substr(2, -1) ==>  
+a.substr(-5, 3) ==>  tri
+a.substr(100, 0) ==>  
+a.substr(10, 1) ==>  a
+a.substring(10, 11) ==>  al
+a.indexOf('ori') ==>  4
+a.indexOf('swer') ==>  -1
+a.indexOf('i') ==>  6
+a.indexOf('i', 9) ==>  16
+Util.fromCharCode(65) ==>  A
+s = 'abcdabcd' ==>  abcdabcd
+s.charAt(3) ==>  d
+s.indexOf('cd') ==>  2
+s.lastIndexOf('cd') ==>  6
+'NOTE: String.map is non-standard'
+res = 'There is a BLUE and white CAR by my BLUE HOUSE' ==>  There is a BLUE and white CAR by my BLUE HOUSE
+res.map(['BLUE','RED','HOUSE','SHACK' ]) ==>  There is a RED and white CAR by my RED SHACK
+res.map(['blue','Red','house','Shack' ], true) ==>  There is a Red and white CAR by my Red Shack
+=!EXPECTEND!=
+*/

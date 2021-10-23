@@ -1,0 +1,1291 @@
+#!/usr/bin/env jsish
+"use strict";
+require('Sys');
+
+// A C-API generator for structs, enums, maps, and extensions.
+
+function Jsi_CData(args:array|string, opts:object=void)
+{
+    var that = {};
+    
+    var options = {     // The C-API preprocessor for structs and enums.
+        confSuffix:'',  // Suffix to add to struct used for object config.
+        debug   :false, // Debugging output
+        json    :false, // Output json definitions
+        name    :null,  // Name of group
+        outFile :null,  // File to send output to.
+        test    :false, // Test output.
+        trace   :false, // Trace output.
+        unkType :true,  // Warn of unknown struct fields that will be ignored.
+        varSuffix:'_Data' // Suffix to add to data used for object config.
+    };
+
+    var that = {
+        pre:'', pre0:'', pre1:'', out0:'', out1:'', out:'', iout:'',
+        init:[], types:'',  structs:'', enums:'', vars:'', cmds:'',
+        varnames:[], mapnames:[], cmdnames:[], 
+        structmap:{}, enummap:{}, enumzero:{},
+        vardefs:'',  siglst:[], varinits:'', mapinits:'', enumIni:{},
+        portlst:[], statlst:[], cmddefs:'', cmddef:'',
+        enumvals:{}, infiles:[]
+    };
+    var Ex = {asize:0, offs:1, size:2, sig:3};
+
+    if (typeof args === 'string')
+        args = [args];
+    if (typeof args !== 'array' || args.length<1)
+        throw "expected 1 or more args";
+
+    Jsi_Opts(that, options, opts);
+            
+    var defs = {structs:[], enums:[], types:[], vars:[], cmds:[]};
+    //var popts = { hassig:true, hassiz:false, builtinhassig:true};
+
+
+    var typeNameStr = "number string boolean array function object regexp any userobj void null undefined";
+    var typeNameList = typeNameStr.split(' ');
+    
+    var portTypes = 'BOOL,UINT8,UINT16,UINT32,UINT64,INT8,INT16,INT32,INT64,DOUBLE,LDOUBLE,TIME_W,TIME_D,STRBUF';
+    var statTypes = 'TIME_T,INT,UINT,LONG,ULONG,SHORT,USHORT,INTPTR,UINTPTR,SIZE_T,'+portTypes;
+    var portableTypes = portTypes.split(',');
+    var staticTypes = statTypes.split(',');
+
+    function GetBaseType(styp) { //TODO: lookup with info type.
+        switch (styp) {
+            case 'bool':     return 'BOOL';  case 'uint':     return 'UINT'; 
+            case 'int':      return 'INT';   case 'double':   return 'DOUBLE';  
+            case 'int8_t':   return 'INT8';  case 'int16_t':  return 'INT16';
+            case 'int32_t':  return 'INT32'; case 'int64_t':  return 'INT64';   
+            case 'uint8_t':  return 'UINT8'; case 'uint16_t': return 'UINT16';
+            case 'uint32_t': return 'UINT32';case 'uint64_t': return 'UINT64';  
+            case 'ulong':    return 'ULONG'; case 'long':     return 'LONG';
+            case 'ushort':   return 'USHORT';case 'short':    return 'SHORT';     
+            case 'double':   return 'DOUBLE';case 'ldouble':  return 'LDOUBLE';
+            case 'size_t':   return 'SIZE_T';case 'Jsi_Number':return 'NUMBER';
+            case 'Jsi_Wide': return 'INT64'; case 'Jsi_UWide': return 'UINT64';
+            case 'Jsi_Sig':  return 'UINT32';
+            case 'intptr_t': return 'INTPTR';case 'uintptr_t':return 'UINTPTR';  
+            case 'time_w':   return 'TIME_W';case 'time_d':   return 'TIME_D';  
+            case 'time_t':   return 'TIME_T';
+            case 'const char*':return 'STRKEY';  case 'Jsi_Strkey':return 'STRKEY';  
+            case 'Jsi_DString': return 'DSTRING';
+            default:
+                if (styp.substr(0,6) === 'STRING') {
+                    var num = parseInt(styp.substr(6));
+                    if (isNaN(num) || num<=0) return null;
+                    return 'STRBUF';
+                     
+                }
+        }
+        return null;
+    }
+    
+    function typeValidate(prefix, typ) {
+        var tlst = typ.split('|');
+        var i = -1;
+        for (i = 0; i<tlst.length; i++)
+            if (typeNameList.indexOf(tlst[i]) < 0)
+                throw prefix+ " type unknown '"+tlst[i]+'" not one of: '+typeNameStr;
+        return tlst;
+    }
+
+    function GenType(def) {
+        // TODO
+        //that.types += "  { \""+name+"\", \""+label+"\", 0, sizeof(name), \""+fmt+"\", "+cformat+", },\n";
+    };
+    
+    // Define an enum
+    function GenEnum(def) {
+        // TODO: generate lookup string table. Also enhance Jsi_Opt_SwitchEnum to support more than just 0,1,2...
+        LogDebug("def=%q",def);
+        var flags = 0;
+        with (def) {
+            that.portlst.push(name);
+            that.statlst.push(name);
+            if (label)
+                that.pre0 += "/* "+label+" */\n";
+            that.pre0 += "typedef enum "+name+" {\n";
+            //that.pre += "  ";
+            var eName = name+"_Enum"; "jsi_csitems_"+name;
+            that.enummap[name] = eName;
+            that.enums += "    { .id=JSI_OPTION_CUSTOM, .name=\""+name+"\""
+                +", .offset="+flds.length+", .size=sizeof(enum "+name+"), .iniVal={}"
+                + ", .help=\""+(label?label:'')+"\""
+                + ", .flags="+ flags+", .custom=0"
+                + ", .data=(void*)"+eName
+                +", .info=0, .tname=\"\" },\n";
+            that.iout += "  static Jsi_EnumSpec "+eName+"[] = {\n";
+            var strKeys = "";
+            for (var i in flds) {
+                var f = flds[i];
+                var nname = f.name;
+                that.enumvals[nname] = f.value;
+                if (f.value === 0)
+                    that.enumzero[name] = 1;
+                f.value = format('0x%x', f.value);
+                that.iout += "    { .id=JSI_OPTION_CUSTOM, .name=\""+nname+"\", .offset=0, .size=0"
+                +", .iniVal={}, .help=\""+(f.label?f.label:'')+"\""
+                +", .flags="+ flags+", .custom=0, .data=0, .info=0, .tname=0, .value="+f.value+"},\n";
+                that.pre0 += "  "+nname+"="+f.value+",\n";
+                if (strKeys !== '')
+                    strKeys += ",";
+                strKeys += "\""+nname+"\"";
+            }
+            strKeys += ", 0";
+            var skname = eName+"_Strkeys"; //"jsi_csstrKeys_"+name;
+            that.pre1 += "\n  const char *"+skname+"[] = { "+strKeys+", 0};\n";
+            that.iout += "    { .id=JSI_OPTION_END, .name=\""+name+"\", .offset=0, .size="+flds.length
+                + ", .iniVal={.ini_STRKEY="+skname+"}}\n  };\n\n";
+            that.pre0 += "} "+name+";\n\n";
+        }
+    }
+    
+    // Define a struct
+    function GenStruct(def) {
+        var sc = '', fieldstr = '', name = def.name, definit = def.init, sig = 0, cnt = 0, aspre = '';
+        var hassig = false;
+        if (!def.Array)
+            def.Array = 0;
+        if (def.label)
+            sc += "/* "+def.label+" */\n";
+        else
+            def.label = '';
+        sc += "typedef struct "+name+" {\n";
+        var bsgets=[], bscnt = 0, inits = [], hasinit = 0, fcnt = 0, flags = 0, bsget = 0,
+            crc = 0, scrc = '', port=1, stat=1, portconds='';
+        // that.out( [subst -novariables fields]
+        for (var ii in def.flds) {
+            var f = def.flds[ii];
+            if (!f)
+                continue;
+            LogTrace("f=%q",f);
+            var type = f.id, fname = f.name, ofname = fname, fflags = f.flags, st = GetBaseType(type);
+            if (type == 'Jsi_Sig')
+                st = 'UINT32';
+            if (scrc === '')
+                scrc += ',';
+            scrc += type;
+            var des = '',
+                fdescr = (f.label?f.label:'');
+            if (!cnt++ && fname == 'sig' && !f.bit && !f.asize) {
+                hassig = true; sig = f.init;
+            }
+            if (fdescr)
+                 des = "  /* "+fdescr+" */ ";
+            var asiz = 0, option=0, bitsiz = 0, bsiz = 0, offset;
+            var s, bn, bsizstr = '';
+            if (f.bit) {
+                scrc += ':'+f.bit;
+                offset = 0;
+                bsget = "jsi_cs_bsget_"+name;
+                option = bscnt++;
+                bitsiz = f.bit;
+                bsgets.push([f.name, type+" "+f.name+":"+bitsiz,type, f.idx]);
+                bsiz = Math.floor((f.bit+7)/8);
+                bsizstr = ':'+f.bit;
+            } else {
+                offset = "Jsi_Offset("+name+","+fname+")";
+                bsiz = "sizeof("+type+")";
+                bitsiz = "8*"+bsiz;
+                if (stat) {
+                    if ((!st || staticTypes.indexOf(st)<0) && that.statlst.indexOf(type)<0)
+                        stat = 0;
+                }
+                if (!stat)
+                    port =0;
+                else if (port) {
+                    if ((!st || portableTypes.indexOf(st)<0) && that.portlst.indexOf(type)<0)
+                        port = 0;
+                }
+            }
+            if (f.asize) {
+                bsizstr = '['+f.asize+']';
+                scrc += bsizstr;
+            }
+            var sinit = 0;
+            if (that.enumIni[type] !== undefined)
+                sinit = that.enumIni[type];
+            else if (type === 'pthread_mutex_t')
+                sinit = 'PTHREAD_MUTEX_INITIALIZER';
+            else if (f.isstr || type.match(/^STRING[0-9]+$/)) {
+                if (f.init === undefined)
+                    sinit = "{}";
+                else
+                    sinit = "\""+f.init+"\"";
+            } else if (f.asize) {
+                sinit = "{}";
+            } else if (f.init !== undefined) {
+                sinit = f.init;
+            } else if (that.structmap[type]) {
+                sinit = "JSI_INI_DEFN_"+type;
+            }
+            var otype = st;
+            
+            inits.push(sinit);
+            var issubopt = (that.structmap[type] !== undefined);
+            var isenum = (that.enummap[type] !== undefined);
+            if (isenum && !that.enumzero[type])
+                LogWarn("%s.%s: enum %s does not define a zero value", name, fname, type);
+            var bdata = 0;
+            var rest = ', .custom=0, .data=0';
+            if (!st) {
+                otype = st = 'CUSTOM';
+                if (issubopt) {
+                    LogTest("SUB = %s", type);
+                    rest = ', .custom=Jsi_Opt_SwitchSuboption, .data=(void*)'+that.structmap[type];
+                } else if (isenum) {
+                    rest = ', .custom=Jsi_Opt_SwitchEnum, .data=(void*)'+that.enummap[type];
+                    fflags += '|JSI_OPT_ENUM_SPEC';
+                } else {
+                    if (f.asize)
+                        throw("array of unspecified unsupported: "+name+'.'+fname);
+                    rest = ', .custom=Jsi_Opt_SwitchNull, .data=0';
+                    if (that.unkType && type !== "Jsi_Interp*")
+                        puts('ignoring unknown type "'+type+'": ' +name+'.'+fname);
+                }
+            }
+            if (f.asize) {
+                if (f.bit)
+                    throw("array of bits unsupported: "+name+'.'+fname);
+                if (isenum)
+                    throw("array of enums unsupported: "+name+'.'+fname);
+                //if (issubopt)
+                    //throw("array of structs unsupported: "+name+'.'+fname);
+                var arnam = name+'_'+fname+'_Specs';
+                aspre += '\n  static Jsi_OptionSpec '+arnam+'[] = {\n'
+                    + '    JSI_OPT_CARRAY_ITEM('+otype+', '+name+', '+fname+', .help="'+fdescr+'", .flags='+fflags+rest+'),\n'
+                    + '    JSI_OPT_END('+name+', .help="Options for array field '+name+'.'+fname+'")\n  };\n\n';
+                fieldstr += '    JSI_OPT_CARRAY('+name+', '+fname+', "'+fdescr+'", '+fflags+', '+arnam+', '+f.asize+', "'+type+'"),\n';
+            } else if (f.bit) {
+                if (isenum)
+                    bdata = '&'+that.enummap[type];
+                fieldstr += '    JSI_OPT_BITS('+type+', '+fname+', "'+fdescr+'", '+fflags+', '+bsget+', '+f.idx+', "'+type+'", '+bdata+'),\n';
+            } else {
+                fieldstr += "    JSI_OPT("+otype+", "+name+", "+fname+", .help=\""+fdescr+"\", .flags="+fflags+rest
+                    +", .info=0, .tname=\""+type+"\""+", .value=0, .bits="+option+",.boffset="+bitsiz+" ),\n";
+            }
+            sc += "  "+type+" "+ofname+bsizstr+";"+des+"\n";
+        }
+        definit = inits.join(',');
+        sc += "} "+name+";\n\n";
+        var init = '0';
+        if (def.init && def.init !== "{}") {
+            init="(void*)&jsi_csini_data_"+name;
+            that.iout += "\n#define JSI_INI_DEFN_"+name+" {"+definit+"}\n";
+            that.iout += "  static "+name+" jsi_csini_data_"+name+" = JSI_INI_DEFN_"+name+";\n";
+            that.init[name] = init;
+        } else
+            definit=0;
+        that.pre0 += sc;
+        //that.pre1 += aspre;
+        if (bsgets.length) {
+            var rc = "\n/* A set/get bitfield function for the struct \"name\". */\n"
+                + "static Jsi_RC jsi_cs_bsget_"+name+"(Jsi_Interp *interp, void *data, Jsi_Wide *s, Jsi_OptionSpec *spec, int idx, bool isSet) \{\n"
+                + "  int same;\n  const char *fname=\"\";\n"
+                + "  struct "+name+" *p = (struct "+name+" *)data;\n"
+                + "  switch (idx) \{\n";
+            for (var k in bsgets) {
+                var i = bsgets[k][0];
+                var j = bsgets[k][1];
+                var btyp = bsgets[k][2];
+                var bidx = bsgets[k][3];
+                var tvar = (btyp.substr(0,1) == 'u'?'Jsi_UWide':'Jsi_Wide');
+                var rr =  "      "+tvar+"* t = ("+tvar+"*)s;\n"
+                    + "      if (!isSet) {*t = p->"+i+"; return JSI_OK; }\n"
+                    + "      p->"+i+"= ("+btyp+")*t;\n"
+                    + "      "+btyp+" oldv = ("+btyp+")*t;\n"
+                    + "      if (!(same = (p->"+i+" == ("+btyp+")*t))) {\n"
+                    + "          p->"+i+" = oldv;\n"
+                    + "          fname = \""+j+"\";\n"
+                    + "      }\n"
+                    + "      break;\n";
+                rc += "\n    case "+bidx+": {\n"+rr+"    }\n";
+            }
+            rc += "\n    default: {Jsi_LogWarn(\"bad index: %d\",idx); return JSI_ERROR; }\n";
+            rc += "  \}\n"
+                    + "  if (!same) { Jsi_LogWarn(\"value %\" PRId64 \" out of range for field '%s'\",*s, fname); return JSI_ERROR; }\n"
+                + "  return JSI_OK;\n\}\n\n";
+            that.out += rc;
+        }
+        crc = 0;
+        if (!port) // Non-portable fields add platform crc.
+            crc = Info.platform().crc;
+        else
+            that.portlst.push(name);
+        if (stat)
+            that.statlst.push(name);
+        crc = Util.crc32(scrc, crc);
+        if (!crc) // Take care of corner case where crc is 0.
+            crc = Util.crc32(scrc+'.');
+        crc = format("%#x", crc);
+        if (!sig && hassig) {
+            sig = crc;
+        }
+        var specname = name+'_Specs';
+        that.pre0 += '#define '+name+'_Sig '+sig+'\n\n';
+        that.iout += aspre + "\n  static Jsi_StructSpec "+specname+"[] = {\n"+ fieldstr
+            +"    JSI_OPT_END("+name+', .help="'+def.label+'")\n  };\n\n';
+        that.structs += "    { .id=JSI_OPTION_CUSTOM, .name=\""+name+"\""
+            +", .offset="+def.flds.length
+            +", .size=sizeof("+name+")"
+            +", .iniVal={.ini_CUSTOM=(void*)"+bsget+"}"
+            +", .help=\""+def.label+"\""
+            +", .flags="+(def.flags?def.flags:0)
+            +", .custom=(Jsi_OptionCustom*)"+init
+            +", .data=(void*)"+specname
+            +", .info=0"
+            +", .tname="+def.Array
+            +", .value=0"
+            +", .bits=0, .boffset=0, .idx="+0+", .ssig="+sig+", .crc="+crc+"},\n";
+    
+    }
+
+    // Generate Vars.
+    function GenVars(def) {
+        var sc = '', fldini = '', name = def.name, definit = def.init;
+        if (!def.Array)
+            def.Array = 0;
+        if (def.label)
+            sc += "/* "+def.label+" */\n";
+        else
+            def.label = '';
+        var fcnt = 0;
+        for (var ii in def.flds) {
+            var f = def.flds[ii];
+            if (!f)
+                continue;
+            LogTrace("f=%q",f);
+            var fieldstr = '', type = f.type, fname = f.name, ofname = fname, fflags = 0, parms = '';
+            var anum = f.asize;
+            if (f.ismap) {
+                if (anum) {
+                    if (anum.substr(0,1) === '#') {
+                        anum = anum.substr(1);
+                        parms = "#";
+                    }
+                    if (anum.substr(0,1) === '@') {
+                        anum = anum.substr(1);
+                    }
+                    if (anum.length && anum !== '0') {
+                        if (!that.structmap[anum])
+                            throw("map index struct unknown: "+anum);
+                    }
+                }
+            } else {
+                if (anum) {
+                    if (typeof(anum) !== 'number') {
+                        if (typeof(anum) === 'string' && that.enumvals[anum] !== undefined) {
+                            f.asize = that.enumvals[anum];
+                        } else if (isNaN(f.asize = new Number(anum)))
+                            throw("not a number: "+anum+' ' +typeof(anum));
+                    }
+                }
+            }
+
+            var sv, des = '',
+                fdescr = (f.label?f.label:'');
+            if (fdescr)
+                 des = "  /* "+fdescr+" */ ";
+            LogTrace("type=%s", type);
+            fieldstr = type+" " + fname;
+            if (f.asize && !f.ismap) {
+                fieldstr += "[" + f.asize + "]";
+            }
+            var rest = '';
+            if (that.structmap[type]) {
+                rest = ', .spec='+that.structmap[type];
+                LogDebug("KTYPE: "+f.ktype);
+                if (f.ktype && that.structmap[f.ktype])
+                    rest += ', .keySpec='+that.structmap[f.ktype];
+                
+            }
+            if (f.ismap) {
+                sv = '    {.id=JSI_OPTION_CUSTOM, .name="'+fname+'"'
+                    +", .offset=0, .size=0, .iniVal={}"
+                    +', .help="'+fdescr+'"'
+                    +', .flags='+fflags
+                    +', .custom=0'
+                    +', .data=(void*)&'+fname
+                    +', .info="'+type+'"'
+                    +', .tname="'+f.ktype+'"'
+                    +', .value=0, .bits=0,.boffset=0,.idx=0,.ssig=0,.crc=0'
+                    +', .userData="'+f.varParam+'"'
+                    + '},\n';
+
+                that.vardefs += sv;
+                that.pre += 'extern Jsi_Map *'+fname+";\n";
+                that.out0 += 'Jsi_Map *'+fname+";\n";
+            } else {
+                sv = '    {.id=JSI_OPTION_CUSTOM, .name="'+fname+'"'
+                    +", .offset=0, .size=0, .iniVal={}"
+                    +', .help="'+fdescr+'"'
+                    +', .flags='+fflags
+                    +', .custom=0'
+                    +', .data=(void*)&'+fname
+                    +', .info="'+type+'"'
+                    +', .tname="'+f.ktype+'"'
+                    +', .value='+f.asize+', .bits=0'
+                    +', .userData="'+f.varParam+'"'
+                    + '},\n';
+
+                that.vardefs += sv;
+                that.pre += 'extern '+fieldstr+";\n";
+                that.out0 += fieldstr+";\n";
+            }
+        }
+    }
+
+    // Define a command extern/extension
+    function GenCmd(def) {
+        LogDebug("def=",def);
+        var hasconstr = 0;
+        var ind='  ', sc = '', fldini = '', name = def.name, definit = def.init;
+        var reg = /^function\s*([a-zA-Z0-9_]*)\s*\(([^)]*)\)(:[\|a-z]+|)\s*\{(.*)$/;
+        var rega = /^([a-zA-Z0-9_]+)(:[|a-z]+|)(=.+|)$/;
+        var keys = Info.keywords();
+        var fnames = def.fnames;
+        var isObj = (fnames.indexOf(name)>=0);
+        var intData = (!isObj && that.varnames.indexOf(name+that.varSuffix)<0);
+        keys.push('length', 'constructor','prototype');
+        if (def.label)
+            sc += "/* "+def.label+" */\n";
+        else
+            def.label = '';
+        var fcnt = 0;
+        var otyp = name+that.confSuffix;
+        var ifpre = def.preface, ipre = '', ffpre = '\nstatic Jsi_CmdSpec '+name+'Cmds[] = {\n';
+        
+        // Process functions
+        for (var f of def.flds) {
+            LogTrace("f=",f);
+            var fre = reg.exec(f.trim());
+            if (!fre)
+                throw "invalid function: "+f;
+            var fflags = 0, finfo = 0, fopts = 0, fretType = 0;
+            var fbody = fre[4];
+            var fhelp = ''; // TODO: pull out of comment.
+            var fhnl = fbody.indexOf('\n');
+            var fhcm = fbody.indexOf('//');
+            if (fhnl>0 && fhcm>=0 && fhcm<fhnl)
+                fhelp = fbody.substr(fhcm+2, fhnl-3).trim();
+            var fname = fre[1];
+            var fconstr = (fname === name);
+            if (fconstr)
+                hasconstr = 1;
+            if (keys.indexOf(fname)>=0)
+                throw("function name can not be a keyword: "+fname);
+            if (!fre[3] || fre[3] == ':')
+                throw "must specify a return type for function: "+fname;
+            var fcmdName = name.toTitle()+fname.toTitle()+'Cmd';
+            ifpre += '\n// function '+fre[1]+'('+fre[2]+')'+fre[3];
+            var ifprecc = '\nstatic Jsi_RC '+fcmdName+'(Jsi_Interp *interp, Jsi_Value *args, Jsi_Value *_this, Jsi_Value **ret, Jsi_Func *funcPtr';
+            var isObjNew = (isObj && name === fname);
+            if (isObjNew) {
+                ifprecc += ', '+otyp+' *cmdPtr';
+            }
+            ifprecc += ')';
+            ifpre += ifprecc +' {\n';
+            if (isObj && name != fname) {
+                that.out += '#define CDATA_CONSTRUCTOR 1\n';
+                ifpre += '  '+otyp+' *cmdPtr = ('+otyp+' *)Jsi_UserObjGetData(interp, _this, funcPtr);\n'
+                    + '  if (!cmdPtr) { Jsi_LogError("Apply in a non object"); return JSI_ERROR; }\n';
+            } else if (intData) {
+                ifpre += '  '+otyp+' *cmdPtr = ('+otyp+' *)Jsi_InterpGetData(interp, "'+name+'", NULL);\n'
+                    + '  if (!cmdPtr) { Jsi_LogError("Missing interp data"); return JSI_ERROR; }\n';
+            }
+            var rettyp = typeValidate('return', fre[3].substr(1));
+            if (rettyp.length>1 || rettyp[0] != 'any') {
+                var rtvl = [];
+                for (var rti of rettyp) {
+                    rtvl.push('JSI_TT_'+rti.toUpperCase());
+                    
+                }
+                fflags = '(uint)('+rtvl.join('|')+')';
+            }
+            var args = fre[2].trim();
+            var alst = args.split(',');
+
+            var minargs = alst.length, maxargs = minargs;
+            var last = alst.length-1;
+            // Process parameters
+            for (var i = 0; args !== '' && i<=last; i++) {
+                var aval = alst[i].trim();
+                if (aval === '...') {
+                    if (i != last)
+                        throw "expected ... to be at end";
+                    maxargs = -1;
+                    if (minargs === alst.length)
+                        minargs = alst.length-1;
+                    continue;
+                }
+                var avals = rega.exec(aval);
+                if (!avals)
+                    throw "invalid argument: "+aval;
+ 
+                var afnam = avals[1];
+                if (!avals[2])
+                    throw("argument '"+aval+"' must have a type in function: "+fname);
+                if (keys.indexOf(afnam)>=0)
+                    throw("argument name can not be a keyword: "+fname);
+                var atyp = avals[2].substr(1);
+                var tvlst = typeValidate('argument', atyp);
+                var iasfx = '', iat = '', tlen = tvlst.length, vget='', ttnam='';
+                
+
+                var dv = 0;
+                if (avals[3] && avals[3] != '') { // Default value
+                    if (minargs===alst.length)
+                        minargs = i;
+                    //ifpre += ind+'if (__argc <= '+i+') ';
+                    var defval = avals[3].substr(1);
+                    var dvlen = defval.length;
+                    switch (defval) {
+                        case 'true': dv = 1; iat='boolean'; break;
+                        case 'false': dv = 0; iat='boolean'; break;
+                        case 'void': dv=0; iat='void';  break;
+                        case 'undefined': dv=0; iat='undefined'; break;
+                        case 'null': iat='null'; break;
+                        default:
+                            if ((defval.substr(0,1) == "'" && defval.substr(dvlen-1,1) == "'")
+                                || (defval.substr(0,1) == '"' && defval.substr(dvlen-1,1) == '"')) {
+                                dv = '"'+defval.substr(1,dvlen-2)+'"';
+                                iat='string';
+                            } else {
+                                dv = parseFloat(defval);
+                                iat='number';
+                                if (isNaN(dv))
+                                    throw "Unrecognized default "+defval+" in function: "+fname;
+                            }
+                    }
+                    if (iat !== '' && tvlst.indexOf(iat)<0) {
+                        tvlst.push(iat);
+                        tlen++;
+                    }
+                    iasfx = (tlen==1?'':'_'+iat);
+                }
+                else if (minargs!==alst.length)
+                    throw "non-default value follows default: "+aval+' in function: '+fname;
+                
+                var voao = 'Jsi_ValueArrayIndex(interp, args, '+i+')';
+                    
+                if (tlen===1) {
+                    iat = tvlst[0];
+                    var iftn = 'Jsi_Value*';
+                    iasfx = (tlen===1?'':'_'+iat);
+                    switch (iat) {
+                        case 'boolean': iftn = 'bool'; ttnam = 'Bool'; break;
+                        case 'number': iftn = 'Jsi_Number'; ttnam = 'Number'; break;
+                        case 'string': iftn = 'const char*';
+                            if (tlen==1)
+                                vget='if (Jsi_ValueGetLength(interp, args) > '+i+' && !('+afnam+'=Jsi_ValueString(interp, '+voao+',NULL))) '
+                                + '{ Jsi_LogError("expected string"); return JSI_ERROR; }\n';
+                            break;
+                    }
+                    ifpre += ind+iftn + ' '+afnam+iasfx+' = '+dv+';\n';
+                    if (ttnam !== '' && vget === '')
+                        vget='if (Jsi_ValueGetLength(interp, args) > '+i+' && Jsi_Get'+ttnam+'FromValue(interp, '+voao+', &'+afnam+') != JSI_OK) '
+                        + '\n'+ind+'  { Jsi_LogError("expected '+atyp+'"); return JSI_ERROR; }\n';
+                }
+                if (vget !== '')
+                    ifpre += ind + vget;
+
+                //var voao = afnam+'_value';
+                //ifpre += ind+'Jsi_Value *'+voao+' = Jsi_ValueArrayIndex(interp, args, '+i+');\n';
+                    
+                if (!isObjNew && i === last && afnam === 'options' && tvlst.indexOf('object')>=0) {
+                    var iopnam = name;
+                    if (fname !== 'conf' && fname !== name)
+                        iopnam += '_'+fname;
+                    iopnam +=  that.confSuffix;
+                    if (!that.structmap[iopnam])
+                        throw('Can not find struct "'+iopnam+'" for cmd '+fname);
+                    var iopnamS = iopnam+'_Specs';
+                    var iodnam, iott = that.structmap[iopnam];
+                    LogDebug('NAM: %s ', iopnamS);
+                    if (fname === 'conf') {
+                        if (isObj || intData)
+                            iodnam = 'cmdPtr';
+                        else
+                            iodnam = '&'+name+that.varSuffix;
+                    } else {
+                        // Cmd-local options.
+                        iodnam = '&data';
+                        ifpre += '  '+iopnam + ' data = {};\n';
+                    }
+                    if (fname === 'conf') {
+                        if (i>0) throw("Conf command takes only a single argument");
+                        ifpre += '  return Jsi_OptionsConf(interp, (Jsi_OptionSpec*)'+iopnamS+', '+iodnam+', '+voao+', ret, 0);\n';
+                    } else {
+                        ifpre += '  if ('+voao+' && Jsi_OptionsProcess(interp, (Jsi_OptionSpec*)'+iopnamS+', &data, '+voao+', 0) < 0) return JSI_ERROR;\n';
+                    }
+                }
+
+            }
+            var fcmdNameI =  (isObj && name === fname ? name+'Constructor': fcmdName);
+            ffpre += ind+'{ "'+fname+'",\t'+fcmdNameI+',\t'+minargs+','+maxargs+',"'+args+'", .help="'+fhelp
+                +'", .retType='+fretType+', .flags='+fflags+', .info='+finfo+', .opts='+fopts+' },\n';
+            var ofbody = '';
+            for (i of fbody.split('\n')) {
+                var ipre = i.trim();
+                if (ipre.substr(0,6) === 'RETURN') {
+                    var retre = ipre.match(/^RETURN\s*\(([a-zA-Z0-9_]*)\);/);
+                    var coffs = ipre.indexOf('//:');
+                    var ctyp;
+                    if (coffs<0) {
+                        if (rettyp.length!=1)
+                            throw("return missing type comment '//:TYPE': "+i);
+                        ctyp = rettyp[0];
+                    } else {
+                        ctyp = ipre.substr(coffs+3).trim();
+                    }
+                    var rnam = retre[1];
+                    var rtyp = typeValidate('return', ctyp);
+                    if (rtyp.length!==1)
+                        throw("expected single return type");
+                    switch (ctyp) {
+                        case 'number': i = '{ Jsi_ValueMakeNumber(interp, ret, '+rnam+'); return JSI_OK; }'; break;
+                        case 'string': i = '{ Jsi_ValueMakeStringDup(interp, ret, '+rnam+'); return JSI_OK; }'; break;
+                        case 'boolean': i = '{ Jsi_ValueMakeBool(interp, ret, '+rnam+'); return JSI_OK; }'; break;
+                        case 'null': i = '{ Jsi_ValueMakeNull(interp, ret); return JSI_OK; }'; break;
+                        case 'void':
+                        case 'undefined': i = 'return JSI_OK;'; break;
+                        case 'object': 
+                            //if (fname === 'conf')
+                            //    i = 'Jsi_OptionsConf(interp, VimyOpts, cmdPtr, Jsi_ValueArrayIndex(interp, args, 0), ret, 0);';
+                            i = ''; 
+                            break;
+                        default: throw("unsupported return type '"+ctyp+"' not one of: number string boolean null undefined"); break;
+                    }
+                    i = '        '+i;
+                }
+                ofbody += i + '\n';
+            }
+            ifpre += ofbody+'\n';
+            if (fconstr)
+                ifpre += that.objCmdStr.replace(/Demo/g, name);
+        }
+        ffpre += ind+'{ NULL, .help="'+def.label+'" }\n  };\n';
+        that.cmddef += '\n' + ifpre + ffpre;
+        if (isObj)
+            that.cmddefs += ''; //'\n  if (Jsi_Init'+name+'(interp, 0) != JSI_OK) return NULL;\n';
+        else
+            that.cmddefs += '\n  if (!Jsi_CommandCreateSpecs(interp, "'+name+'",   '+name+'Cmds,   NULL, 0)) return NULL;\n';
+        if (intData)
+            that.cmddefs += '  '+otyp+' *cmdPtr = ('+otyp+'*) Jsi_Calloc(1, sizeof(*cmdPtr));\n'
+                + '  if (!cmdPtr || JSI_OK != Jsi_CDataStructInit(interp, (uchar*)cmdPtr, "'+otyp+'")) return NULL;\n'
+                + '  Jsi_InterpSetData(interp, "'+name+'", (void*)cmdPtr,  Jsi_DeleteData);\n';
+    }
+    
+    function GenAllItems(items:object)
+    {
+        for (var i of items.enums) {
+            LogTrace("enum: %q", i);
+            GenEnum(i);
+        }
+        for (var i of items.structs) {
+            LogDebug("struct: %q", i);
+            GenStruct(i);
+        }
+        for (var i of items.types) {
+            LogDebug("types: %q", i);
+            GenType(i);
+        }
+        for (var i of items.vars) {
+            LogDebug("var: %q", i);
+            GenVars(i);
+        }
+        for (var i of items.cmds) {
+            LogDebug("cmd: %q", i);
+            GenCmd(i);
+        }
+        return;
+    };
+
+    function CDataFinalize () {
+        var name = that.name;
+
+        that.out = '// DO NOT EDIT: file generated by Jsi_CData.jsi from: '+that.infiles.join(',')+'\n\n'
+        + "#ifndef _JSI_CDEFS_"+name+"_H_\n"
+        + "#define _JSI_CDEFS_"+name+"_H_\n\n"
+        + '#define _GNU_SOURCE\n#include <string.h>\n#ifdef CDATA_MAIN\n#define JSI_CDATA_IMPL\n\n'
+        + '#ifdef CDATA_SHARED\n#define JSI_USE_STUBS 1\n#include "jsi.h"\n#else\n#include "jsi.c"\n#endif\n#endif\n\n'
+        + that.pre0 + '\n' + that.pre + "\n#ifdef JSI_CDATA_IMPL\n\nJSI_EXTENSION_INI\n"
+        + that.out0 + that.out + that.out1
+        + that.pre1 + '\n' + that.iout
+        + "\n  static Jsi_EnumSpec CS_ENUMS_"+name+"\[\] = {\n"
+        + that.enums 
+        + "    {}\n  };\n"
+        + "\n  static Jsi_StructSpec CS_STRUCTS_"+name+"\[\] = {\n"
+        + that.structs 
+        + "    {}\n  };\n"
+        + "\n  static Jsi_OptionType CS_TYPES_"+name+"\[\] = {\n"
+        + that.types 
+        + "    {}\n  };\n"
+        + "\n   static Jsi_VarSpec CS_VARS_"+name+"\[\] = {\n"
+        + that.vardefs 
+        + "    {}\n  };\n\n"
+        
+        + "  static Jsi_CData_Static CS_STATICS_"+name+" = { .name=\""+name+"\", .structs=CS_STRUCTS_"+name
+        +", .enums=CS_ENUMS_"+name
+        +', .vars=CS_VARS_'+name
+        +", .types=CS_TYPES_"+name
+        +"  };\n\n"
+
+        + that.cmddef
+
+        
+        + "\n\nstatic const Jsi_CData_Static* jsi_c_init_"+name+"(Jsi_Interp *interp) {\n"
+        + '  if (interp && (Jsi_PkgRequire(interp, "CData", 0)<0 || \n'
+        + "      JSI_OK != Jsi_CDataRegister(interp, &CS_STATICS_"+name+"))) return NULL;\n\n"
+
+        + that.cmddefs 
+
+        + "\n  return &CS_STATICS_"+name+";\n}\n\n"
+        + "\n#endif\n#endif\n"
+        + that.selfSuffix.replace(/Demo/g, name);
+        if (that.outFile)
+            File.write(that.outFile, that.out);
+        else
+            return(that.out);
+    }
+    
+    function StrGetEnum(str:string) {
+        LogDebug("DO: %s", str);
+        var top = -1;
+        var flds = [];
+        var ina = str.match(/^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*=\s*\{/);
+        if (!ina)
+            throw("bad def: " + str);
+        var name = ina[2];
+        var def = {name:name, type:ina[1]};
+        var vli;
+        var l = str.trim().split('\n');
+        l = l.splice(1, l.length-2);
+        var lastv = -1;
+        for (var i in l) {
+            //var res = {};
+            var s, label = '', v = l[i].trim();
+            LogDebug("v=%s", v);
+            if (flds.length == 0 && v.substr(0,2) === '//') {;
+                label = v.substr(2).trim();
+                if (!def.label)
+                    def.label = label;
+                else
+                    throw("multiline label not allowed: "+v);
+                continue;
+            }
+            vli = v.indexOf('//');
+            var reslabel;
+            if (vli>0) {
+                reslabel = v.substr(vli+2);
+                v = v.substr(0,vli).trim();
+            }
+            if (v === '') continue;
+            var vv = v.split(',');
+            if (vv.length>1 && vli>0 && vv[1].trim() !== '')
+                throw("commented item must be on single line: "+v);
+            var vcnt = 0;
+            for (var j in vv) {
+                vcnt++;
+                var vt = vv[j].trim();
+                var nval;
+                if (vt === '') continue;
+                flds[++top] = {};
+                if (vcnt == vv.length && reslabel)
+                    flds[top].label = reslabel;
+                if (vt.indexOf('=')<=0) {
+                    flds[top].name = vt;
+                    lastv = nval = lastv+1;
+                } else {
+                    s = vt.match(/^\s*([a-zA-Z0-9_]+)\s*=\s*([^\s]+)\s*$/);
+                    LogTrace('s=%S',s);
+                    if (s === null || s.length != 3)
+                        throw("invalid: "+vt);
+                    flds[top].name = s[1];
+                    lastv = nval = parseInt(s[2]);
+                }
+                flds[top].value = nval;
+            }
+        }
+        LogTrace("AAAA: %q %q", top, flds);
+        def.flds = flds;
+        that.enumIni[name] = flds[0].name;
+        return def;
+    };
+
+    that.parmFlags = ("isSpecified,initOnly,readOnly,noDupValue,noClear,dbDirty,dbIgnore,dbRowid,"
+        +"nocase,forceInt,bitsetBool,dateOnly,timeOnly,isBits,fmtTime,fmtHex,strict,fieldSetup,"
+        +"coerce,noSig").split(',');
+
+    function ParseFlags(rest:string) {
+        if (rest.substr(0,1) !== '<')
+            return;
+        var ree = rest.indexOf('>');
+        if (ree<0)
+            throw("expected end bracket: "+rest);
+        var parms = rest.substr(1, ree-1);
+        rest = rest.substr(ree+1).trim();
+        LogTrace('parms=%q', parms);
+        var pf = that.parmFlags;
+        var f = 0;
+        for (var o of parms.split(',')) {
+            var oi = pf.indexOf(o);
+            if (oi<0)
+                throw("unknown flag '"+o+"' expected: "+pf.join(', '));
+            f |= (1<<oi);
+        }
+        return [f, rest];
+    }
+
+    function StrGetStruct(str:string) {
+        LogDebug("DO: "+str);
+        var flds = [], fcnt = 0;
+        var ina = str.match(/^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*=\s*\{/);
+        if (!ina)
+            throw("bad def: " + str);
+        var label, def = {name:ina[2], type:ina[1], opts:null, label:null};
+        var li, l = str.trim().split('\n');
+        if ((li=l[0].indexOf('//'))>0) {
+            label = l[0].substr(li+2).trim();
+            def.label = label;
+        }
+        l = l.splice(1, l.length-2);
+        var dfn = def.name+'_Specs';
+        if (that.structmap[dfn])
+            throw("duplicate struct name");
+        that.structmap[def.name] = dfn;
+        for (var i in l) {
+            var res = {label:'', bit:0, asize:0, flags:0, isstr:false};
+            var v = l[i].trim();
+            LogTrace("v=%q". v);
+            if (v.match(/^<.*>$/)) {
+                if (def.opts) throw("multiple opts");
+                LogDebug("OPTS: %s", v);
+                def.opts = v.substr(1,v.length-2);
+                continue;
+            }
+            if (v === '') continue;
+            var spref = v.substr(0,6);
+            if (spref !== 'const ') 
+                spref = '';
+            else
+                v = v.substr(6);
+            if (flds.length == 0 && v.substr(0,2) === '//') {
+                label = v.substr(2).trim();
+                if (!def.label)
+                    def.label = label;
+                else
+                    throw("multiline label not allowed: "+v);
+                continue;
+            }
+            var s = v.match(/^\s*(\S+)\s+([^;]+)\s*;\s*(.*)$/);
+            LogTrace('SS: <%q>', v);
+            if (s === null || s.length < 2)
+                throw('invalid field: "'+v+'"');
+            res.id = spref + s[1];
+            var namval = s[2].trim();
+            var rest = s[3].trim();
+            var pfi = ParseFlags(rest);
+            if (pfi) {
+                res.flags = pfi[0].toString(16);
+                rest = pfi[1];
+            }
+            label = rest;
+            if (label !== "") {
+                if (label.substr(0,2) !== '//')
+                    throw('expected // after definition: '+label);
+                label = label.substr(2).trim();
+            }
+            res.label = label.trim();
+            var nam = namval, val = null, nn;
+            if (nam.indexOf('=')>=0)
+            {
+                nn = nam.split('=');
+                if (nn.length != 2)
+                    throw('expected nam=val: '+nam);
+                nam = nn[0];
+                val = nn[1].trim();
+                if (val === '')
+                    val = "{}";
+                else if (val.match(/^".*"$/)) {
+                    res.isstr = true;
+                    val = val.substr(1,val.length-2);
+                }
+                if (val.trim() === '')
+                    val = "{}";
+            }
+            nam = nam.trim();
+            var n;
+            res.idx = fcnt++;
+            if (nam.indexOf(':')>=0)
+            {
+                nn = nam.split(':');
+                res.bit = parseInt(nn[1]);
+                nam = nn[0].trim();
+                res.flags += '|JSI_OPT_IS_BITS';
+            } else if ((n = nam.indexOf('[')) && nam.substr(-1) == ']') {
+                res.asize = nam.substr(n+1, nam.length-n-2);
+                nam = nam.substr(0,n);
+            }
+            if (!nam.match(/^[a-zA-Z0-9_]+$/))
+                throw("field name chars must be in [a-zA-Z0-9_] for '"+nam+"' in "+def.name);
+            res.name = nam;
+            if (val!==null)
+                res.init = val;
+            LogTrace('res=%q', res);
+            flds.push(res);
+        }
+        def.flds = flds;
+        return def;
+    }
+    
+    function StrGetVars(str:string) {
+        LogDebug("DO: "+str);
+        var flds = [];
+        var ina = str.match(/^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*=\s*\{/);
+        if (!ina)
+            throw("bad vars def: " + str);
+        var label, def = {name:ina[2], type:ina[1]};
+        var l = str.trim().split('\n');
+        l = l.splice(1, l.length-2);
+        for (var i in l) {
+            var res = {label:'', asize:0, opts:'', ismap:false, ktype:null, varParam:''};
+            var v = l[i].trim();
+            LogTrace("v=%q", v);
+            if (v === '') continue;
+            if (flds.length == 0 && v.substr(0,2) === '//') {
+                label = v.substr(2).trim();
+                if (!def.label)
+                    def.label = label;
+                else
+                    throw("multiline label not allowed: "+v);
+                continue;
+            }
+            var s = v.match(/^\s*(\S+)\s+([^;]+)\s*;\s*(.*)$/);
+            LogTrace('SS: <%q>', v);
+            if (s === null || s.length < 2)
+                throw('invalid var: "'+v+'"');
+            var typ = res.type = s[1];
+            var namval = s[2].trim();
+            label = s[3];
+            if (label !== "") {
+                if (label.substr(0,2) !== '//')
+                    throw('expected // after definition: '+label);
+                label = label.substr(2).trim();
+                if ((s=label.match(/^(\{[^\}]+\})\s*(.*)$/))) {
+                    label = s[2];
+                    res.opts = s[1]; // Options from start of comment.
+                }
+            }
+            res.label = label.trim();
+            var nam = namval, val = null, nn;
+            nam = nam.trim();
+            if ((nn = nam.indexOf('['))>=0 && nam.substr(-1) == ']') {
+                res.asize = nam.substr(nn+1, nam.length-nn-2);
+                res.varParam = nam.substr(nn, nam.length-nn);
+                nam = nam.substr(0,nn);                
+            } else if ((nn = nam.indexOf('{'))>=0 && nam.substr(-1) == '}') {
+                res.asize = nam.substr(nn+1, nam.length-nn-2);
+                res.varParam = nam.substr(nn, nam.length-nn);
+                nam = nam.substr(0,nn);
+                res.ismap = 1;
+            }
+            if (1 || res.asize) {
+                var ktyp = null, ktind;
+                if (res.ismap && (ktind=res.asize.indexOf('@'))>=0) {
+                    ktyp = res.asize.substr(ktind+1);
+                    res.ktype = ktyp;
+                    LogTest("Pushing spec: %s", ktyp);
+                }
+            }
+
+            res.name = nam;
+            if (that.varnames.indexOf(nam)>=0)
+                throw("duplicate var name: "+nam);
+            that.varnames.push(nam);
+            if (val!==null)
+                res.init = val.trim();
+            LogTrace('res=%q', res);
+            flds.push(res);
+        }
+        def.flds = flds;
+        return def;
+    }
+
+    function StrGetCmd(str:string) {
+        LogDebug("DO: %S", str);
+        var ina = str.match(/^([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*=\s*\{/);
+        if (!ina)
+            throw("bad cmds def: " + str);
+        var preface = '';;
+        var label, sdefs=[], def = {name:ina[2], type:ina[1], fnames:[]};
+        var curdef = '', fcnt = 0;
+        var l = str.trim().split('\n');
+        l = l.splice(1, l.length-2);
+        var nam = def.name;
+
+        for (var i of l) {
+            var ipre = i.trim();
+            if (curdef == '' && ipre.substr(0,2) === '//') {
+                label = ipre.substr(2).trim();
+                if (!def.label)
+                    def.label = label;
+                else
+                    throw("multiline label not allowed: "+ipre);
+                continue;
+            }
+            var reg;
+            if ((reg=ipre.match(/^function\s*([a-zA-Z0-9_]*)/))) {
+                fcnt++;
+                def.fnames.push(reg[1]);
+                if (curdef !== '') {
+                    sdefs.push(curdef);
+                    curdef = '';
+                }
+            } else if (curdef === '') {
+                if (fcnt === 0) {
+                    preface += i + '\n';
+                    continue;
+                }
+                throw("expected function: "+i);
+            }
+            curdef += i + '\n';
+        }
+        if (curdef != '') {
+            sdefs.push(curdef);
+            curdef = '';
+        }
+        LogTrace("sdefs=: %s", sdefs.join(','));
+        def.flds = sdefs;
+        def.preface = preface;
+        return def;
+    }
+
+    function GetIncludeReg(match, file) {
+        str = File.read(file);
+        return GetInclude(str);
+    }
+    
+    function GetInclude(str:string) {
+        if (str.indexOf('include')<0)
+            return str;
+        return str.replace(/^include\s*=\s*([a-zA-Z0-9_.]+)\s*;$/gm, GetIncludeReg);
+    }
+    
+    // Gather all the definitions 
+    function GetDefs(str) {
+        var curdef = '', gdefs = [], slst, cnt = 0;
+        str = GetInclude(str);
+        slst = str.split('\n');
+        for (var i of slst) {
+            cnt++;
+            var ipre = i.trim().substr(0,2);
+            if (ipre === '//' || ipre == '') continue;
+            if (i.trimRight() === '};') {
+                if (curdef === '') throw("extra end found at line "+cnt);
+                curdef += i;
+                gdefs.push(curdef);
+                curdef = '';
+                continue;
+            }
+            if (curdef === ''  && i.indexOf('//')<0 && i.indexOf(';')>=0)
+                throw("defn can not be all on one line: "+i);
+            curdef += i + '\n';
+        }
+        if (curdef !== '') throw("extra input found at end");
+        return gdefs;
+    }
+    
+    function main() {
+        if (!that.name)
+            if (that.outFile)
+                that.name = File.rootname(File.tail(that.outFile));
+            else
+                that.name = 'main';
+        var inp = '';
+        for (var fname of args) {
+            that.infiles.push(fname);
+            var cinp = File.read(fname);
+            if (cinp.substr(0,2) === '#!')
+                cinp = cinp.substr(cinp.indexOf('\n'));
+            inp += cinp;
+        }
+
+        var ina = GetDefs(inp);
+        //var ina = inp.match(/([a-zA-Z0-9_]+\s+\S+\s*\{[^\}]+\};)/g);
+        LogTrace('INA: %q', ina);
+        for (var i of ina) {
+            LogTrace("i=%q", i);
+            var in1 = i.match(/^([a-zA-Z0-9_]+)\s+[a-zA-Z0-9_]+\s*=\s*\{/);
+            var in1 = i.match(/^([a-zA-Z0-9_]+)\s+[a-zA-Z0-9_]+\s*=\s*\{/);
+            if (!in1)
+                throw("unknown input: "+i);
+            var nam = in1[1];
+            switch (nam) {
+                case 'enum':    defs.enums.push(StrGetEnum(i)); break;
+                case 'struct':  defs.structs.push(StrGetStruct(i)); break;
+                //case 'types':    defs.types.push(StrGetTypes(i)); break;
+                case 'vars':    defs.vars.push(StrGetVars(i)); break;
+                case 'extension':  defs.cmds.push(StrGetCmd(i)); break;
+                default: throw("unknown defn ' "+nam+"' expected: struct, enum, vars, extension");
+            }
+        }
+        if (that.json)
+            return JSON.stringify(defs);
+        GenAllItems(defs);
+        return CDataFinalize();
+    }
+    
+    that.objCmdStr = '
+
+// Start of template code for object commands.
+
+static Jsi_CmdSpec DemoCmds[];
+
+static void DemoObjErase(Demo *cmdPtr)
+{
+    if (!cmdPtr->interp)
+        return;
+    Jsi_OptionsFree(cmdPtr->interp, Demo_Specs, cmdPtr, 0);
+    memset(cmdPtr, 0, sizeof(*cmdPtr));;
+}
+
+static Jsi_RC DemoObjFree(Jsi_Interp *interp, void *data)
+{
+    Demo *cmdPtr = (Demo *)data;
+    DemoObjErase(cmdPtr);
+    Jsi_Free(cmdPtr);
+    return JSI_OK;
+}
+
+static bool DemoObjIsTrue(void *data)
+{
+    return 1;
+}
+
+static bool DemoObjEqual(void *data1, void *data2)
+{
+    return (data1 == data2);
+}
+
+static Jsi_UserObjReg DemoObjReg = {
+    "Demo",
+    DemoCmds,
+    DemoObjFree,
+    DemoObjIsTrue,
+    DemoObjEqual
+};
+
+#ifndef DemoLastArg
+#define DemoLastArg 0
+#endif
+
+static Jsi_CmdProcDecl(DemoConstructor)
+{
+    
+    Jsi_Value *arg = Jsi_ValueArrayIndex(interp, args, DemoLastArg);
+    
+    Demo *cmdPtr = (Demo *)Jsi_Calloc(1, sizeof(*cmdPtr));
+    Jsi_CDataStructInit(interp, (uchar*)cmdPtr, "Demo");
+
+    bool hasOpts = (arg != NULL && !Jsi_ValueIsNull(interp,arg));
+    if (hasOpts && (Jsi_OptionsProcess(interp, Demo_Specs, cmdPtr, arg, 0) < 0
+        || DemoDemoCmd(interp, args, _this, ret, funcPtr, cmdPtr) != JSI_OK)) {
+        DemoObjFree(interp, cmdPtr);
+        return JSI_ERROR;
+    }
+
+    Jsi_Value *toacc = NULL;
+    if (Jsi_FunctionIsConstructor(funcPtr)) {
+        toacc = _this;
+    } else {
+        Jsi_Obj *o = Jsi_ObjNew(interp);
+        Jsi_PrototypeObjSet(interp, "Demo", o);
+        Jsi_ValueMakeObject(interp, ret, o);
+        toacc = *ret;
+    }
+
+    Jsi_Obj *fobj = Jsi_ValueGetObj(interp, toacc);
+    int objId;
+    if ((objId = Jsi_UserObjNew(interp, &DemoObjReg, fobj, cmdPtr))<0) {
+        DemoObjFree(interp, cmdPtr);
+        Jsi_ValueMakeUndef(interp, ret);
+        return JSI_ERROR;
+    }
+    return JSI_OK;
+}
+
+';
+
+    that.selfSuffix = '
+#ifdef CDATA_MAIN
+
+int Jsi_DemoInit(Jsi_Interp *interp)
+{
+    jsi_c_init_Demo(interp);
+    return JSI_OK;
+}
+
+Jsi_RC Jsi_DoneDemo(Jsi_Interp *interp)
+{
+#ifdef CDATA_CONSTRUCTOR
+    if (Jsi_UserObjUnregister(interp, &DemoObjReg) != JSI_OK)
+        return JSI_ERROR;
+#endif
+    Jsi_PkgProvide(interp, "Demo", -1, NULL);
+    return JSI_OK;
+}
+
+Jsi_InitProc Jsi_InitDemo;
+
+Jsi_RC Jsi_InitDemo(Jsi_Interp *interp, int isRelease)
+{
+    if (isRelease)
+        return Jsi_DoneDemo(interp);
+#if JSI_USE_STUBS
+    if (Jsi_StubsInit(interp, 0) != JSI_OK)
+        return JSI_ERROR;
+#endif
+#ifdef CDATA_CONSTRUCTOR
+    Jsi_Hash *wsys;
+    if (!(wsys = Jsi_UserObjRegister(interp, &DemoObjReg))) {
+        Jsi_LogBug("Can not init Demo");
+        return JSI_ERROR;
+    }
+    if (!Jsi_CommandCreateSpecs(interp, DemoObjReg.name, DemoCmds, wsys, JSI_CMDSPEC_ISOBJ))
+        return JSI_ERROR;
+#endif
+    Jsi_DemoInit(interp);
+    if (Jsi_PkgProvide(interp, "Demo", 1, Jsi_InitDemo) != JSI_OK)
+        return JSI_ERROR;
+
+    return JSI_OK;
+}
+
+
+#ifndef CDATA_SHARED
+int main(int argc, char *argv[])
+{
+    Jsi_InterpOpts opts = {.argc=argc, .argv=argv};
+    Jsi_Interp *interp = Jsi_InterpNew(&opts);
+    if (Jsi_InitDemo(interp, 0) != JSI_OK)
+        return 1;
+    
+    Jsi_Main(&opts);
+    return(0);
+}
+#endif
+#endif
+';
+
+    var retval = main();
+    if (retval === undefined)
+        return '';
+    return retval;
+}
+
+provide('Jsi_CData');
+
+if (Info.isMain()) {
+    puts(Jsi_Main('Jsi_CData'));
+}

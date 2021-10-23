@@ -1,0 +1,55 @@
+#!/usr/local/bin/jsish -c -test true -debug true -outFile /tmp/xx.h %s
+enum weather = {
+    fog, rain, snow, sun
+};
+
+struct Carp = {
+    Jsi_Sig sig;
+    int     fld1 = 2;// An int field with default value of 2
+    double  val1;    // A float
+    int     arr[9];
+    int     bit:4;
+    uint64_t   bit2:44;
+    bool bv:1;
+    bool b;
+    int sint;
+    STRING8 str8;
+};
+
+struct BB1 = {
+    Jsi_Sig sig;
+    int32_t  fld1 = 2;// An int field with default value of 2
+    double  val1;    // A float
+    int32_t  arr[9];
+    int32_t  bit:4;
+    uint64_t   bit2:44;
+    bool bv:1;
+    bool b;
+    uint32_t sint;
+    STRING8 str8;
+};
+
+struct BB2 = {
+    Jsi_Sig sig;
+    int32_t  fld1 = 2;// An int field with default value of 2
+    double  val1;    // A float
+    int32_t  arr[9];
+    int32_t  bit:4;
+    uint64_t   bit2:44;
+    bool bv:1;
+    bool b;
+    weather sint;
+    STRING8 str8;
+};
+
+struct BB = {
+    uint32_t num;
+    BB2 b;
+};
+
+
+vars MyVars = {
+    Carp     carp; // A Carp variable.
+    BB1 bb1;
+    BB2 bb2; 
+};

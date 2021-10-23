@@ -1,0 +1,142 @@
+#!/usr/local/bin/jsish -u %s
+"use strict";
+
+//var x = 1;
+function foo() {
+  x = 1;
+}
+try { foo(); } catch(e) { puts(e); }
+
+for (var i = 1; i<10; i++)
+    i++;
+
+function bar() {
+  var k = 1;
+  for (var j of [1,2]) 
+      k+=j;
+}
+
+bar();
+
+function bar2() {
+  var k = 1;
+  for (j of [1,2]) 
+      k+=j;
+}
+try { bar2(); } catch(e) { puts(e); }
+
+function bar3() {
+  k = 1;
+  for (var j of [1,2]) 
+      k+=j;
+}
+
+try { bar3(); } catch(e) { puts(e); }
+function bar4() {
+for (l = 1; l<10; l++)
+    l++;
+}
+try { bar4(); throw('failed'); } catch(e) { puts(e); }
+
+function foo1() {}
+foo1();
+try { foo1(1); throw('failed'); } catch(e) { puts(e); }
+
+function foo2(n) {}
+try { foo2(); throw('failed'); } catch(e) { puts(e); }
+try { foo2(1,2); throw('failed'); } catch(e) { puts(e); }
+
+
+function foo3(n:string) {}
+try { foo3(); throw('failed'); } catch(e) { puts(e); }
+try { foo3(1); throw('failed'); } catch(e) { puts(e); }
+
+
+function foo4(n:string='a') {}
+foo4();
+try { foo4(1); throw('failed'); } catch(e) { puts(e); }
+try { foo4('',1); throw('failed'); } catch(e) { puts(e); }
+
+function foo5(n='a') {}
+foo5();
+try { foo5(1); throw('failed'); } catch(e) { puts(e); }
+try { foo5('',1); throw('failed'); } catch(e) { puts(e); }
+
+
+function foo6(n='a',m=1) {}
+foo6();
+try { foo6(1); throw('failed'); } catch(e) { puts(e); }
+try { foo6('',''); throw('failed'); } catch(e) { puts(e); }
+
+function foo7(...) {}
+foo7();
+foo7(1);
+foo7(1,'a');
+
+function foo8(n:number, ...) {}
+foo8(1);
+foo8(1,'a');
+try { foo8(); throw('failed'); } catch(e) { puts(e); }
+try { foo8('',''); throw('failed'); } catch(e) { puts(e); }
+
+function foo9(n:number=2, ...) {}
+foo9();
+foo9(1);
+foo9(1,'a','b');
+try { foo9(true); throw('failed'); } catch(e) { puts(e); }
+try { foo9('',''); throw('failed'); } catch(e) { puts(e); }
+
+function foo10(n:number='', ...) {}
+foo10();
+foo10(1);
+foo10('a');
+foo10(1,'a','b');
+try { foo10(null,''); throw('failed'); } catch(e) { puts(e); }
+
+var xyz;
+function foo11(n:number=void) {}
+//foo11();
+try { foo11(xyz); throw('failed'); } catch(e) { puts(e); }
+try { foo11(9,''); throw('failed'); } catch(e) { puts(e); }
+
+var tc = Interp.conf('typeCheck');
+tc.push('noundef');
+Interp.conf({typeCheck:tc});
+
+function foo12(n:number=9) {}
+try { foo12(xyz); throw('failed'); } catch(e) { puts(e); }
+
+//Don't test the rest because they not be caught: bad return and function with no return.
+//function foo13(n:number=9):number {}
+//foo13();
+//try { foo13(); throw('failed'); } catch(e) { puts(e); }
+
+//function foo14(n:number=9):number { }
+
+/*
+=!EXPECTSTART!=
+function created global: "x"
+function created global: "j"
+function created global: "k"
+function created global: "l"
+got 1 args, expected 0, calling function foo1()
+got 0 args, expected 1, calling function foo2(n)
+got 2 args, expected 1, calling function foo2(n)
+got 0 args, expected 1, calling function foo3(n:string)
+type mismatch for argument arg 1 'n': expected "string" but got "number", in call to 'foo3' declared at strict.jsi:50.2 <1>.
+type mismatch for argument arg 1 'n': expected "string" but got "number", in call to 'foo4' declared at strict.jsi:55.2 <1>.
+got 2 args, expected 0-1, calling function foo4(n="a")
+type mismatch for argument arg 1 'n': expected "string" but got "number", in call to 'foo5' declared at strict.jsi:60.2 <1>.
+got 2 args, expected 0-1, calling function foo5(n="a")
+type mismatch for argument arg 1 'n': expected "string" but got "number", in call to 'foo6' declared at strict.jsi:66.2 <1>.
+type mismatch for argument arg 2 'm': expected "number" but got "string", in call to 'foo6' declared at strict.jsi:66.2 <>.
+got 0 args, expected 1 or more, calling function foo8(n:number)
+type mismatch for argument arg 1 'n': expected "number" but got "string", in call to 'foo8' declared at strict.jsi:76.2 <>.
+type mismatch for argument arg 1 'n': expected "number" but got "boolean", in call to 'foo9' declared at strict.jsi:82.2 <true>.
+type mismatch for argument arg 1 'n': expected "number" but got "string", in call to 'foo9' declared at strict.jsi:82.2 <>.
+type mismatch for argument arg 1 'n': expected "number|string" but got "null", in call to 'foo10' declared at strict.jsi:89.2 <null>.
+call with undefined var for argument arg 1 'n', in call to 'foo11' declared at strict.jsi:97.2 <undefined>.
+got 2 args, expected 0-1, calling function foo11(n:number|void=undefined)
+type mismatch for argument arg 1 'n': expected "number" but got "undefined", in call to 'foo12' declared at strict.jsi:106.7 <undefined>.
+=!EXPECTEND!=
+*/

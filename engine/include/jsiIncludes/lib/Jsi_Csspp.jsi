@@ -1,0 +1,115 @@
+#!/usr/bin/env jsish
+"use strict";
+require('Sys');
+
+/* Preprocessor to provide CSS with $var define/substitution, eg:
+ * 
+ *  $mycolor = { blue }
+ *  $mysize = { 14pt }
+ *  $mydefn = {
+ *      color:$mycolor;
+ *      font-size:$mysize 
+ *  }
+ * 
+ *  #mybut1 { color:$mycolor; font-size:$mysize}
+ *  #myentry { $mydefn; margin:1px }
+ * 
+ *
+ */
+
+function Jsi_Csspp(files:array|string=null, opts:object=undefined):string|object
+{
+    var options = { // A CSS preprocessor providing $var substitution
+        trimDef     :true,       // Trim whitespace from definitions.
+        trimAll     :true,       // Trim whitespace from final.
+        fatal       :false       // Throw error on redefine/undefined.
+    };
+    var that = {
+        package:"Jsi_Csspp",
+        vmap:[],            // Set of maps.
+        curFile:'',         // Current file being processed.
+        tail:''             // Basename of file.
+    };
+    Jsi_Opts(that, options, opts);
+    that.curFile = '';
+    
+    // Function called on any error.
+    function errorCmd(msg:string) {
+        if (that.fatal) throw 'ERROR: '+msg;
+        puts('WARNING: '+msg);
+    }
+    
+    // Function called when an undefined $var is encountered.
+    function undefinedVar(str:string) {
+        var reg = /\$[a-zA-Z0-9_]*/;
+        var vals = reg.exec(str);
+        var name = (vals?vals[0]:"");
+        errorCmd("Use of undefined variable in "+that.curFile+': "'+name+'"');
+    }
+    
+    // Collect name/replacement pairs into that.vmap to pass in to String.map()
+    function reMethod(str:string) {
+        var reg = /^(\$[a-zA-Z0-9_]+)\s*=\s*\{([^\}]*)\}/;
+        var vals = reg.exec(str);
+        if (!vals)
+            errorCmd("invalid css define: "+str);
+        var fnam = vals[1];
+        var nstr = vals[2];
+        if (that.trimDef)
+            nstr = nstr.trim();
+        var res = nstr;
+        var cres = nstr;
+        var i = that.maxRecurse;
+        if (that.vmap.length) {
+            if (that.vmap.indexOf(fnam)>=0)
+                errorCmd("Redefined symbol: "+fnam);
+            if (nstr.indexOf('$')>=0) {
+                res = nstr.map(that.vmap);
+                if (res.indexOf('$')>=0)
+                    undefinedVar(res);
+            }
+        }
+        nstr = res;
+        that.vmap.push(fnam, nstr);
+        return '';
+    }
+    
+    function parse(files:array|string) {
+        //debugger;
+        if (typeof files === 'string')
+            files = [files];
+        var rc = '';
+        var reg = /^\$[a-zA-Z0-9_]+\s*=\s*\{[^\}]*\}/gm;
+        for (var i in files) {
+            that.curFile = files[i];
+            that.tail = File.tail(File.rootname(that.curFile));
+            var s = File.read(that.curFile);
+            var nstr = s.replace(reg, reMethod);
+            if (that.vmap.length) {
+                nstr = nstr.map(that.vmap);
+                if (nstr.indexOf('$')>=0) {
+                    var res = nstr.map(that.vmap);
+                    if (res.indexOf('$')>=0)
+                        undefinedVar(res);
+                    nstr = res;
+                }
+            }
+            rc += nstr;
+        }
+        if (that.trimAll)
+            rc = rc.trim();
+        return rc;
+    }
+    if (files)
+        return parse(files);
+        
+    that.parse = parse;
+    return that;
+}
+
+provide("Jsi_Csspp");
+
+if (Info.isMain()) {
+    puts(Jsi_Main('Jsi_Csspp'));
+}
+

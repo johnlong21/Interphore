@@ -1,0 +1,40 @@
+// File autoload.jsi: Sourced first time an unknown function call occurs
+// which sets-up Jsi_Auto with entries for loading code on-demand.
+if (Jsi_Auto.__autoloaded__)
+    return;
+Jsi_Auto.Cmap           =
+Jsi_Auto.LogTrace       =
+Jsi_Auto.LogDebug       =
+Jsi_Auto.LogInfo        =
+Jsi_Auto.LogWarn        =
+Jsi_Auto.LogError       =
+Jsi_Auto.Jsi_AutoMake   =
+Jsi_Auto.Jsi_AutoPkg    =
+Jsi_Auto.Jsi_Main       =
+Jsi_Auto.Jsi_LogFile    =
+Jsi_Auto.Jsi_Opts       = 'source("'+Info.scriptDir()+'/Sys.jsi")';
+Jsi_Auto.Jsi_Htmlpp     = 'source("'+Info.scriptDir()+'/Jsi_Htmlpp.jsi")';
+Jsi_Auto.Jsi_Csspp      = 'source("'+Info.scriptDir()+'/Jsi_Csspp.jsi")';
+Jsi_Auto.Jsi_Jspp       = 'source("'+Info.scriptDir()+'/Jsi_Jspp.jsi")';
+Jsi_Auto.Jsi_Markdown   = 'source("'+Info.scriptDir()+'/Jsi_Markdown.jsi")';
+Jsi_Auto.Jsi_CData      = 'source("'+Info.scriptDir()+'/Jsi_CData.jsi")';
+Jsi_Auto.Jsi_Websrv     = 'source("'+Info.scriptDir()+'/Jsi_Websrv.jsi")';
+Jsi_Auto.Jsi_Debug      = 'source("'+Info.scriptDir()+'/Jsi_Debug.jsi")';
+Jsi_Auto.Jsi_Safe       = 'source("'+Info.scriptDir()+'/Jsi_Safe.jsi")';
+Jsi_Auto.Jsi_Zip        = 'source("'+Info.scriptDir()+'/Jsi_Zip.jsi")';
+Jsi_Auto.Jsi_UnitTest   = 'source("'+Info.scriptDir()+'/Jsi_UnitTest.jsi")';
+Jsi_Auto.Jsi_DebugUI    = 'source("'+Info.scriptDir()+'/Jsi_DebugUI/Jsi_DebugUI.jsi")';
+Jsi_Auto.Jsi_SqliteUI   = 'source("'+Info.scriptDir()+'/Jsi_SqliteUI/Jsi_SqliteUI.jsi")';
+Jsi_Auto.Jsi_Make     = 'source("'+Info.scriptDir()+'/Jsi_Make.jsi")';
+
+Jsi_Auto.Sqlite         = 'require("Sqlite");';
+Jsi_Auto.MySql          = 'require("MySql");';
+Jsi_Auto.Websocket      = 'require("WebSocket");';
+Jsi_Auto.Socket         = 'require("Socket");';
+Jsi_Auto.DebugUI        = 'require("DebugUI");';
+
+source(Info.scriptDir()+'/JsiCompat.jsi');
+
+provide('Sys');
+Jsi_Auto.__autoloaded__ =true;
+

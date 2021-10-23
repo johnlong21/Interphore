@@ -1,0 +1,54 @@
+#!/usr/local/bin/jsish -c %s
+// Car object.  Created with "new Car()"
+
+struct Car = {
+    Jsi_Interp* interp; // Note: must add interp field for object command.
+    int maxSpeed=120;
+    int gear;
+    int shiftCnt;
+};
+
+struct Car_fix = {
+    int Max;
+    int Cnt;
+};
+
+vars CarVars = {
+    //Car CarOpts;
+    Car_fix Car_fix_Data;
+};
+
+extension Car = { // Extension to create a Car object command.
+
+    function Car(options:object=void):userobj { // Car constructor
+        /* C code. */
+        return JSI_OK;
+    }
+
+    function conf(options:object|string=void):any { // Function to configure Car options
+        /* C code. */
+    }
+
+    function shift(gear:number):number { // Shift car into gear
+        /* C-code. */
+        Jsi_Number n = gear;
+        cmdPtr->gear = n;
+        cmdPtr->shiftCnt++;
+        RETURN(n);
+    }
+
+    function setSpeed(pref:string, times:number):string { // Set speed
+        /* C-code. */
+        char buf[BUFSIZ];
+        snprintf(buf, sizeof(buf), "accel %s %g times", pref, times);
+        RETURN(buf); //:string
+    }
+
+    function fix(str:string, options:object=void):void { // Fix care: a function with local options
+        /* C-code. */
+        //return options; //:object
+        RETURN(); //:undefined
+    }
+    
+};
+

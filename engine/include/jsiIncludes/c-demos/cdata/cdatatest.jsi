@@ -1,0 +1,187 @@
+#!/usr/local/bin/jsish -u
+"use strict";
+
+;'====Enum====';
+var fruit = 'Fruit';
+;fruit;
+;CEnum.define({name:fruit}, [{name:'apple'}, {name:'banana'}] );
+;CEnum.names();
+;CEnum.names(fruit);
+;CEnum.conf(fruit);
+;CEnum.conf(fruit, 'idx');
+;CEnum.find(fruit, 1);
+;CEnum.fieldconf(fruit, 'banana');
+;CEnum.fieldconf(fruit, 'banana', 'value');
+;CEnum.value(fruit, 'apple');
+
+;'====Struct====';
+CStruct.define(
+    {name:"Bee"}, [
+        {name:'t', type:'int'},
+        {name:'s', type:'int', bits:4},
+        {name:'r', type:'int', bits:3},
+        {name:'k', type:'Fruit'}]);
+;CStruct.conf('Bee');
+;CStruct.conf('Bee','name');
+;CStruct.names();
+;CStruct.names('Bee');
+;CStruct.fieldconf('Bee', 't');
+;CStruct.fieldconf('Bee', 's', 'bits');
+;CStruct.get('Bee');
+
+CStruct.define(
+    {name:"Bkey"}, [
+        {name:'a', type:'int'},
+        {name:'b', type:'int'}]);
+
+;'====Types====';
+;CType.names().sort();
+;CType.names(true).sort();
+;CType.conf('INT');
+;CType.conf('INT','flags');
+
+;'====Data====';
+var alpha, alpha2, beta, gamma, theta, hash;
+
+;alpha = new CData({structName:'Bee'});
+;alpha.get(null);
+;alpha.get(null, 't');
+;alpha.set(null, 't', 4);
+;alpha.get(null, 't');
+//;CStruct.fieldconf('Bee'));
+
+;'====Array====';
+;beta = new CData({structName:'Bee', arrSize:10 });
+;beta.set(0, 't', 2);
+;beta.get(0);
+;beta.get(0, 't');
+;beta.conf();
+
+;'====Map====';
+;gamma = new CData({structName:'Bee', mapType:'tree' });
+;gamma.set('X', 't', 2);
+;gamma.names();
+;gamma.get('X', 't');
+;gamma.conf();
+
+;theta = new CData({structName:'Bee', mapType:'tree', keyType:'number' });
+;theta.set(0, 't', 2);
+;theta.get(0, 't');
+;theta.names();
+;theta.conf();
+
+;alpha2 = new CData({structName:'Bee', mapType:'tree', keyName:'Bkey' });
+var bkey;
+;bkey={a:1,b:2};
+;alpha2.set(bkey, 't', 2);
+;alpha2.get(bkey, 't');
+;bkey.a++;
+;alpha2.set(bkey, 't', 2);
+;alpha2.names();
+;alpha2.conf();
+
+;hash = new CData({structName:'Bee', mapType:'hash' });
+;hash.set('X', 't', 2);
+;hash.get('X', 't');
+;hash.names();
+;hash.conf();
+
+;'====Db====';
+var db, schema;
+;db = new Sqlite('/tmp/bees.db');
+;schema = CStruct.schema('Bee');
+;db.eval('CREATE TABLE IF NOT EXISTS Bee (\n'+schema+'\n);');
+;db.query('INSERT INTO Bee %s',{cdata:'beta'});
+;db.query('SELECT %s FROM Bee',{cdata:'beta'});
+
+;'====Cleanup====';
+;Info.named('CData');
+delete hash;
+delete beta;
+delete alpha;
+delete alpha2;
+delete gamma;
+delete theta;
+CStruct.undefine('Bee');
+try { CEnum.undefine('Fruit'); } catch(e) {}
+
+
+/*
+=!EXPECTSTART!=
+'====Enum===='
+fruit ==>  Fruit
+CEnum.define({name:fruit}, [{name:'apple'}, {name:'banana'}] ) ==>  undefined
+CEnum.names() ==>  [ "Fruit" ]
+CEnum.names(fruit) ==>  [ "apple", "banana" ]
+CEnum.conf(fruit) ==>  { flags:0, help:null, idx:2, name:"Fruit", value:0 }
+CEnum.conf(fruit, 'idx') ==>  2
+CEnum.find(fruit, 1) ==>  banana
+CEnum.fieldconf(fruit, 'banana') ==>  { flags:0, help:null, idx:1, name:"banana", value:1 }
+CEnum.fieldconf(fruit, 'banana', 'value') ==>  1
+CEnum.value(fruit, 'apple') ==>  0
+'====Struct===='
+CStruct.conf('Bee') ==>  { crc:0, flags:0, help:null, idx:4, name:"Bee", size:7, ssig:0, value:0 }
+CStruct.conf('Bee','name') ==>  Bee
+CStruct.names() ==>  [ "Bee" ]
+CStruct.names('Bee') ==>  [ "t", "s", "r", "k" ]
+CStruct.fieldconf('Bee', 't') ==>  { bits:0, boffset:0, flags:0, help:null, idx:0, info:null, name:"t", offset:0, size:4, type:"int" }
+CStruct.fieldconf('Bee', 's', 'bits') ==>  4
+CStruct.get('Bee') ==>  { fields:[ { bitoffs:0, bitsize:0, "id:":"int", isbit:0, label:"", name:"t", offset:0, size:4 }, { bitoffs:32, bitsize:4, "id:":"int", isbit:0, label:"", name:"s", offset:0, size:4 }, { bitoffs:36, bitsize:3, "id:":"int", isbit:0, label:"", name:"r", offset:0, size:4 }, { bitoffs:39, bitsize:0, "id:":"Fruit", isbit:0, label:"", name:"k", offset:5, size:2 } ], name:"Bee", size:7 }
+'====Types===='
+CType.names().sort() ==>  [ "ARRAY", "BOOL", "CUSTOM", "DOUBLE", "DSTRING", "FLOAT", "FUNC", "INT", "INT16", "INT32", "INT64", "INT8", "INTPTR_T", "LDOUBLE", "LONG", "NUMBER", "OBJ", "REGEXP", "SHORT", "SIZE_T", "SSIZE_T", "STRBUF", "STRING", "STRKEY", "TIME_D", "TIME_T", "TIME_W", "UINT", "UINT16", "UINT32", "UINT64", "UINT8", "UINTPTR_T", "ULONG", "USEROBJ", "USHORT", "VALUE", "VAR" ]
+CType.names(true).sort() ==>  [ "Bee", "Bkey", "Fruit", "Jsi_DString", "Jsi_Number", "Jsi_Strbuf", "Jsi_Value*", "bool", "const char*", "double", "float", "int", "int16_t", "int32_t", "int64_t", "int8_t", "intptr_t", "ldouble", "long", "short", "size_t", "ssize_t", "time_d", "time_t", "time_w", "uint", "uint16_t", "uint32_t", "uint64_t", "uint8_t", "uintptr_t", "ulong", "ushort" ]
+CType.conf('INT') ==>  { cName:"int", flags:0, fmt:"d", help:"Integer", idName:"INT", size:4, user:0, xfmt:"#x" }
+CType.conf('INT','flags') ==>  0
+'====Data===='
+alpha = new CData({structName:'Bee'}) ==>  "#CData_1"
+alpha.get(null) ==>  { k:"apple", r:0, s:0, t:0 }
+alpha.get(null, 't') ==>  0
+alpha.set(null, 't', 4) ==>  undefined
+alpha.get(null, 't') ==>  4
+'====Array===='
+beta = new CData({structName:'Bee', arrSize:10 }) ==>  "#CData_2"
+beta.set(0, 't', 2) ==>  undefined
+beta.get(0) ==>  { k:"apple", r:0, s:0, t:2 }
+beta.get(0, 't') ==>  2
+beta.conf() ==>  { arrSize:10, flags:0, help:null, keyName:null, keyType:"number", mapType:"none", maxSize:0, noAuto:false, structName:"Bee", user:0, varParam:null }
+'====Map===='
+gamma = new CData({structName:'Bee', mapType:'tree' }) ==>  "#CData_3"
+gamma.set('X', 't', 2) ==>  undefined
+gamma.names() ==>  [ "X" ]
+gamma.get('X', 't') ==>  2
+gamma.conf() ==>  { arrSize:0, flags:0, help:null, keyName:null, keyType:"string", mapType:"tree", maxSize:0, noAuto:false, structName:"Bee", user:0, varParam:null }
+theta = new CData({structName:'Bee', mapType:'tree', keyType:'number' }) ==>  "#CData_4"
+theta.set(0, 't', 2) ==>  undefined
+theta.get(0, 't') ==>  2
+theta.names() ==>  [ 0 ]
+theta.conf() ==>  { arrSize:0, flags:0, help:null, keyName:null, keyType:"number", mapType:"tree", maxSize:0, noAuto:false, structName:"Bee", user:0, varParam:null }
+alpha2 = new CData({structName:'Bee', mapType:'tree', keyName:'Bkey' }) ==>  "#CData_5"
+bkey={a:1,b:2} ==>  { a:1, b:2 }
+alpha2.set(bkey, 't', 2) ==>  undefined
+alpha2.get(bkey, 't') ==>  2
+bkey.a++ ==>  1
+alpha2.set(bkey, 't', 2) ==>  undefined
+alpha2.names() ==>  [ { a:1, b:2 }, { a:2, b:2 } ]
+alpha2.conf() ==>  { arrSize:0, flags:0, help:null, keyName:"Bkey", keyType:"8", mapType:"tree", maxSize:0, noAuto:false, structName:"Bee", user:0, varParam:null }
+hash = new CData({structName:'Bee', mapType:'hash' }) ==>  "#CData_6"
+hash.set('X', 't', 2) ==>  undefined
+hash.get('X', 't') ==>  2
+hash.names() ==>  [ "X" ]
+hash.conf() ==>  { arrSize:0, flags:0, help:null, keyName:null, keyType:"string", mapType:"hash", maxSize:0, noAuto:false, structName:"Bee", user:0, varParam:null }
+'====Db===='
+db = new Sqlite('/tmp/bees.db') ==>  "#Sqlite_1"
+schema = CStruct.schema('Bee') ==>    -- 'Bee': 
+  t INT
+ ,s int
+ ,r int
+ ,k TEXT
+  -- MD5=420ab989893d8ea5304df1d744a416d4
+db.eval('CREATE TABLE IF NOT EXISTS Bee (
+'+schema+'
+);') ==>  undefined
+db.query('INSERT INTO Bee %s',{cdata:'beta'}) ==>  10
+db.query('SELECT %s FROM Bee',{cdata:'beta'}) ==>  10
+'====Cleanup===='
+Info.named('CData') ==>  [ "#CData_4", "#CData_5", "#CData_1", "#CData_6", "#CData_2", "#CData_3" ]
+=!EXPECTEND!=
+*/

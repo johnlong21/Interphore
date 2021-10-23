@@ -1,0 +1,89 @@
+#!/usr/local/bin/jsish -u %s
+
+log("Starting");
+function test(msg, debug) {
+    var logDebug = (debug?log.bind(null, 'DEBUG: '):noOp);
+    logDebug("testing 1, 2, 3: "+msg);
+}
+test('call1', false);
+test('call2', true);
+
+;Interp.conf({noStderr:true});
+
+function foo() {
+;   log('hello worm');
+;   console.puts('hello cat');
+;   console.log('hello bird');
+;   console.logf('hello dog');
+;   console.logf('hello %s', 'snail');
+;   console.logf('MANKY: ', 'hello %s', 'slug');
+}
+
+foo();
+;Interp.conf({logOpts:{before:true}});
+foo();
+;Interp.conf({logOpts:{file:false}});
+foo();
+;Interp.conf({logOpts:{func:false}});
+foo();
+puts('done');
+
+/*
+=!EXPECTSTART!=
+"Starting", logging.jsi:3, 
+"DEBUG:  testing 1, 2, 3: call2", logging.jsi:6, test()
+Interp.conf({noStderr:true}) ==>  undefined
+"hello worm", logging.jsi:14, foo()
+log('hello worm') ==>  undefined
+hello cat
+console.puts('hello cat') ==>  undefined
+"hello bird", logging.jsi:16, foo()
+console.log('hello bird') ==>  undefined
+"hello dog", logging.jsi:17, foo()
+console.logf('hello dog') ==>  undefined
+"hello snail", logging.jsi:18, foo()
+console.logf('hello %s', 'snail') ==>  undefined
+"MANKY: hello slug", logging.jsi:19, foo()
+console.logf('MANKY: ', 'hello %s', 'slug') ==>  undefined
+Interp.conf({logOpts:{before:true}}) ==>  undefined
+logging.jsi:14:  "hello worm", foo()
+log('hello worm') ==>  undefined
+hello cat
+console.puts('hello cat') ==>  undefined
+logging.jsi:16:  "hello bird", foo()
+console.log('hello bird') ==>  undefined
+logging.jsi:17:  "hello dog", foo()
+console.logf('hello dog') ==>  undefined
+logging.jsi:18:  "hello snail", foo()
+console.logf('hello %s', 'snail') ==>  undefined
+logging.jsi:19:  "MANKY: hello slug", foo()
+console.logf('MANKY: ', 'hello %s', 'slug') ==>  undefined
+Interp.conf({logOpts:{file:false}}) ==>  undefined
+hello worm, foo()
+log('hello worm') ==>  undefined
+hello cat
+console.puts('hello cat') ==>  undefined
+hello bird, foo()
+console.log('hello bird') ==>  undefined
+hello dog, foo()
+console.logf('hello dog') ==>  undefined
+hello snail, foo()
+console.logf('hello %s', 'snail') ==>  undefined
+MANKY: hello slug, foo()
+console.logf('MANKY: ', 'hello %s', 'slug') ==>  undefined
+Interp.conf({logOpts:{func:false}}) ==>  undefined
+hello worm
+log('hello worm') ==>  undefined
+hello cat
+console.puts('hello cat') ==>  undefined
+hello bird
+console.log('hello bird') ==>  undefined
+hello dog
+console.logf('hello dog') ==>  undefined
+hello snail
+console.logf('hello %s', 'snail') ==>  undefined
+MANKY: hello slug
+console.logf('MANKY: ', 'hello %s', 'slug') ==>  undefined
+done
+=!EXPECTEND!=
+*/

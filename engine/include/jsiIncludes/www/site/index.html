@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- META  HTTP-EQUIV=refresh CONTENT="5; url=http://jsish.sourceforge.net" -->
+<base href="http://jsish.org/" />
+<title>jsish.org</title>
+
+<link href="index.css" rel="stylesheet" media="screen">
+</head>
+
+<body>
+<div class="header">
+  <div class="logo">
+<a href="/jsi" title="Jsish fossil repository and documentation"><img src="/jsitechno1.png" alt="logo" /></a>
+  </div>
+
+ <div class="title" style="vertical-align:middle"><a href="/jsi" title="Jsish fossil repository and documentation">JavaScript Interpreter</a></div>
+
+  <div class="status"> </div>
+</div>
+<div class="mainmenu">
+<a href='/jsi' title="Jsish fossil repository and documentation">Jsi Home Page</a>
+</div>
+<div class="content">
+<script>
+function gebi(x){
+if(/^#/.test(x)) x = x.substr(1);
+var e = document.getElementById(x);
+if(!e) throw new Error("Expecting element with ID "+x);
+else return e;}
+</script>
+
+
+<!-- <p align="center">
+<font size="3">
+<i>Embedded Application Development</i>
+</font>
+</p> -->
+
+
+<a href="http://jsish.org/jsi">Jsi</a> is a small but feature-full <i>javascript</i> interpreter written <b>in C</b>,
+and providing:
+
+<ul>
+<li>Support for <b>Database</b>, <b>Websocket</b> and <b>JSON</b></li>
+<li>An extensive API for both <b>Javascript</b> and <b>C</b></li>
+<li>Direct access to <b>C-struct</b> data from Javascript</li>
+</ul>
+<p>
+
+Industrially, Jsi is used primarily for web-enabled
+<b>diagnostics</b>, <b>testing</b> and <b>configuration</b>
+in mass-transit <i>data-acquisition</i>.
+
+What distinguishes Jsi from other script languages?
+<ol>
+<li>Type-checking for <i>function arguments</i></li>
+<li>A mature design, modelled after Tcl</li>
+<li>It's javascript; no need to learn <i>yet-another-scripting-language</i></li>
+</ol>
+<p>
+Jsi is written in <b>C+/-</b>.  It compiles as C, and as native C++ without use of <b>extern C</b>.
+</p>
+<p>
+For more details see: <a href='/jsi/www/language.wiki'>Language Comparisons</a>.
+Click any of the above links to enter the site.
+
+<hr>
+
+<p>
+Jsi was designed specifically for embedded applications by  <a href="/pdqi/">PDQI</a>, also responsible for:
+<ul>
+<li>
+<a href="indexwize.php">Wize</a>: Embedded web development. <b>Industry:</b> <a href="https://www.itron.com/na/industries/electricity">Power Measurement</a>.
+</li>
+<li>
+<a href="browsex/index.html">BrowseX</a>: A web-browser.  <b>Industry:</b>  <a href="https://www.crunchbase.com/organization/covigo#/entity">Mobile Transactions</a>.
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Softlanding_Linux_System">SLS Linux</a>: The first Linux distribution.
+</li>
+</ul>
+
+
+
+</div>
+</body></html>

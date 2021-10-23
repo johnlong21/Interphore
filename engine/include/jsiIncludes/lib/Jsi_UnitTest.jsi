@@ -1,0 +1,266 @@
+#! /usr/bin/env jsish
+"use strict";
+require('Sys');
+
+// Unit-Test a script.
+
+function Jsi_UnitTest(fileargs:array|string, opts:object=void):number {
+
+    var options = { // Run script(s) as unit-tests setting return code to number of failed tests.
+        args        :'',        // Argument string to call script with
+        context     :3,         // Number of context lines for DIFF (>3 forces dir diff).
+        debug       :false,     // Enable debugging messages.
+        echo        :false,     // Run with puts/assert output showing file:line number, but don't test.
+        evalFile    :'',        // File to source in subinterp before test.
+        exec        :false,     // Use exec instead of running test in a sub-interp.
+        expectFile  :null,      // File to use for expected output.
+        failMax     :0,         // Quit after this many failed tests.
+        inFile      :null,      // File to use for stdin input.
+        silent      :false,     // Run quietly, showing only failures.
+        time        :false,     // Show timing for all tests.
+        update      :false,     // In-place update or create of EXPECT* from a run of test file(s).
+        verbose     :false      // Show gory detail: inputs/outputs/args.
+    };
+    var that = {
+        package:"Jsi_UnitTest",
+        cnt:0,
+        isdir:false,
+        nodiff:false,
+        fails:0,
+        flst:[],
+        outfile:'/tmp/utest.txt',
+        startTime:0,
+        version:1.0
+    };
+    
+    Jsi_Opts(that, options, opts);
+    
+    function runOne(fn:string) {
+        var fail = 0;
+        if (!fn)
+            throw("Script file required");
+        if (!fn || !File.exists(fn))
+            throw("File not found: "+fn);
+        var ext = File.extension(fn);
+        if (ext != '.jsi' && ext != '.js')
+            throw(fn+": Test module file extension "+ext+" not one of: .js .jsi: "+fn);
+        var scr = File.read(fn);
+        var pat = "=!EXPECTSTART!=\n(.*)=!EXPECTEND!=";
+        var sm = scr.match(pat);
+        var expect = null;
+        if (sm)
+            expect = sm[1];
+
+        var ipat = "=!INPUTSTART!=\n(.*)=!INPUTEND!=";
+        var ism = scr.match(ipat);
+            
+        var apat = "=!ARGSTART!=\n(.*)\n=!ARGEND!=";
+        var asm = scr.match(apat);
+
+        if (that.args === '' && asm)
+            that.args = asm[1];
+        var tcmd = Info.executable() + ' -Iasserts true';
+        var ut = 1;
+        var sint = null;
+        var siargs = {asserts:true};
+
+        if (that.echo)
+            ut += 2;
+        if (ut) {
+            tcmd += ' -IunitTest ' + ut;
+            siargs.unitTest = ut;
+        }
+        tcmd += ' '+fn+' '+that.args;
+
+        if (expect === null && that.expectFile)
+            expect = File.read(that.expectFile);
+
+        var input = '';
+        if (that.inFile)
+            input = File.read(that.inFile);
+        if (input === '' && ism)
+            input = ism[1];
+        if (input !== '') {
+            siargs.stdinStr = input;
+            tcmd += ' 2>&1 > '+that.outfile;
+        }
+        debugger;
+        //printf("ISM: <%s>", tcmd);
+        if (!that.silent)
+            printf('Test '+fn+' ');
+        var eopts = {noTrim:true};
+        if (input!=='')
+            eopts.input = input;
+        var res = null;
+        var fail = false;
+        var emsg = "ERROR: ";
+        var etime, stime = strptime();
+        try {
+            if (!that.exec) {
+                siargs.stdoutStr = '';
+                //siargs.scriptFile = fn;
+                siargs.args = that.args.split(' ');
+                sint = new Interp(siargs);
+                sint.conf({scriptFile:fn});
+                if (that.evalFile !== '')
+                    sint.source(that.evalFile);
+                sint.source(fn);
+                res = sint.conf('stdoutStr');
+            } else {
+                emsg = "EXEC ERROR: ";
+                res = exec(tcmd, eopts);
+            }
+        } catch(e) {
+            puts(emsg+(e?e:'failed'));
+            fail = true;
+        }
+        if (sint)
+            delete sint;
+        if (fail) {
+            puts("\r[FAIL] "+fn);
+            return fail;
+        }
+        if (res === null || res === undefined)
+            return 1;
+        
+        LogDebug(res);
+        //puts('\nRES: ' +res);
+        if (input !== '' && that.exec) {
+            res = File.read(that.outfile);
+            //res = res.substr(0, res.length-1);
+        }
+        if (that.echo) {
+            puts('\n'+res);
+            return 0;
+        }
+        if (that.update) {
+            var fdat = File.read(fn);
+            if (res.indexOf('*/')>=0) throw("output contains comment terminator");
+            if (!sm) {
+                fdat += "\n/*\n=!EXPECTSTART!=\n"+res+"=!EXPECTEND!=\n*/\n";
+                puts('\rCreated '+fn);
+            } else {
+                var s1 = fdat.indexOf("=!EXPECTSTART!=");
+                var s2 = fdat.indexOf("=!EXPECTEND!=");
+                var ndat = fdat.substr(0, s1)+"=!EXPECTSTART!=\n"+res+fdat.substr(s2);
+                if (ndat !== fdat)
+                    puts('\rUpdated '+fn);
+                else {
+                    puts('\rUnchanged '+fn);
+                    return 0;
+                }
+                fdat = ndat;
+            }
+            File.write(fn, fdat);
+            return 0;
+        }
+        if (that.verbose) {
+            puts('\nCMD: '+tcmd);
+            if (input !== '')
+                puts('INPUT: <'+input+'>');
+            puts('OUTPUT: <'+res+'>');
+            if (expect !== null)
+                puts('EXPECT: <'+expect+'>');
+        }
+        if (!fail)
+            fail = (expect===null?false:(res !== expect));
+        if (!fail) {
+            if (!that.silent) {
+                var estr = '';
+                if (that.time)
+                    estr = ' \t ('+(strptime()-stime)+' ms)';
+                
+                puts("\r[PASS] "+fn+estr);
+            }
+        } else {
+            //puts('R:', res);
+            //puts('E:'+expect);
+            puts("\r[FAIL] "+fn);
+            if (expect && res) {
+                var rlst = res.split('\n');
+                var elst = expect.split('\n');
+                var elen = elst.length, rlen = rlst.length;
+                var slen = (rlen<elen?rlen:elen);
+                for (var i = 0; i<slen; i++)
+                    if (rlst[i] !== elst[i]) break;
+                if (rlen != elen && (rlst[i] === undefined || elst[i] === undefined)) {
+                    if (rlen<elen)
+                        printf("Output short: expected %d got %d\n",elen,rlen);
+                    else
+                        printf("Output long: expected %d got %d\n",elen,rlen);
+                } else if (i<slen) {
+                    printf("at line %d of output:\n\toutput:\t<%s>\n\texpect:\t<%s>\n", i+1, rlst[i], elst[i]);
+                }
+                if (that.context>0 && (!that.nodiff || that.context>3)) {
+                    puts('====================DIFFSTART');
+                    for (var j = i-that.context; j<i+that.context; j++) {
+                        if (j<0 || j>=rlst.length) continue;
+                        if (j!==i) { puts('',rlst[j]); continue; }
+                        puts('-'+elst[i]);
+                        puts('+'+rlst[i]);
+                    }
+                    puts('====================DIFFEND');
+                }
+            } else {
+                puts("Error output:"+ res);
+            }
+            fail = 1;
+        }
+        return fail;
+    }
+    
+    function main() {
+        LogDebug('Starting');
+        that.startTime = strptime();
+        if (that.evalFile !== '' && that.exec)
+            throw "'evalFile' not available with 'exec'";
+        if (!that.rootdir)
+            that.rootdir=Info.scriptDir();
+        
+        if (fileargs.length === 1) {
+            fileargs = fileargs[0];
+            if (!File.isdir(fileargs)) {
+                that.flst = [fileargs];
+                that.nodiff = true;
+            } else {
+                that.isdir = true;
+                var nlst = File.glob(fileargs+'/*').sort();
+                that.flst = [];
+                for (var nn of nlst) {
+                    switch (File.extension(nn)) {
+                        case '.jsi':
+                        case '.js':
+                            that.flst.push(nn);
+                            break;
+                    }
+                }
+            }
+            //puts(that.flst);
+        } else if (fileargs.length) {
+            that.flst = fileargs;
+            that.nodiff = true;
+        }
+        //puts(that.flst);
+        for (var i of that.flst) {
+            that.cnt++;
+            that.fails += runOne(i);
+            if (that.failMax && that.fails>=that.failMax)
+                break;
+        }
+
+        LogDebug('Done');
+        Info.interp();
+        if (!that.silent && that.cnt>1)
+            printf("%d FAIL, %d PASS: runtime %u ms\n", that.fails, that.cnt-that.fails, (strptime()-that.startTime));
+        return that.fails;
+    }
+    
+    return main();
+}
+
+provide("Jsi_UnitTest");
+
+
+if (Info.isMain()) {
+    exit(Jsi_Main('Jsi_UnitTest'));
+}

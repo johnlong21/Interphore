@@ -1,0 +1,7 @@
+To enable syntax hightlighting in Geany:
+
+  cp filetypes.javascript ~/.config/geany/filedefs/
+
+You could also edit /usr/share/geany/filetype_extensions.conf and add "*.jsi;" to the Javascript section. 
+
+To enable completion, keep open in the editor "../protos.jsi".

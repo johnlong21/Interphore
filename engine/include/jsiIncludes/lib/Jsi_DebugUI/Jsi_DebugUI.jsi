@@ -1,0 +1,828 @@
+#!/usr/bin/env jsish
+"use strict,!error";
+require('Sys');
+
+// Jsi_DebugUI: A jsi debugger with a web user interface.
+// This module combines code from Jsi_Debug and Jsi_Websrv.
+
+require('Sqlite');
+require('WebSocket');
+
+function Jsi_DebugUI(fileargs:array, opts:object=void)
+{
+
+    var options = { // A web-based debugger for Jsi scripts
+        browser     :null,      // Browser program to use.
+        debug       :false,     // Debugging output
+        echoCmd     :false,     // Echo user cmds.
+        local       :true,      // Connection listens only on localhost.
+        maxPort     :100,       // Max ports to try.
+        minLevel    :0,         // Minimum level for up/down.
+        noCheck     :false,     // Disable typechecking.
+        noGui       :false,     // Do not start local browser session.
+        noPuts      :false,     // Do not redirect puts, log, etc to the web.
+        noUpdate    :false,     // Caller will provide update calls.
+        noXeval     :false,     // Disable the xeval command, even for local==true.
+        port        :8065,      // Start search for free port from.
+        timeout     :10000,     // When last client exits, grace time after before exiting (in ms).
+        wsdebug     :0,         // Websocket debugging mask.
+        wsopts      :{}         // Websocket options.
+    };
+    
+    var that = {
+        package:'Jsi_DebugUI',
+        curline:0,
+        curfile:null,
+        curlev:0,
+        curfunc:null,
+        curfunc:null, curlevel:0, optstr:'', bpId:0,
+        done:false,
+        fsent:[], // File name cache
+        files:[],
+        filedata:{},
+        file:null,
+        id:-1,
+        isSafe:false,   // Debug program in a safe interp
+        lastCmd:'',     // Previous cmd, empty string repeats.
+        lastCommand:'',  // Full command name (unaliased)
+        lastPrintArg:null,
+        level:0,
+        line:0,
+        optdbfile: '~/.debugui.db',   // Store options, etc.
+        prevLevel:0,
+        rootdir: null,  // Root for application files.
+        stopped:false,
+        toplev:0,
+        version:1.0,
+
+        browsers: {                     // Not used, yet.
+            unix:[ "xdg-open", "gnome-open", "firefox", "google-chrome" ],
+            win: [ "start" ],
+            mac: [ "open" ]
+        }
+        
+    };
+    
+    var commands = {
+        "args":"Print function argument or scope if at top",
+        "break":"Break execution at a named function, line or file", 
+        "continue":"Continue execution", 
+        "delete":"Delete one or all breakpoints", 
+        "disable":"Disable one or all breakpoints", 
+        "down":"Move down one or more stack levels", 
+        "enable":"Enable one or all breakpoints", 
+        "eval":"Evaluate expression in program context", 
+        "finish":"Run till return of current function", 
+        "help":"Display command usage", 
+        "info":"Info subcommands: bp args locals var", 
+        "list":"List file lines args can be: startLine|func numLines file", 
+        "locals":"Print function local vars", 
+        "next":"Single-step over function calls", 
+        "print":"Print value of a simple variable", 
+        "quit":"Quit debugging current program and exit", 
+        "step":"Single-step into function calls", 
+        "halt":"Stop execution", 
+        "tbreak":"Sets a temporary breakpoint", 
+        "up":"Move up one or more stack levels", 
+        "where":"Display current location",
+        "xeval":"Eval expression in debugger, rather than the app" 
+    };
+
+    Jsi_Opts(that, options, opts);
+    
+    function webDoExit(n=0)   // Notify all going down, then exit.
+    {
+        webSend(that.id, 'exit', {rc:n});
+        setTimeout(function () {exit(n); }, 3000); 
+    }
+    
+    function webCloseNow()
+    {
+        that.closeId = null;
+        if (that.ws.conf('stats.connectCnt')>0)
+            return;
+        LogDebug("Last client has closed");
+        that.ws.conf({noUpdate:true});
+        that.done = 1;
+        exit(0);
+    }
+    
+    function webCloseLast()
+    {
+        // Wait around for a while for refresh or new clients before exiting
+        if (that.closeId)
+            clearInterval(that.closeId);
+        that.closeId = null;
+        if (that.timeout>=0)
+            that.closeId = setTimeout(function () { webCloseNow(); }, that.timeout);
+        return true;
+    }
+    
+    function webFileBrowse(id:number, d:object)
+    {
+       var e, req = {success:true, did:'files', msg:''}, fn = d.files_dir;
+        fn = fn.trim(' ');
+        if (fn.length<=0) {
+            req.success = false;
+            req.msg = 'empty dir name';
+        } else if (!File.isdir(fn)) {
+            req.success = false;
+            req.msg = 'can not find db file';
+        } else {
+            try {
+                req.files = File.glob('*', {dir:fn, types:'f'}).sort();
+                req.dirs = File.glob('*', {dir:fn, types:'d'}).sort();
+                req.dir = fn;
+            }
+            catch (e) {
+                req.msg = e;
+                req.success = false;
+            }
+        }
+        webSend(id, 'fileBrowse', req);
+    }
+
+    function webGotFile(id:number, d:object) {
+        LogDebug("GOTFILE: "+d.fname);
+        that.fsent.push(d.fname);
+    }
+
+    function webStopped() {
+        LogDebug("webStopped: "+that.curline);
+        var msg = {fname:that.curfile, line:that.curline, func:that.curfunc};
+        if (that.fsent.indexOf(that.curfile)<0) {
+            msg.fdata = File.read(that.curfile);
+        }
+        webSend(that.id, 'stopped', msg);
+    }
+    
+    /**********************/
+    
+    function webSendRaw (id,cmd,data,type)
+    {
+        if (type === undefined)
+            type = "";
+        data = '{"type":"'+type+'", "cmd":"'+cmd+'", "data" : '+ data +'}';
+        //puts("RAWSEND: "+data);
+        that.ws.send(data,id);
+    }
+    
+    function webSend (id:number, cmd:string, data:object, type:string='')
+    {
+        var dat = {type: type, cmd:cmd, data:data };
+        dat = JSON.stringify(dat);
+        //LogDebug("SEND: %S", dat);
+        that.ws.send(dat,id);
+    }
+
+    function loadFile() {
+        var rc = {};
+        var fd = File.read(that.dbfile);
+        rc.file = that.dbfile;
+        rc.data = fd;
+        return rc;
+    }
+    
+    function webLoadAll(id:number)
+    {
+        LogDebug("LOADALL");
+        that.id = id;
+        webSend(id, "webLoadAll", {file:that.dbfile, args:that.args});
+        webStopped();
+        //webSend(id,'webLoadAll',loadFile());
+    }
+    
+    function webRecv(id:number, data:string)
+    {
+        var buf, buf0, buf1, buf2;
+        LogDebug("DBG SERVER GOT: "+ id +": "+data);
+        var dat = JSON.parse(data);
+        LogDebug("JSON: "+dat.toString());
+        switch (dat.cmd) {
+            case 'webLoadAll':  return webLoadAll(id);
+            case 'uistack':     return webUiStack(id,dat.data);
+            case 'fileBrowse':  return webFileBrowse(id,dat.data);
+            case 'getfile':     return webGetFile(id, dat.data);
+            case 'gotfile':     return webGotFile(id, dat.data);
+            case 'command':     return webCommand(id, dat.data);
+            case 'varget':      return webVarGet(id, dat.data);
+            case 'exit':        webDoExit(); break;
+                
+            default: LogDebug("unknown webmsg: "+dat.cmd); break;
+        }
+    }
+        
+    function eputs(str:string) {
+        LogDebug(str);
+        webSend(that.id, "errorMsg", {msg:str});
+    }
+
+    function wputs(str:string) {
+        LogDebug(str);
+        webSend(that.id, "textMsg", {msg:str});
+    }
+    
+    function cmdPrint(lst:array) {
+        var val = lst[1];
+        if (lst.length === 1 && that.lastPrintArg !== null) {
+            val = that.lastPrintArg;
+        } else if (lst.length != 2 || val === '') {
+            eputs("first print requires one argument");
+            return;
+        }
+        that.lastPrintArg = val;
+        try {
+            var rc = that.interp.value(val, that.curlev);
+            if (rc === undefined)
+                rc = 'undefined';
+            else if (rc === null)
+                rc = 'null';
+            wputs(val + " = " + JSON.stringify(rc));
+        } catch(e) {
+            eputs("ERROR: "+e);
+        }
+    }
+    
+    function cmdEval(inval:string, myinterp:boolean) {
+        var ofs = inval.indexOf(' ');
+        var val;
+        if (ofs<0 || ((val=inval.substr(ofs+1).trim()) === ''))
+            return eputs("eval requires an argument: "+inval);
+
+        var rc, err=false;
+        if (myinterp)  {
+            if (!that.local || that.noXeval)
+                rc = 'xeval is disabled when not local';
+            else
+                rc = eval(val);
+        } else {
+            try {
+                rc = that.interp.uplevel(val, that.curlev);
+            } catch(e) {
+                eputs("ERROR: "+e);
+                err=true;
+            }
+        }
+        if (!err) {
+            if (rc === undefined)
+                rc = 'undefined';
+            else if (rc === null)
+                rc = 'null';
+            wputs(val+" : " + JSON.stringify(rc));
+        }
+    }
+    
+    function cmdHelp(lst:array) {
+        var val = lst[1], rc = '';
+        if (commands[val] !== undefined)
+            rc = commands[val];
+        else {
+            for (var i in commands)
+                rc += format("%-10s: %s\n", i, commands[i]);
+        }
+        wputs(rc);
+    }
+
+    function getFunc(func:string) {
+        var fstr = null;
+        try {
+            fstr = that.interp.eval('Info.funcs("'+func+'")');
+        } catch (e) {
+        }
+        return fstr;
+    }
+    
+    // Print lines of file
+    function cmdList(lst:array) {
+        var file = that.curfile;
+        var line = that.curline;
+        var num = 10;
+        if (lst.length > 1) {
+            var lstr = lst[1];
+            if (lstr.match(/^[0-9]+$/))
+                line = parseInt(lstr);
+            else {
+                fstr = getFunc(lstr);
+                if (typeof fstr !== "object") {
+                    eputs("unknown func: "+lstr);
+                    return;
+                }
+                file = fstr.script;
+                line = fstr.lineStart;
+            }
+        }
+        if (lst.length > 2)
+            num = parseInt(lst[2]);
+        if (lst.length > 3) {
+            file = File.realpath(lst[3]);
+            if (!File.exists(file))
+                return eputs("bad file name: "+lst[3]);
+        }
+        if (!line)
+            return eputs("Error: expected line number: "+line);
+        if (!num)
+            return eputs("Error: expected count: "+num);
+        if (line<1)
+            line = 1;
+        listFile(file, line, num);
+    }
+    
+    function listFile(file:string, line:number, num:number) {
+        var find = addFile(file);
+        var data = that.filedata[file];
+        printf("FILE: %s:%d\n", file, line);
+        for (var i=line; i<line+num && data[i-1] !== undefined; i++)
+                printf("%-5d: %s\n", i, data[i-1]);
+    }
+    
+    var infoCmds = { "bp":"Show breakpoints", "var":"Show variables",
+        "args":"Show function args", "locals":"Show function local vars" };
+    
+    function cmdInfo(lst:array) {
+        var val = lst[1], oval, lev = that.curlev;
+        if (!lev)
+            lev = that.interp.eval('Info.level()')-1;
+        if (lst.length != 2)
+            return eputs("expected 1 arg: "+JSON.stringify(lst));
+        var cmd = getCommand(val, infoCmds);
+        if (cmd === '')
+            return;
+        switch (cmd) {
+            case 'bp':
+                var blst = that.interp.eval('Debug.info()');
+                if ((!blst) || blst.length<=0)
+                    return;
+                for (var i in blst.sort()) {
+                    var bp = that.interp.eval('Debug.info('+blst[i]+')');
+                    str = format("#%-5d: enabled=%s hits=%d, ", bp.id, bp.enabled?"true, ":"false,", bp.hits);
+                    switch (bp.type) {
+                        case 'line': str += format("file=%s:%d", bp.file, bp.line); break;
+                        case 'func': str += format("func=%s", bp.func); break;
+                        default: eputs("ERROR: bad breakpoint type: "+bp.type); return;
+                    }
+                    if (bp.temporary)
+                        str += ", temp=true";
+                    wputs(str);
+                }
+                break;
+            case 'var':
+                wputs(JSON.stringify(that.interp.eval('Interp.uplevel("Info.vars()", '+lev+')')));
+                break;
+            case 'args':
+                wputs(that.interp.eval('JSON.stringify(Info.level('+lev+').scope)'));
+                break;
+            case 'locals':
+                oval = that.interp.eval('Info.level('+lev+').locals.join(", ")');
+                wputs(oval);
+                break;
+            case 'help': // TODO: detect dup case.
+                break;
+            default:
+                break;
+        }
+    }
+
+    function webBPUpdate() {
+        var bps = [], blst = that.interp.eval('Debug.info()');
+        if (blst && blst.length) {
+            for (var i in blst.sort()) {
+                var bp = that.interp.eval('Debug.info('+blst[i]+')');
+                bps.push(bp);
+            }
+        }
+        webSend(that.id, 'breakList', {bps:bps});
+    }   
+    
+    function cmdBreak(lst:array, line:number, func:string, file:string, temp:boolean=false) {
+        var bp, val;
+        if (lst.length > 2) {
+            eputs("too many arguments");
+            return;
+        }
+        if (lst.length === 2) {
+            var ofs, nline;
+            val = lst[1];
+            if ((ofs=val.indexOf(':'))>0) {
+                nline=parseInt(val.substr(ofs+1));
+                if (nline<=0) {
+                    eputs("invalid line number: "+val);
+                    return;
+                }
+                file = val.substr(0,ofs);
+                file = File.realpath(file);
+                if (!File.exists(file)) {
+                    eputs("unknown file: "+file);
+                    return;
+                }
+                bp = file+':'+nline;
+            } else if ((nline=parseInt(val))>0) {
+                bp = file+':'+nline;
+            } else {
+                bp = val;
+                var fstr = getFunc(val);
+                //if (typeof fstr !== "object")
+                 //   eputs("Note: function '"+val+"' is not yet defined");
+            }
+        } else {
+             bp = file+':'+line;
+        }
+        //printf("BP: %s\n", bp);
+        var done = false;
+        try {
+            var b = that.interp.eval('Debug.add("'+bp+'", '+(temp?"true":"false")+')');
+            wputs((temp?"temporary ":"") +"breakpoint #"+b+" set: "+bp);
+            done = true;
+        } catch(e) {
+            eputs("add failed: "+e);
+        }
+        if (done) {
+            LogDebug("DONE BP");
+            update();
+            webBPUpdate();
+        }
+    }
+    
+    function cmdDelete(lst:array, line:number, func:string, file:string) {
+        var bp, num, val = lst[1];
+        if (lst.length == 1) {
+            var bps = that.interp.eval('Debug.info()');
+            for (var i in bps) {
+                that.interp.eval('Debug.remove('+bps[i]+')');
+            }
+        } else {
+            if (val === undefined || (num=parseInt(val))<=0) {
+                eputs("bad index: "+val);
+                return;
+            }
+            try {
+                that.interp.eval('Debug.remove('+num+')');
+            } catch(e) {
+                eputs("remove failed: "+e);
+            }
+        }
+        webBPUpdate();
+    }
+    
+    function cmdEnable(lst:array, on:boolean) {
+        var bp, num, val = lst[1];
+        if (lst.length == 1) {
+            var bps = that.interp.eval('Debug.info()');
+            for (var i in bps) {
+                that.interp.eval('Debug.enable('+bps[i]+','+on+')');
+            }
+        } else {
+            if (val === undefined || (num=parseInt(val))<=0)
+                return eputs("bad index: "+val);
+            try {
+                that.interp.eval('Debug.enable('+num+','+on+')');
+            } catch(e) {
+                return eputs("enable failed: "+e);
+            }
+        }
+        webBPUpdate();
+    }
+
+    function webUiStack(id, m) {
+        var stks = [], lev = that.interp.eval('Info.level()')-1;
+        while (lev>0) {
+            var rs = that.interp.eval('Info.level(' + lev-- + ')');
+            rs.file = File.tail(rs.fileName);
+            rs.dir = File.dirname(rs.fileName);
+            stks.push(rs);
+        }
+        webSend(that.id, 'stackList', {stks:stks});
+    }
+    
+    function cmdWhere(lst:array, line:number, func:string, file:string) {
+        var rs = '', lev = that.curlev;
+        if (!that.curlev)
+            lev = that.interp.eval('Info.level()')-1;
+        while (lev>1) {
+            if (rs !== '')
+                rs += '\n';
+            var r = that.interp.eval('Info.level(' + lev-- + ')');
+            rs += format("%d : %S:(%S) <in %S:%d>", lev, r.funcName, r.scope.join(', '), File.tail(r.fileName), r.line);
+        }
+        wputs(rs);
+    }
+    
+    // Change current level.
+    function cmdLevel(lst:array, isUp:boolean) {
+        var amt = 1, nlev;
+        if (!that.curlev)
+            that.curlev = that.toplev = that.interp.eval('Info.level()')-1;
+        if (lst[1] !== undefined) {
+            if (lst[1].substr(0,1) == '#') {
+                nlev = parseInt(lst[1].substr(1));
+            } else {
+                amt = parseInt(lst[1]);
+                if (!amt) {
+                    amt = 1;
+                    eputs("level invalid: "+lst[1]);
+                }
+                nlev = that.curlev+(isUp?-amt:amt);
+            }
+        } else
+            nlev = that.curlev+(isUp?-amt:amt);
+        if (nlev<=0)
+            nlev = 1;
+        else if (nlev>that.toplev)
+            nlev = that.toplev;
+        that.curlev = nlev;
+        var val = that.interp.eval('Info.level('+nlev+')');
+        that.curfile = val.fileName;
+        that.curline = val.line;
+        that.curfunc = val.funcName;
+    }
+    
+    // Return unique command name match.
+    function getCommand(val:string, cmds:object)//:string 
+    {
+        if (cmds[val] !== undefined)
+            return val;
+        var mat = [];
+        for (var i in cmds)
+            if (i.indexOf(val) === 0)
+                mat.push(i);
+        if (mat.length === 0)
+            eputs("Command '"+val+"' not one of: " + cmds.keys().join(','));
+        else if (mat.length === 1)
+            return mat[0];
+        else
+            eputs("Ambiguous command '"+val+"' matches: "+mat.join(','));
+        return "";
+    }
+    
+    // Add file to data-cache.
+    function addFile(file:string) {
+        if (file === '')
+            return;
+        var find = that.files.indexOf(file);
+        if (find>=0)
+            return find;
+        find = that.files.length;
+        that.files.push(file);
+        var data = File.read(file);
+        that.filedata[file] = data.split('\n');
+        that.find = find;
+        //puts("pushed "+file);
+        return find;
+    }
+
+    function webVarGet(id:number, d:object) {
+        var rc;
+        try {
+            rc = that.interp.value(d.name, that.curlev);
+        } catch (e) {};
+        if (rc !== undefined) {
+            var msg = {name:d.name, value:rc};
+            webSend(id, 'varget', msg);
+        }
+    }
+    
+    function webGetFile(id:number, d:object) {
+        var fnam = d.fname;
+        var msg = {fname:fnam, fdata:File.read(fnam)};
+        webSend(id, 'fileData', msg);
+    }
+    
+    function log_callback(msg:string, type:string, file:string, line:number, col:number) {
+        webSend(that.id, "errorMsg", {msg:msg, file:file, line:line, type:type, col:col});
+    }
+    
+
+    function puts_callback(msg:string, isStderr:number) {
+        webSend(that.id, "putsMsg", {msg:msg, isStderr:isStderr});    
+    }
+
+    function webCommand(id:number, d:object) {        
+        // Process a user command from web.
+        //printf("#%d==> ", that.curlev?that.curlev:level);
+        //var inp = console.input();
+        //update(); // Handle signals.
+
+        var file = that.curfile,
+            line = that.curline,
+            func = that.curfunc,
+            level = that.curlevel,
+            optstr = that.optstr,
+            bpId = that.bpId,
+            level = that.level;
+        
+        var inp = d.cmd;
+        if (inp === undefined)
+            inp = '';
+        inp = inp.trim();
+        var echo = that.echoCmd;
+        if (inp === '') {
+            inp = that.lastCmd;
+            echo = false;
+        }
+        that.lastCmd = inp;
+        var inlst = inp.split(' ');
+        var cmd = getCommand(inlst[0], commands);
+        if (cmd === '')
+            return;
+        that.lastCommand = cmd;
+        if (echo)
+            puts('CMD: '+cmd);
+        switch (cmd) {
+            case 'break':   cmdBreak(inlst,line,func,file,false); break;
+            case 'continue':that.stopped=false; that.interp.conf({debugOpts:{doContinue:true}}); break;
+            case 'delete':  cmdDelete(inlst,line,func,file); break;
+            case 'disable': cmdEnable(inlst,false); break;
+            case 'down':    cmdLevel(inlst, false); break;
+            case 'enable':  cmdEnable(inlst,true); break;
+            case 'eval':    cmdEval(inp,false); break;
+            case 'finish':  that.stopped=false; that.interp.conf({debugOpts:{minLevel:(that.minLevel = --that.level)}}); break;
+            case 'help':    cmdHelp(inlst); break;
+            case 'info':    cmdInfo(inlst); break;
+            case 'list':    cmdList(inlst); break;
+            case 'next':    that.stopped=false; that.interp.conf({debugOpts:{minLevel:(that.minLevel = that.level)}}); break;
+            case 'print':   cmdPrint(inlst); break;
+            case 'quit':    webDoExit(); break;
+            case 'step':    that.stopped=false; break;
+            case 'halt':    that.interp.conf({debugOpts:{doContinue:false, minLevel:(that.minLevel = 0)}}); break;
+            case 'tbreak':  cmdBreak(inlst,line,func,file,true); break;
+            case 'up':      cmdLevel(inlst, true); break;
+            case 'where':   cmdWhere(inlst,line,func,file); break;
+            case 'xeval':   cmdEval(inp, true); break;
+            default: eputs("ERROR '"+cmd+"' not one of: " + commands.keys().join(','));
+        }
+        if (that.stopped)
+            webStopped();
+        else
+            webSend(that.id, 'running', {msg:''});
+    }
+    
+
+    // Main callback handler for the debugger. 
+    function debugCallback (file:string, line:number, level:number, func:string, opstr:string, bpId:number, emsg:string)
+    {
+        if (that.debug)
+            printf("PROGRAM STOPPED: #%d:%s:%d <%s> %s:%d\n", level, file, line, func, opstr, bpId);
+        if (bpId)
+            wputs("Stopped at breakpoint #"+bpId);
+        else if (opstr.substr(0,3) === 'SIG')
+            wputs("Stopped by signal: "+opstr);
+        else if (emsg && emsg !== '')
+            wputs("MSG: "+emsg);
+        addFile(file);
+        if (that.minLevel>0)
+            that.interp.conf({debugOpts:{minLevel:0}});
+        that.interp.conf({debugOpts:{doContinue:false}});
+        that.minLevel = 0;
+        that.curfile = that.file = file;
+        that.curline = that.line = line;
+        that.curfunc = func;
+        that.curlevel = level;
+        that.optstr = optstr;
+        that.bpId = bpId;
+        that.prevLevel = that.level = level;
+        that.curlev = 0;
+        
+        that.stopped = true;
+        if (that.id>=0)
+            webStopped();
+        
+        while (that.stopped && Event.update(100) ) {} // Loop processing events.
+        if (that.debug)
+            LogDebug("PROGRAM RUNNING");
+        return true;
+    };
+
+    function main() {
+        debugger;
+        that.callback = debugCallback;
+        that.log_callback = log_callback;
+        that.puts_callback = puts_callback;
+        var req = require("Jsi_DebugUI", 1.0);
+        if (!that.rootdir)
+            that.rootdir=File.dirname(req.loadFile);
+        that.args = null;
+        if (typeof(fileargs) !== 'array')
+            that.dbfile = fileargs;
+        else {
+            that.dbfile = fileargs[0];
+            that.args = fileargs.splice(1);
+        }
+        if (!File.exists(that.dbfile)) {
+            throw("script file required: "+that.dbfile);
+            return(1);
+        }
+       
+        var i;
+        var defws = {
+            defaultUrl  :'/html/main.htmli',
+            port        :that.port, 
+            rootdir     :that.rootdir, 
+            onRecv      :webRecv, 
+            onCloseLast :webCloseLast, 
+            debug       :that.wsdebug,
+            defHandlers :true        // Sets up preprocess handlers for .htmli, .cssi, and .jsi files
+        };
+        if (that.local && Info.platform().platform != 'win')
+            defws.interface = 'lo';
+        for (i in defws)
+            if (that.wsopts[i] === undefined)
+                that.wsopts[i] = defws[i];
+        
+        /* Open websockets on first available port. */
+        var  emsg = '';
+        for (i=0; i<that.maxPort; i++) {
+            try {
+                that.ws = new WebSocket(that.wsopts);
+                break;
+            }
+            catch (e) {that.wsopts.port++; emsg=e;}
+        }
+        if (i>=that.maxPort) {
+            throw("Failed to get port: "+emsg);
+        }
+        var nargs = null;
+        if (that.noCheck)
+            nargs = '{noCheck:true}';
+                    
+        /* Setup options. */
+        if (that.optdbfile && that.optdbfile != '') {
+            that.optdb = new Sqlite(that.optdbfile);
+        }
+        
+        LogDebug("Listen on "+that.wsopts.port);
+        if (!that.noGui) {
+            if (that.browser === null) {
+                switch (Info.platform().os) {
+                    case 'win': that.browser = 'start';     break;
+                    default:    that.browser = "xdg-open";  break;
+                }
+            }
+            exec(that.browser + " http://127.0.0.1:"+that.wsopts.port+that.wsopts.defaultUrl+" &");
+        }
+    
+        if (0 && Signal) {
+            try {
+                Signal.callback(jsi_debugui_sigint, 'SIGINT');
+            } catch(e) {}
+        }
+        jsi_debugui_that = that;
+        var interpOpts = {
+            debugOpts:{callback:'jsi_debugui_callback', msgCallback:'jsi_debug_logCallback'},
+            args:that.args,
+            scriptFile:that.dbfile,
+            name:'debugProg',
+            busyCallback:'', // Same as "update"
+            busyInterval:100
+        };
+        if (!that.noPuts)
+            interpOpts.debugOpts.putsCallback = 'jsi_debug_putsCallback';
+        that.interp = new Interp(interpOpts);
+        LogDebug("Running in debugger: "+that.dbfile+' '+that.args.toString());
+        var rc = that.interp.source(that.dbfile);
+        if (rc===undefined) rc = 0;
+        LogDebug("JSI DEBUGGER EXIT: "+rc);
+        webDoExit(rc);
+        Event.update(3000);
+
+        LogDebug("Done!");
+        if (that.optdbfile)
+            delete that.optdb;
+        delete that.db;
+        delete that.ws;
+        return 0;
+    }
+    
+    return main();
+}
+
+
+var jsi_debugui_that = null;
+
+// Indirect callback because Jsi_Value is private to an interp.
+function jsi_debugui_callback(file:string, line:number, level:number, func:string, opstr:string, bpId:number, emsg:string):boolean
+{
+    var rc;
+    rc = jsi_debugui_that.callback(file, line, level, func, opstr, bpId, emsg);
+    return rc;
+};
+
+function jsi_debug_logCallback(msg:string, type:string, file:string, line:number, col:number) {
+    jsi_debugui_that.log_callback(msg, type, file, line, col);
+}
+
+
+function jsi_debug_putsCallback(msg:string, isStderr:number) {
+    jsi_debugui_that.puts_callback(msg, isStderr);
+}
+
+function jsi_debugui_sigint() {
+    puts('Exit via signal');
+    exit(0);
+};
+
+function jsi_debugupdate() { Event.update(1); }
+
+provide("Jsi_DebugUI", 1.0);
+
+if (Info.isMain()) {
+    exit(Jsi_Main('Jsi_DebugUI'));
+}

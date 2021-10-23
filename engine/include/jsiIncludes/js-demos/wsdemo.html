@@ -1,0 +1,48 @@
+<html>
+<body onload='DoInit()' >
+Minimal Jsi websocket application.
+<!-- CAN BE RUN WITH: "jsish -W wsdemo.html" -->
+<p />
+
+<input id="myinput" size=30></input>
+
+<script>
+"use strict";
+var ws;
+function puts(str) { console.log(str); }
+console.log.bind(puts);
+
+var cnt = 0;
+function WebMsg(msg) {
+  puts("MMM: "+msg.data);
+  var s = JSON.parse(msg.data);
+  var id = document.getElementById('myinput');
+  id.value = cnt+': '+msg.data;
+  if (s.cmd == "exit")
+     return;
+  var r = { resp:s.cmd }
+  r.cmd = (cnt++ >= 10 ? 'exit' : 'process');
+  setTimeout(function() { ws.send(JSON.stringify(r)); }, 1000);
+}
+
+function DoInit() {
+    var pcol= "ws://", url, u = document.URL;
+    if (u.substring(0, 5) == "https") {
+        pcol = "wss://";
+        u = u.substr(8);
+    } else {
+        if (u.substring(0, 4) == "http")
+            u = u.substr(7);
+    }
+    u = u.split('/');
+    url = pcol + u[0];
+    ws = new WebSocket(url, "jsi-protocol");
+    ws.onmessage = WebMsg;
+    ws.onopen = function() {
+      ws.send('{"cmd":"init"}');
+    };
+}
+
+</script>
+</body>
+</html>

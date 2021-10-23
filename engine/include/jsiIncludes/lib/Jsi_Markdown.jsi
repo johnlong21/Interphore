@@ -1,0 +1,43 @@
+#!/usr/bin/env jsish
+"use strict";
+require('Sys');
+
+/* Return markdown converted to html */
+
+function Jsi_Markdown(files:array|string=null, opts:object=undefined):string|object
+{
+    var options = { // Apply markdown
+        title       :'',       // Page title
+        root        :''        // Url root
+    };
+    var that = {
+        package:"Jsi_Markdown"
+    };
+    Jsi_Opts(that, options, opts);
+        
+    function parse(files:array|string) {
+        //debugger;
+        if (typeof files === 'string')
+            files = [files];
+        var rc = '';
+        for (var i in files) {
+            var curFile = files[i];
+            var s = File.read(curFile);
+            rc += Util.markdown(s).data;
+        }
+
+        return rc;
+    }
+    if (files && files.length)
+        return parse(files);
+        
+    that.parse = parse;
+    return that;
+}
+
+provide("Jsi_Markdown");
+
+if (Info.isMain()) {
+    puts(Jsi_Main('Jsi_Markdown'));
+}
+

@@ -1,0 +1,248 @@
+#!/usr/bin/env jsish
+"use strict";
+require('Sys');
+
+// Create a websocket-enabled web server.
+
+require('WebSocket');
+
+function Jsi_Websrv(args:string|array, opts:object=void):void
+{
+    var that = {
+        package:"Jsi_Websrv",
+        wsOpts:{}
+    };
+    var options = { // Run a standalone web server, opening browser to serve out url.
+        closeTimeout:5000,      // Time til exit after close of final client websocket (ms).
+        browser     :'',        // The browser to exec, eg. "chrome-browser"
+        debug       :false,     // Debugging output.
+        ignoreExit  :false,     // Ignore exit request.
+        isFile      :false,     // Url is a file, so throw if not exists.
+        local       :true,      // Accept only local connections.
+        maxPort     :1000,      // Max to add to above port.
+        noCheck     :false,     // Disable function type-checking for .jsi files in browser.
+        noGui       :false,     // Disable starting local browser on listener.
+        noWait      :false,     // Just return object: caller will provide an update() loop;
+        port        :8765,      // Start search for port.
+        rootdir     :null,      // Base directory.
+        timeout     :0,         // Set timeout to shutdown (ms).
+        trace       :false,     // Tracing output.
+        url         :"./main.htmli",// The file to serve out.
+        wsdebug     :0,         // Debug option for websockets.
+        wsOptStr    :''         // Websocket options to add in JSON
+    };
+    Jsi_Opts(that, options, opts);
+     
+    function DoExit()   // Notify all going down, then exit.
+    {
+        if (that.ignoreExit) return;
+        WebSend(-1, 'exit');
+        setTimeout(function () {that.done = 1; }, 1000); 
+    }
+
+    function CloseNow()
+    {
+        that.closeId = null;
+        if (that.ws.conf('stats.connectCnt')>0)
+            return;
+        LogDebug("Last client has closed");
+        that.ws.conf({noUpdate:true});
+        that.done = 1;
+    }
+    
+    function WsOpen(id:number)
+    {
+        LogDebug("Opening WS: "+id);
+    }
+        function WsClose(id:number)
+    {
+        LogDebug("Closing WS: "+id);
+    }
+    
+    function WsCloseLast() // Wait around for a while for reconnect or new clients before exiting
+    {
+        LogDebug("Close last");
+        if (that.closeId)
+            clearInterval(that.closeId);
+        if (that.closeTimeout>0)
+            that.closeId = setTimeout(function () { CloseNow(); }, that.closeTimeout);
+        return true;
+    }
+    
+    function WebSend (id:number, cmd:string, msg:any=void)
+    {
+        var dat = {cmd:cmd, data:msg };
+        dat = JSON.stringify(dat);
+        LogTrace("SEND: "+dat);
+        that.ws.send(dat, id);
+    }
+    
+    function WebRecv(id:number, data:string)
+    {
+        var buf, buf0, buf1, buf2, msg;
+        LogDebug("SERVER GOT: "+ id +": "+data);
+        var dat;
+        try {
+            dat = JSON.parse(data);
+            LogDebug("JSON: "+dat.toString());
+            switch (dat.cmd) {
+                case 'init':
+                    msg = {ws:that.ws.conf()};
+                    WebSend(id, 'init', msg);
+                    break;
+                case 'process':     WebSend(id, 'process'); break;
+                case 'exit':        DoExit(); break;
+                    
+                default: LogDebug("unknown cmd: "+dat.cmd); break;
+            }
+        } catch (e) {
+          LogDebug("ERROR: "+e);
+        }
+    }
+
+    function OpenWebsock() {
+        /* Try opening websocket on first available port. */
+        var i;
+        for (i=0; i<that.maxPort; i++) {
+            var err = null;
+            try {
+                that.ws = new WebSocket(that.wsopts);
+                break;
+            }
+            catch (e) {
+                if (e.indexOf("failed on port")<0)
+                    err=e;
+            }
+            if (err)
+                throw('wsfail: '+err);
+            that.wsopts.port++;
+            puts("ee: "+err);
+        }
+        if (i>=that.maxPort) {
+            console.log("Failed to get port");
+            return false;
+        }
+        return true;
+    }
+    
+    function OpenBrowser(url:string) {
+        var prog = that.browser;
+        var browsers = {
+            unix: "xdg-open",
+            win:  "start",
+            mac:  "open"
+        };
+        if (!prog.length)
+            prog = browsers[Info.platform().os];
+        if (!prog)
+            prog = "xdg-open";
+        // Display page in browser.
+        LogDebug("URL: "+that.url);
+        exec(prog + " http://127.0.0.1:"+that.wsopts.port+'/'+that.url+" &");
+    }
+
+
+    that.css = "<STYLE>" +
+        "table.cmdstbl { background-color: #f5f5f5; border-collapse: collapse; padding: 3px; }"+
+        "table.cmdstbl th { background-color: #558195; color: #FFFFFF; padding: 3px; }"+
+        "table.cmdstbl td { padding: 3px; }"+
+        "table.cmdstbl td:first-child { font-weight: bold; }"+
+        "</STYLE>";
+
+    function tablifyObj(cv:object, all:boolean=false) {
+        var rv = '<TR><TH>Name</TH><TH>Value</TH></TR>';
+        for (var i in cv) {
+            rv += '<TR><TD>'+i+'</TD><TD>'+JSON.stringify(cv[i])+'</TD></TR>';
+        }
+        if (all)
+            rv = '<TABLE border=1 class=cmdstbl>'+rv+'</TABLE>';
+        return rv;        
+    }
+    
+    function WebAdmin(id:number, url:string, args:object) {
+        var cv = that.ws.conf();
+        var rv = '<HEAD>'+that.css+'</HEAD>' + tablifyObj(cv, true);
+        var rids = that.ws.ids();
+        puts('RIDS: '+id+' '+rids.toString());
+        for (var nid of rids) {
+            cv = that.ws.idconf(nid);
+            var cur = (id === nid?' (CURRENT)':'');
+            rv += '<H3> Conn #'+nid+cur+'</H3>'+tablifyObj(cv, true);
+        }
+        var pv = '<A href="http://127.0.0.1:'+that.port+'/jsi/web/wsadmin.htmli">Admin</A><P>';
+        return "<H2>Websrv Admin</H2>"+pv+rv;
+    }
+    
+    function main() {
+        if (typeof args == 'string')
+            that.url = args;
+        else if (typeof args == 'array' && args.length)
+            that.url = args[0];
+        
+        if (!that.rootdir) {
+            that.rootdir = File.dirname(that.url);
+            if (!that.rootdir.length)
+                that.rootdir = Info.scriptDir();
+            var rlen = that.rootdir.length;
+            if (that.url.substr(0, rlen) === that.rootdir)
+                that.url = that.url.substr(rlen);
+        }
+        
+        if (that.url && that.url.length)
+            if ((that.isFile || that.url.substr(0,2) === './') && !File.isfile(that.url))
+                throw("file not found: "+ufn);
+                
+        // Provide default values for websocket.
+        that.wsopts = {
+            debug:that.wsdebug,
+            getRegexp:/^\/admin/,
+            onGet:WebAdmin,
+            onOpen:WsOpen,
+            onClose:WsClose,
+            onCloseLast:WsCloseLast,
+            onRecv:WebRecv, 
+            port:that.port,
+            rootdir:that.rootdir
+        };
+        if (that.local)
+            that.wsopts.interface = 'lo';
+        if (that.wsOptStr.length)
+            that.wsOpts = JSON.parse(that.wsOptStr);
+        for (var i in that.wsOpts)
+            that.wsopts[i] = that.wsOpts[i];
+
+        OpenWebsock();
+        
+        var nargs = null;
+        if (that.noCheck)
+            nargs = '{noCheck:true}';
+        that.ws.handler('.htmli', 'Jsi_Htmlpp',  null);  // Associate .htmli with Web Pre-Processor (for. <? ... ?> tags).
+        that.ws.handler('.jsi',   'Jsi_Jspp', nargs);    // Associate .jsi with Pre-Processor for types.
+        that.ws.handler('.cssi',  'Jsi_Csspp',  null);   // Associate .cssi with Pre-Processor for css.
+        that.ws.handler('.md',    'Jsi_Markdown',  null);// Associate .md with Pre-Processor for markdown.
+        LogDebug("Listening on port: "+that.wsopts.port);
+            
+        if (that.noGui==0 && that.url && that.url.length)
+            OpenBrowser(that.url);
+
+        if (that.noWait) {
+            that.openWebsock = OpenWebsock;
+            return that;
+        }
+
+        that.done = 0;
+        if (that.timeout)
+            setTimeout(function () { that.done = 1; }, that.timeout);
+        while (that.done == 0 && Event.update(100) ) ;
+        delete that.ws;
+    }
+    
+    main();
+    
+}
+
+provide("Jsi_Websrv");
+
+if (Info.isMain()) {
+    Jsi_Main('Jsi_Websrv');
+}

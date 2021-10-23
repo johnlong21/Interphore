@@ -1,0 +1,14 @@
+#!/usr/local/bin/jsish
+// Demonstrate warnings by enabling parse warnings, then require().
+// or run  "jsish -W parse warndemo.jsi"
+// or Interp.conf({typeCheck:['parse']});
+
+"use strict,parse"; // Note: can only be empty or // lines above.
+
+function warndemoA() {
+}
+
+function warndemoB(n:number) {
+}
+
+require('warndemo2');

@@ -1,0 +1,19 @@
+demo0.o: demo0.h
+demo1.o: demo1.h
+demo2.o: demo2.h
+demo.o: demo.c ../../jsiOne.c ../../jsi.h ../../linenoise.c \
+ ../../linenoise.h ../../regex/regex.h ../../regex/tre.h \
+ ../../regex/regcomp.c ../../regex/regerror.c ../../regex/regexec.c \
+ ../../regex/tre-mem.c ../../parser.h ../../jsiInt.h ../../jsiUtf8.h \
+ ../../jsiCode.c ../../jsiLexer.c ../../jsiFunc.c ../../jsiValue.c \
+ ../../jsiRegexp.c ../../jsiPstate.c ../../jsiInterp.c ../../jsiUtils.c \
+ ../../jsiProto.c ../../jsiFilesys.c ../../jsiChar.c ../../jsiString.c \
+ ../../jsiBool.c ../../jsiNumber.c ../../jsiArray.c ../../jsiLoad.c \
+ ../../jsiHash.c ../../jsiOptions.c ../../jsiStubs.c ../../jsiFormat.c \
+ ../../jsiJSON.c ../../jsiCmds.c ../../jsiFileCmds.c ../../jsiObj.c \
+ ../../jsiSignal.c ../../jsiTree.c ../../jsiMD5.c ../../jsiDString.c \
+ ../../jsiMath.c ../../jsmn.c ../../jsiZvfs.c ../../jsiUtf8.c \
+ ../../jsiUserObj.c ../../jsiSocket.c ../../jsiSqlite.c \
+ ../../jsiWebSocket.c ../../jsiMySql.c ../../jsiCdata.c \
+ ../../jsiMarkdown.c ../../parser.c ../../win/compat.c \
+ ../../win/strptime.c ../../jsiEval.c demo0.h demo1.h demo2.h

@@ -1,0 +1,60 @@
+#! /usr/bin/env jsish
+"use strict";
+require('Sys');
+
+// Run a script within a safe interpreter.
+
+function Jsi_Safe(fileargs:array|string, opts:object=void):number {
+
+    var options = { // Run a script within a safe interpreter.  With no script enter interactive mode.
+        debug       :false,    // Debugging output
+        noRead      :false     // Disable default of allowing read from script directory.
+    };
+    var that = {
+        package:"Jsi_Safe",
+        srcFile:'',
+        version:1.0
+    };
+    
+    Jsi_Opts(that, options, opts);
+        
+    function main() {
+        LogDebug('Starting');
+        debugger;
+        if (!that.rootdir)
+            that.rootdir=Info.scriptDir();
+        that.args = [];
+        var scr = null;
+        if (typeof(fileargs) === 'string')
+            that.srcFile = fileargs;
+        else if (fileargs.length) {
+            that.srcFile = fileargs[0];
+            that.args = fileargs.splice(1);
+        }
+        if (that.srcFile) {
+            if (!File.exists(that.srcFile))
+                throw("script file required: "+that.srcFile);
+            var ext = File.extension(that.srcFile);
+            if (ext != '.jsi' && ext != '.js')
+                throw("Safe module file extension "+ext+" not one of: .js .jsi: ");
+            scr = File.read(that.srcFile);
+        }
+            
+        var sopts = {isSafe:true, args:that.args, scriptStr:scr, scriptFile:that.srcFile, name:'safeProg'};
+        if (!that.noRead)
+            sopts.safeReadDirs = ['.', that.rootdir];
+        puts("Running in safe interp: file="+that.srcFile+', args='+that.args.toString()+', indir='+that.rootdir);
+        that.interp = new Interp(sopts);
+        LogDebug('Done');
+        return 0;
+    }
+    
+    return main();
+}
+
+provide("Jsi_Safe");
+
+
+if (Info.isMain()) {
+    exit(Jsi_Main('Jsi_Safe'));
+}

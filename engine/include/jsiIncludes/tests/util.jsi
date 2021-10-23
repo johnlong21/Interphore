@@ -1,0 +1,85 @@
+#!/usr/local/bin/jsish -u -update true %s
+
+var x = 0;
+function foo(n) { return n+1; }
+function bar() { x += foo(0); }
+var tim = Util.times(bar,1000);
+;x;
+
+var d = 'ABCDEFGHIJKLMOPQRSTUVWYZ';
+;Util.hash(d);
+;Util.hash(d, {type:'sha1'});
+;Util.hash(d, {type:'md5'});
+;Util.hash(d, {hashcash:11});
+
+;'===ENCRYPTION BASIC===';
+var f, e, hpass, pass = 'mysecret';
+;Util.base64(e = Util.encrypt(d, pass));
+;Util.crc32(e);
+;f=Util.decrypt(e, pass);
+;f===d;
+
+;'===ENCRYPTION HASHCASH===';
+hpass = Util.hash(pass, {hashcash:9, noHex:true});
+;Util.base64(e = Util.encrypt(d, hpass));
+;Util.crc32(e);
+;f=Util.decrypt(e, hpass);
+;f===d;
+
+hpass = Util.hash(pass, {hashcash:10, noHex:true});
+;Util.base64(e = Util.encrypt(d, hpass));
+;Util.crc32(e);
+;f=Util.decrypt(e, hpass);
+;f===d;
+
+;'===ENCRYPTION USING BLOCKCHAIN===';
+var b;
+
+for (var i of [1, 2, 3]) {
+;   i;
+    hpass = Util.hash(e, {hashcash:10, noHex:true});
+;   Util.base64(e = Util.encrypt(d+i, hpass));
+;   Util.crc32(e);
+;   f=Util.decrypt(e, hpass);
+;   f===(d+i);
+}
+
+/*
+=!EXPECTSTART!=
+x ==>  1000
+Util.hash(d) ==>  ba4123e75ab3d7aa8d58f217d99b17c3f37e6db639243ef3b8c191c04e8edf5b
+Util.hash(d, {type:'sha1'}) ==>  59e447b01f77780cad662823b768b5f781ecc31d
+Util.hash(d, {type:'md5'}) ==>  4f527b5d177a0a7059d9428cb7f0e04a
+Util.hash(d, {hashcash:11}) ==>  ba4123e75ab3d7aa8d58f217d99b17c3f37e6db639243ef3b8c191c04e8edf5b
+'===ENCRYPTION BASIC==='
+Util.base64(e = Util.encrypt(d, pass)) ==>  1e5J/zr0loX8RB/cy+Bb93vLcGwBsOxhAA==
+Util.crc32(e) ==>  1328906859
+f=Util.decrypt(e, pass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ
+f===d ==>  true
+'===ENCRYPTION HASHCASH==='
+Util.base64(e = Util.encrypt(d, hpass)) ==>  1e5J/zr0loX8RB/cy+Bb93vLcGwBsOxhAA==
+Util.crc32(e) ==>  1328906859
+f=Util.decrypt(e, hpass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ
+f===d ==>  true
+Util.base64(e = Util.encrypt(d, hpass)) ==>  1e5J/zr0loX8RB/cy+Bb93vLcGwBsOxhAA==
+Util.crc32(e) ==>  1328906859
+f=Util.decrypt(e, hpass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ
+f===d ==>  true
+'===ENCRYPTION USING BLOCKCHAIN==='
+i ==>  1
+Util.base64(e = Util.encrypt(d+i, hpass)) ==>  wyIVLzLhy0woB/n7LXseIYja8t4eCbG7a3BTwQM=
+Util.crc32(e) ==>  743326621
+f=Util.decrypt(e, hpass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ1
+f===(d+i) ==>  true
+i ==>  2
+Util.base64(e = Util.encrypt(d+i, hpass)) ==>  G7r5cfBQyglnAVS24O1OzfXkQJLNJiaqufpSmgM=
+Util.crc32(e) ==>  2848269598
+f=Util.decrypt(e, hpass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ2
+f===(d+i) ==>  true
+i ==>  3
+Util.base64(e = Util.encrypt(d+i, hpass)) ==>  HMga3g6foaXn10UZRLSsflu4ghpgJXIGCZpA5QM=
+Util.crc32(e) ==>  2956713681
+f=Util.decrypt(e, hpass) ==>  ABCDEFGHIJKLMOPQRSTUVWYZ3
+f===(d+i) ==>  true
+PECTEND!=
+*/

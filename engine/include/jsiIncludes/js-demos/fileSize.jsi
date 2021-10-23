@@ -1,0 +1,38 @@
+#!/usr/bin/env jsish
+function fileSize(fargs:array|string=void, opts:object=void) {
+
+    var options = { // Count bytes in files
+        debug       :false, // Debugging output
+        max         :10     // Max number of files
+    };
+    var that = {
+        package:'fileSize', // Note: "package" is used by Jsi_Opts to support "-h".
+        cnt:0
+    };
+    
+    function getLength(fargs:array|string) {
+        if (typeof fargs === 'string')
+            fargs = [fargs];
+        for (var i in fargs) {
+            if (i>=that.max) break;
+            if (that.debug)
+                puts('Count: '+fargs[i]);
+            that.cnt += File.size(fargs[i]);
+        }
+        return that.cnt;
+    }
+
+    Jsi_Opts(that, options, opts);
+    
+    if (fargs)
+        return getLength(fargs);
+        
+    that.getLength = getLength; // Return object-command
+    return that;
+}
+
+provide('fileSize');
+
+if (Info.isMain()) {
+    puts(Jsi_Main('fileSize'));
+}

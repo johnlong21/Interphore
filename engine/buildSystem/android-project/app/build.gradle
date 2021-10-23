@@ -1,0 +1,57 @@
+apply plugin: 'com.android.application'
+
+android {
+	compileSdkVersion 18
+		buildToolsVersion '25.0.3'
+
+		defaultConfig {
+			applicationId 'com.paraphore.semiphore'
+				minSdkVersion 18
+				targetSdkVersion 18
+
+				ndk {
+					abiFilters 'armeabi-v7a'
+				}
+
+			externalNativeBuild {
+				cmake {
+					// Available argumetns are inside ${SDK}/cmake/.../android.toolchain.cmake file
+					arguments '-DANDROID_PLATFORM=android-18', '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
+						cppFlags '-std=c++11 -Wall -O0 -DSTATIC_ASSETS'
+				}
+			}
+		}
+
+	buildTypes {
+		debug {
+			println 'Args:'
+			println semiArgs
+			// throw new GradleException('Returning')
+			minifyEnabled = false
+				proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+				externalNativeBuild {
+					cmake {
+						cppFlags += semiArgs
+					}
+				}
+		}
+		release {
+			minifyEnabled = false
+				proguardFiles getDefaultProguardFile('proguard-android.txt'),
+			'proguard-rules.pro'
+		}
+	}
+	externalNativeBuild {
+		cmake {
+			path 'src/main/cpp/CMakeLists.txt'
+		}
+	}
+
+
+	applicationVariants.all { variant ->
+		variant.outputs.each { output ->
+			output.outputFile = new File("app/build/outputs/apk", "app.apk")
+		}
+	}
+}
+

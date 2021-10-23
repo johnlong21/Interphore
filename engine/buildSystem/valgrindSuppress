@@ -1,0 +1,108 @@
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr8
+		...
+		obj:/usr/lib/xorg/modules/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr4
+		...
+		obj:/usr/lib/xorg/modules/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr1
+		...
+		fun:printf
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr1
+		...
+		obj:/usr/lib/xorg/modules/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr2
+		...
+		obj:/usr/lib/xorg/modules/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/xorg/modules/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/libglfw.so.3.2
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/libdl-2.25.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/libX11.so.6.3.0
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/libGLEW.so.2.0.0
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Cond
+		...
+		fun:mz_compress
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Value8
+		...
+		fun:mz_compress
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr4
+		...
+		fun:glXCreateContext
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr8
+		...
+		fun:glXCreateContext
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr2
+		...
+   obj:/usr/lib/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr4
+		...
+   obj:/usr/lib/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Addr8
+		...
+   obj:/usr/lib/dri/i965_dri.so
+}
+{
+	<insert_a_suppression_name_here>
+		Memcheck:Leak
+		...
+		obj:/usr/lib/libGLX_mesa.so.0.0.0
+}

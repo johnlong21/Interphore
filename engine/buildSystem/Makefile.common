@@ -1,0 +1,624 @@
+SHELL=/bin/bash
+CUR_MAKE_PATH := `pwd`
+GAME_NAME ?= "Engine"
+SCREEN_ORIENTATION ?= portrait
+MAKEFLAGS += --no-print-directory -j 4
+CODE_ONLY := 0
+ASSETS_ONLY := 0
+NO_AUDIO := 0
+SHIPPING ?= 0
+
+NEEDED_FONTS ?= "Espresso-Dolce 22" \
+									"Espresso-Dolce 30" \
+									"Espresso-Dolce 38" \
+									"Espresso-Dolce 44" \
+									"OpenSans-Regular 20" \
+									"OpenSans-Regular 30" \
+									"OpenSans-Regular 35" \
+									"OpenSans-Regular 40" \
+									"NunitoSans-Light 22" \
+									"NunitoSans-Bold 22" \
+									"NunitoSans-Italic 22" \
+									"NunitoSans-Light 30" \
+									"NunitoSans-Bold 30" \
+									"NunitoSans-Italic 30" \
+									"NunitoSans-Light 38" \
+									"NunitoSans-Bold 38" \
+									"NunitoSans-Italic 38" \
+									"NunitoSans-Light 44" \
+									"NunitoSans-Bold 44" 
+
+JAVA_EXE := $(JAVA_MAKE_PATH)/bin/java
+ASC2=$(JAVA_EXE) -jar $(CROSSBRIDGE_PATH)/sdk/usr/lib/asc2.jar -merge -md -parallel
+
+CYG_SHELL := $(CROSSBRIDGE_PATH)/run.bat
+ASSET_EXCUDE_RE := .*\.ttf$\|.*assetLib.cpp$
+
+ENGINE_LIB_BASE := $(CPP_TOOLS)/engine/lib
+ENGINE_INCLUDE_BASE := $(CPP_TOOLS)/engine/include
+
+ANDROID_NDK_PATH := $(ANDROID_SDK_PATH)/ndk-bundle
+
+ADB := $(ANDROID_SDK_PATH)/platform-tools/adb
+SYSTRACE := C:\Python27\python.exe $(ANDROID_SDK_PATH)/platform-tools/systrace/systrace.py
+NDK_BUILD := $(ANDROID_NDK_PATH)/ndk-build.cmd
+ANDROID_CMD := $(ANDROID_SDK_PATH)/tools/android.bat
+APP_PROFILER := python $(ANDROID_NDK_PATH)/simpleperf/app_profiler.py
+NDK_PERF_PATH := /d/_tools/fplutil-1.1.0/bin
+ANT := $(ANT_PATH)/bin/ant
+NDK_GDB := $(ANDROID_NDK_PATH)/ndk-gdb.cmd
+KEYTOOL := $(JAVA_MAKE_PATH)/bin/keytool
+JARSIGNER := $(JAVA_MAKE_PATH)/bin/jarsigner
+JOBB := $(ANDROID_SDK_PATH)/tools/bin/jobb.bat
+WIN64_LIB_PATH := "/c/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x64"
+WIN32_LIB_PATH := "/c/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x86"
+WIN64_MSVC_LIB_PATH := "/c/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.13.26128/lib/x64"
+WIN32_MSVC_LIB_PATH := "/c/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.13.26128/lib/x86"
+
+APK := "bin/android-project/app/build/outputs/apk/app.apk"
+
+GCC_GAME_ARGS=-g -Wall -Wno-unused-variable -Wno-sign-compare -Wno-strict-aliasing -Wno-trigraphs \
+														-D DESKTOP_BUILD -D STATIC_ASSETS -DSEMI_BUILD_DATE=$(shell date +%s) $(EXTRA_DEFINES) \
+														-I$(ENGINE_INCLUDE_BASE)/libIncludes -isystem$(ENGINE_LIB_BASE) -I$(CPP_TOOLS)/engine/src -lGL -lGLEW -lopenal -lSDL2 -lpthread -lcurl -ldl
+
+GCC_LIB_ARGS=-DSTB_IMAGE_IMPLEMENTATION -I$(ENGINE_LIB_BASE) -O4 -Wall -Wno-unused-variable -Wno-sign-compare -Wno-strict-aliasing -Wno-trigraphs 
+GCC_ASSET_BUILDER_ARGS=-I$(ENGINE_LIB_BASE) -O4 -Wall -Wno-unused-variable -Wno-sign-compare -Wno-strict-aliasing -Wno-trigraphs -Werror 
+
+CLANG_GAME_ARGS=-g -Wall -I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(ENGINE_INCLUDE_BASE)/curlIncludes -I$(ENGINE_INCLUDE_BASE)/alIncludes -I$(ENGINE_INCLUDE_BASE)/glIncludes \
+													-I$(ENGINE_INCLUDE_BASE)/sdlIncludes -I$(CPP_TOOLS)/engine/lib -I$(CPP_TOOLS)/engine/src \
+													-L$(WIN32_LIB_PATH) \
+													-L$(WIN32_MSVC_LIB_PATH) \
+													-luser32.lib -lshell32.lib -lOpenGL32.lib -lgdi32.lib -lmsvcrt.lib \
+													$(ENGINE_LIB_BASE)/win32/*.lib \
+													-DDESKTOP_BUILD -DSTATIC_ASSETS -DSEMI_BUILD_DATE=$(shell date +%s) $(EXTRA_DEFINES)
+
+CL_GAME_ARGS=-I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(ENGINE_INCLUDE_BASE)/curlIncludes -I$(ENGINE_INCLUDE_BASE)/alIncludes -I$(ENGINE_INCLUDE_BASE)/glIncludes \
+													-I$(ENGINE_INCLUDE_BASE)/sdlIncludes -I$(CPP_TOOLS)/engine/lib -I$(CPP_TOOLS)/engine/src \
+													OpenGL32.lib $(ENGINE_LIB_BASE)/win32/*.lib \
+													-DDESKTOP_BUILD -DSEMI_BUILD_DATE=$(shell date +%s) $(EXTRA_DEFINES) -Fobin/ -Fdbin\ -EHsc -nologo
+
+GCC_FLASH_LIB_ARGS=-D DUK_F_32BIT_PTRS -DSTB_IMAGE_IMPLEMENTATION -I$(ENGINE_LIB_BASE) -O4 -Wall -Wno-unused-variable -Wno-sign-compare -Wno-strict-aliasing -Wno-trigraphs
+GCC_FLASH_GAME_ARGS=-O2 -Wall -Wno-sign-compare -Wno-strict-aliasing \
+																				-I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(CPP_TOOLS)/engine/src -isystem$(ENGINE_LIB_BASE) \
+																				-D DUK_F_32BIT_PTRS -D STATIC_ASSETS -DSEMI_BUILD_DATE=$(shell date +%s) $(EXTRA_DEFINES) -symbol-abc=bin/Console.abc --emit-swf -swf-size=$(GAME_WIDTH)x$(GAME_HEIGHT) -swf-version=26 -swf-preloader=bin/Preloader.swf
+
+EMSCRIPTEN_INCLUDES= -I$(EMSCRIPTEN_DIR_WIN)/system/include/libcxx \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/lib/libcxxabi/include \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/include/compat \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/include \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/include/SSE \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/include/libc \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/lib/libc/musl/arch/emscripten \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/local/include \
+	-I$(EMSCRIPTEN_DIR_WIN)/system/include/SDL \
+
+EMSCRIPTEN_GAME_ARGS=-D DUK_F_32BIT_PTRS $(EMSCRIPTEN_INCLUDES) -I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(ENGINE_INCLUDE_BASE)/curlIncludes -I$(ENGINE_INCLUDE_BASE)/alIncludes -isystem$(ENGINE_LIB_BASE) \
+																					-I$(CPP_TOOLS)/engine/src \
+																					-s USE_SDL=2 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=67108864
+
+EMSCRIPTEN_ASSET_ARGS=$(EMSCRIPTEN_INCLUDES) -I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(ENGINE_INCLUDE_BASE)/curlIncludes -I$(ENGINE_INCLUDE_BASE)/alIncludes -isystem$(ENGINE_LIB_BASE)
+
+ifeq ($(SHIPPING), 1)
+	CL_GAME_ARGS += -MT -GS-
+else
+	CL_GAME_ARGS += -MTd -Zi -GS -RTC1
+endif
+
+
+# export PATH+=:~/android_dev/android-sdk-linux
+export JAVA_HOME = $(JAVA_MAKE_PATH)
+export ANDROID_HOME = $(ANDROID_SDK_PATH)
+
+ifeq ($(shell uname), Darwin)
+	FLASH_PLAYER=open /Applications/Flash\ Player\ Debugger.app
+	PYTHON3_COMMAND=python3
+	BROWSER_COMMAND=open 
+endif
+
+ifneq (, $(findstring MSYS_NT, $(shell uname)))
+	FLASH_PLAYER=$(CPP_TOOLS)/tools/flashplayer_28_sa_debug.exe
+	PYTHON3_COMMAND=python3
+	BROWSER_COMMAND=start 
+endif
+
+ifeq ($(shell uname), Linux)
+	FLASH_PLAYER=wine $(CPP_TOOLS)/tools/flashplayer_24_sa_debug.exe
+	PYTHON3_COMMAND=python3
+	BROWSER_COMMAND=xdg-open
+endif
+
+defaultAll:
+	$(MAKE) b
+	$(MAKE) r
+
+ifneq (, $(findstring MSYS_NT, $(shell uname))) # -------------------------------------------------------------------------------------------------- Windows start
+
+ifeq ($(ASSETS_ONLY), 1)
+
+b:
+	$(MAKE) buildAssets
+	@echo Skipping code
+
+else
+
+b:
+	$(MAKE) buildAssets
+	
+	rm -f bin/*.pdb
+	
+	set -o pipefail; \
+		cmd /c "cl $(CL_GAME_ARGS) src/main.cpp bin/assetCache/*.c bin/assetCache/*.cpp -link /DEBUG /NODEFAULTLIB:msvcrt -out:bin/engine.exe" | tee errors.err
+	cp $(CPP_TOOLS)/engine/lib/win32/*.dll bin
+
+clang: 
+	$(MAKE) buildAssets
+	$(MAKE) bclang
+	ASAN_OPTIONS=intercept_strlen=0:intercept_strchr=0:intercept_strndup=0:replace_str=0:poison_heap=0:debug=1:verbosity=5 ./bin/engine.exe
+
+bclang:
+	clang -fsanitize-recover=address -fsanitize-memory-track-origins -fsanitize-blacklist=$(CPP_TOOLS)/engine/buildSystem/asan.supp -fsanitize=address $(CLANG_GAME_ARGS) bin/assetCache/*.c bin/assetCache/*.cpp src/main.cpp -o bin/engine.exe
+	cp $(CPP_TOOLS)/engine/lib/win32/*.dll bin
+
+bclangTest:
+	clang -g -fsanitize=address src/testMain.cpp -o bin/test.exe \
+		-g -Wall -I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(ENGINE_LIB_BASE)/mujs -I$(ENGINE_INCLUDE_BASE)/curlIncludes -I$(ENGINE_INCLUDE_BASE)/alIncludes -I$(ENGINE_INCLUDE_BASE)/glIncludes \
+		-I$(ENGINE_INCLUDE_BASE)/sdlIncludes -I$(CPP_TOOLS)/engine/lib -I$(CPP_TOOLS)/engine/src \
+		-L$(WIN32_LIB_PATH) \
+		-L$(WIN32_MSVC_LIB_PATH) \
+		-luser32.lib -lshell32.lib -lOpenGL32.lib -lgdi32.lib \
+		$(ENGINE_LIB_BASE)/win32/*.lib \
+		-DDESKTOP_BUILD -DSTATIC_ASSETS $(EXTRA_DEFINES)
+	cp $(CPP_TOOLS)/engine/lib/win32/*.dll bin
+	./bin/test.exe
+
+vsTest:
+	cmd /c "cl src/testMain.cpp \
+		-Fobin/ -Fdbin\ -MTd -Zi -EHsc -nologo -link /debug -out:bin/test.exe"
+	cp $(CPP_TOOLS)/engine/lib/win32/*.dll bin
+	./bin/test.exe
+
+debugVs:
+	devenv -Run bin\\test.exe &
+
+endif
+
+r:
+	./bin/engine.exe
+
+debugC:
+	devenv -Run bin\\engine.exe &
+
+profileGl:
+	apitrace replay --pgpu --pcpu --ppd bin/engine.trace > log
+
+debugGl:
+	rm -f bin/engine.trace
+	cmd /c "apitrace trace -v --api gl bin/engine.exe"
+	cmd /c "qapitrace bin/engine.trace"
+
+rasterizeFonts:
+	rm -f $(ASSET_PATH)/font/bitmap/*.png
+	rm -f $(ASSET_PATH)/font/bitmap/*.fnt
+	fontSets=( $(NEEDED_FONTS) ); \
+									for set in "$${fontSets[@]}"; do \
+									arr=($$set); \
+									fontName=$${arr[0]}; \
+									fontSize=$${arr[1]}; \
+									echo $$fontName at $$fontSize; \
+									sed -i "s/fontFile=.*/fontFile=\.\.\/$$fontName\.ttf/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; \
+									sed -i "s/fontName=.*/fontName=$$fontName/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; \
+									sed -i "s/isItalic=.*/isItalic=0/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; \
+									sed -i "s/isBold=.*/isBold=0/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; \
+									sed -i "s/fontSize=.*/fontSize=$$fontSize/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; \
+									if [[ $$fontName == *"Italic"* ]]; then sed -i "s/isItalic=.*/isItalic=1/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; fi; \
+									if [[ $$fontName == *"Bold"* ]]; then sed -i "s/isBold=.*/isBold=1/g" $(ASSET_PATH)/font/bitmap/dummy.bmfc; fi; \
+									bmfont64 -c "$(ASSET_PATH)/font/bitmap/dummy.bmfc" -o "$(ASSET_PATH)/font/bitmap/$${fontName}_$${fontSize}"; \
+									sed -i "s#$(ASSET_PATH)#assets#g" $(ASSET_PATH)/font/bitmap/$${fontName}_$${fontSize}.fnt; \
+									magick convert $(ASSET_PATH)/font/bitmap/$${fontName}_$${fontSize}_0.png -gravity West -background white -splice 5x0 -background black -splice 5x0 -trim +repage -chop 5x0 -gravity north -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 $(ASSET_PATH)/font/bitmap/$${fontName}_$${fontSize}_0.png; \
+									done;
+
+buildLibs:
+	# -rm -rf bin/box2d_win32
+	# mkdir -p bin/box2d_win32/vs2017
+	# cd bin/box2d_win32; cmake ../../lib/Box2D -G "Visual Studio 15 2017"
+	# cmd /c $(CPP_TOOLS_WIN)\\engine\\buildSystem\\winbuild
+	# $(MAKE) flashBuildLibs
+
+setupWebgl:
+	cmd /c "$(CPP_TOOLS_WIN)\\engine\\buildSystem\\emsetup.bat
+
+bwebgl:
+	$(MAKE) buildAssets
+	$(MAKE) compileWebglAssets
+	-mkdir -p bin/webgl
+	-mkdir -p bin/webglAssetCache
+	cp bin/assetCache/*.webglobj bin/webglAssetCache
+	
+	for file in bin/webglAssetCache/*.webglobj; do \
+		mv "$$file" "$${file%.webglobj}.o"; \
+	done
+
+	em++ $(EMSCRIPTEN_GAME_ARGS)	bin/webglAssetCache/*.o src/main.cpp -o bin/webgl/engine.js || (echo -ne '\007'; false)
+	cp $(CPP_TOOLS)/engine/buildSystem/emscriptenTemplate.html bin/webgl/index.html
+	-mv bin/webgl/engine.js.mem bin/webgl/engine.html.mem
+
+%.webglobj: %.cpp
+		$(EMSCRIPTEN_DIR)/em++ $(EMSCRIPTEN_ASSET_ARGS) $^ -c -o $@
+
+WEBGL_CACHE_OBJS = $(patsubst bin/assetCache/%.cpp, bin/assetCache/%.webglobj, $(wildcard bin/assetCache/*.cpp))
+compileWebglAssets: $(WEBGL_CACHE_OBJS)
+	echo "Done."
+
+ctags:
+	ctags -R --tag-relative=yes -f .tags src $(CPP_TOOLS)/engine/src
+endif # ----------------------------------------------------------------------------------------------------------------------------------- Windows end
+
+ifeq ($(shell uname), Linux) # ------------------------------------------------------------------------------------------------------------------------ Linux start
+b:
+	$(MAKE) buildAssets
+	$(MAKE) compileLinuxAssets
+	g++ src/main.cpp bin/assetLib.o -o bin/engine $(GCC_GAME_ARGS)	|| (echo -ne '\007'; false)
+
+r:
+	./bin/engine
+
+%.o: %.cpp
+	g++ $^ $(GCC_LIB_ARGS) -c -o $@
+
+%.o: %.c
+	gcc -std=c99 $^ $(GCC_LIB_ARGS) -c -o $@
+
+CACHE_OBJS := $(filter %.o,$(patsubst %.cpp,%.o,$(wildcard bin/assetCache/*.cpp)) $(patsubst %.c,%.o,$(wildcard bin/assetCache/*.c)))
+compileLinuxAssets: $(CACHE_OBJS)
+	ld -r bin/assetCache/*.o -o bin/assetLib.o
+
+debugValgrind:
+	# valgrind --quiet --suppressions=$(CPP_TOOLS)/engine/buildSystem/valgrindSuppress --track-origins=yes --leak-check=yes --log-file=bin/val.log bin/engine
+	valgrind --suppressions=$(CPP_TOOLS)/engine/buildSystem/valgrindSuppress --show-leak-kinds=all --gen-suppressions=all --leak-check=full --log-file=bin/val.log bin/engine
+	# valgrind --suppressions=$(CPP_TOOLS)/engine/buildSystem/valgrindSuppress --show-leak-kinds=all --leak-check=full --log-file=val.log bin/engine
+
+debugGl:
+	apitrace trace --output bin/engine.trace -v --api gl bin/engine
+	qapitrace bin/engine.trace
+
+debugC:
+	(cd bin; gdb engine)
+
+buildLibs:
+	curPath=`pwd`; \
+		cd bin/; \
+		rm -rf openal; \
+		mkdir openal; \
+		cd openal; \
+		cmake $$curPath/$(CPP_TOOLS)/engine/lib/openal; \
+		make;
+
+bwebgl:
+	$(MAKE) checkAssetsWebgl
+	@-mkdir bin/webgl
+	em++ -Wall -Wno-sign-compare -Wno-unused-variable \
+		-I$(ENGINE_INCLUDE_BASE)/glIncludes -I$(ENGINE_INCLUDE_BASE)/libIncludes -I$(CPP_TOOLS)/engine/src -I$(CPP_TOOLS)/engine/lib \
+	 -D HTML5_BUILD -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASYNCIFY=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=67108864 \
+	bin/assetLibWebgl.o src/main.cpp -o bin/webgl/engine.js
+	cp $(CPP_TOOLS)/engine/buildSystem/emscriptenTemplate.html bin/webgl/index.html
+
+ctags:
+	ctags -R -f bin/tags src $(CPP_TOOLS)/engine/src --tag-relative=yes
+endif # ----------------------------------------------------------------------------------------------------------------------------------- Linux end
+
+ifeq ($(shell uname), Darwin) # ------------------------------------------------------------------------------------------------------------------------ Mac start
+b:
+	@echo lol no.
+	# $(MAKE) checkAssetsLinux
+	# clang++ -g -Wall -Wno-unused-variable -Wno-sign-compare -Wno-strict-aliasing -Wno-trigraphs \
+	# 	-D DESKTOP_BUILD -D STATIC_ASSETS $(EXTRA_DEFINES) \
+	# 	-I$(ENGINE_INCLUDE_BASE)/libIncludes -isystem$(ENGINE_LIB_BASE) -I$(CPP_TOOLS)/engine/src \
+	# 	src/main.cpp bin/assetCache/*.o -o bin/engine \
+	#  -framework OpenGL -lGLEW -lSDL2 || (echo -ne '\007'; false)
+
+%.o: %.cpp
+	# clang++ $^ -c -o $@
+
+r:
+	# ./bin/engine
+endif # ----------------------------------------------------------------------------------------------------------------------------------- Mac end
+
+flash:
+	$(MAKE) bflash
+	$(MAKE) rflash
+
+bflash:
+	$(MAKE) buildAssets
+	$(MAKE) compileConsole
+	@rm -f bin/engine.swf
+	$(CYG_SHELL) -c "cd /cygdrive$(CUR_MAKE_PATH); $(MAKE) bflashcyg"
+
+debugFlash:
+	$(MAKE) buildAssets
+	$(MAKE) compileConsole
+	@rm -f bin/engine.swf
+	$(CYG_SHELL) -c "cd /cygdrive$(CUR_MAKE_PATH); $(MAKE) debugFlashcyg"
+
+boptflash:
+	$(MAKE) buildAssets
+	$(MAKE) compileConsole
+	@rm -f bin/engine.swf
+	$(CYG_SHELL) -c "cd /cygdrive$(CUR_MAKE_PATH); $(MAKE) boptflashcyg"
+
+cygshell:
+	start $(CYG_SHELL) -c "cd /cygdrive$(CUR_MAKE_PATH); bash"
+
+rflash:
+	if [ -a bin/engine.swf ]; then $(FLASH_PLAYER) bin/engine.swf; fi
+
+rflashInBrowser:
+	cp $(CPP_TOOLS)/engine/buildSystem/flashTemplate.html bin/flashTest.html
+	$(BROWSER_COMMAND) bin/flashTest.html
+
+rflashInBrowserSmall:
+	cp $(CPP_TOOLS)/engine/buildSystem/flashTemplateSmall.html bin/flashTest.html
+	$(BROWSER_COMMAND) bin/flashTest.html
+
+rflashInBrowserBlocked:
+	cp $(CPP_TOOLS)/engine/buildSystem/flashTemplateBlocked.html bin/flashTest.html
+	$(BROWSER_COMMAND) bin/flashTest.html
+
+compileConsole:
+	$(CYG_SHELL) -c "cd /cygdrive$(CUR_MAKE_PATH); $(MAKE) buildFlashAssetFs"
+	
+	$(ASC2) \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/builtin.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/playerglobal.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/CModule.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/ISpecialFile.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/C_Run.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/BinaryData.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/IBackingStore.aBC \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/IVFS.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/InMemoryBackingStore.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/PlayerKernel.abc \
+		-abcfuture -AS3 -strict -warnings bin/vfs/*.as $(CPP_TOOLS)/engine/src/Console.as -outdir bin -out Console
+	
+	$(ASC2) \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/builtin.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/playerglobal.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/CModule.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/ISpecialFile.abc \
+		-import $(CROSSBRIDGE_PATH)/sdk/usr/lib/C_Run.abc \
+		-import bin/Console.abc \
+		-abcfuture -AS3 -optimize -merge -md -swf Preloader,1280,720 -strict -warnings $(CPP_TOOLS)/engine/src/Preloader.as -outdir bin -out Preloader
+
+ifneq (, $(findstring CYGWIN, $(shell uname))) # --------------------------------------------------------------------------------------------- Cyg start
+bflashcyg:
+	# g++ $(GCC_FLASH_LIB_ARGS) bin/Preloader.abc -o bin/Preloader.swf
+	@export PATH='/usr/local/bin:/usr/bin:/bin:/opt/bin:/cygdrive$(CROSSBRIDGE_PATH)/sdk/usr/bin:/cygdrive$(JAVA_MAKE_PATH)/bin:/cygdrive$(AIR_MAKE_PATH)'
+	$(MAKE) compileFlashAssets
+	g++ $(GCC_FLASH_GAME_ARGS) bin/assetCache/*.o src/main.cpp -o bin/engine.swf
+
+boptflashcyg:
+	@export PATH='/usr/local/bin:/usr/bin:/bin:/opt/bin:/cygdrive$(CROSSBRIDGE_PATH)/sdk/usr/bin:/cygdrive$(JAVA_MAKE_PATH)/bin:/cygdrive$(AIR_MAKE_PATH)'
+	$(MAKE) compileFlashAssets
+	g++ $(GCC_FLASH_GAME_ARGS) -O4 bin/assetCache/*.o src/main.cpp -o bin/engine.swf
+
+debugFlashcyg:
+	@export PATH='/usr/local/bin:/usr/bin:/bin:/opt/bin:/cygdrive$(CROSSBRIDGE_PATH)/sdk/usr/bin:/cygdrive$(JAVA_MAKE_PATH)/bin:/cygdrive$(AIR_MAKE_PATH)'
+	$(MAKE) compileFlashAssets
+	g++ -g $(GCC_FLASH_GAME_ARGS) -O0 bin/assetCache/*.o src/main.cpp -o bin/engine.swf
+	@export FLASCC_GDB_RUNTIME="/cygdrive$(CPP_TOOLS_ABS)/tools/flashplayer_24_sa_debug.exe"; \
+	gdb bin/engine.swf
+
+%.o: %.cpp
+	g++ $^ $(GCC_FLASH_LIB_ARGS) -c -Oz -o $@
+
+%.o: %.c
+	gcc $^ $(GCC_FLASH_LIB_ARGS) -c -Oz -o $@
+
+FLASH_CACHE_OBJS := $(filter %.o,$(patsubst %.cpp,%.o,$(wildcard bin/assetCache/*.cpp)) $(patsubst %.c,%.o,$(wildcard bin/assetCache/*.c)))
+compileFlashAssets: $(FLASH_CACHE_OBJS)
+	@echo "Done"
+
+buildFlashAssetFs:
+	rm -rf bin/vfs
+	rm -rf bin/assetsVfs
+	
+	mkdir bin/vfs
+	mkdir bin/assetsVfs
+	cp -r bin/assets bin/assetsVfs
+	(cd bin/vfs; genfs --type=embed --name assetVfs ../assetsVfs fs)
+
+endif # ----------------------------------------------------------------------------------------------------------------------------------------- Cyg end
+
+webgl:
+	$(MAKE) bwebgl
+	$(MAKE) rwebgl
+
+rwebgl:
+	clear; cd bin/webgl; $(BROWSER_COMMAND) 'http://127.0.0.1:8000' & $(PYTHON3) -m http.server
+
+ifeq ($(CODE_ONLY), 1)
+
+buildAssets:
+	@echo Skipping assets
+
+else
+
+buildAssets:
+	-mkdir -p bin/assetCache bin/assets
+	-[[ $(NO_AUDIO) == "0" ]] && $(MAKE) checkAudio || rm -rf bin/assets/audio
+	function doAssetCpp() { \
+		local file=$$1; \
+		if [ $${file: -4} == ".ogg" ]; then return; fi; \
+		baseAssetName=`dirname $$file`; \
+		dataDirName=$${file%.*}_data; \
+		test -d "bin/assets/$$baseAssetName" || mkdir -p "bin/assets/$$baseAssetName"; \
+		test -d $(ASSET_PATH)/$$dataDirName && cp $(ASSET_PATH)/$$dataDirName/*.* bin/assets/$$baseAssetName || cp $(ASSET_PATH)/$$file bin/assets/$$baseAssetName || exit 1; \
+	}; \
+	for file in `cat res/assetList.txt`; do \
+	doAssetCpp $$file & \
+	done; \
+	echo Waiting for them to finish; \
+	wait
+	rsync --checksum $(ENGINE_LIB_BASE)/tinyxml2.cpp bin/assetCache
+	# rsync --checksum $(ENGINE_LIB_BASE)/stb_image.h bin/assetCache/stb_image.c
+	rsync --checksum $(ENGINE_LIB_BASE)/miniz.c bin/assetCache
+	rsync --checksum $(ENGINE_LIB_BASE)/duktape.c bin/assetCache
+	# rsync --checksum $(ENGINE_INCLUDE_BASE)/jsiIncludes/jsi.c bin/assetCache
+
+endif
+
+checkAudio:
+	touch bin/audioBuilt.md5
+	-mkdir -p bin/assets/audio
+	find $(ASSET_PATH)/audio bin/assets/audio -type f -exec md5sum {} \; | sort -k 2 | md5sum > bin/audioBuiltTest.md5
+	cmp --silent bin/audioBuiltTest.md5 bin/audioBuilt.md5 && echo 'oggs are up to date' || $(MAKE) buildOggs
+	find $(ASSET_PATH)/audio bin/assets/audio -type f -exec md5sum {} \; | sort -k 2 | md5sum > bin/audioBuilt.md5
+
+buildOggs:
+	printf "\n\nExporting Audio\n"; \
+	function doOgg() { \
+		local file=$$1; \
+		if ! [ $${file: -4} == ".ogg" ]; then return; fi; \
+		baseAssetName=`dirname $$file`; \
+		test -d "bin/assets/$$baseAssetName" || mkdir -p "bin/assets/$$baseAssetName"; \
+		echo Processing audio file $$file; \
+		ffmpeg -i $(ASSET_PATH)/$${file%.*}.* -loglevel error -qscale:a 2 "bin/assets/$${file%.*}.ogg" -y; \
+	}; \
+	for file in `cat res/assetList.txt`; do \
+	doOgg $$file & \
+	done; \
+	wait
+
+android:
+	$(MAKE) bandroid
+	$(MAKE) randroid
+
+bandroid:
+	$(MAKE) buildAssets
+	-mkdir -p bin/androidAssetCache
+	rsync --checksum bin/assetCache/*.cpp bin/androidAssetCache
+	rsync --checksum bin/assetCache/*.c bin/androidAssetCache
+	-rm -rf bin/android-project
+	cp -r $(CPP_TOOLS)/engine/buildSystem/android-project bin
+	cp -r bin/assets bin/android-project/app/src/main/assets
+	(cd bin; find assets -type f > android-project/app/src/main/assets/fullAssetList.txt)
+	sed -i "s/semiphore/$(GAME_NAME)/g" bin/android-project/app/src/main/AndroidManifest.xml
+	sed -i "s/Semiphore/$(GAME_NAME)/g" bin/android-project/app/src/main/AndroidManifest.xml
+	sed -i "s/replaceScreenOrientation/$(SCREEN_ORIENTATION)/g" bin/android-project/app/src/main/AndroidManifest.xml
+	sed -i "s/semiphore/$(GAME_NAME)/g" bin/android-project/app/build.gradle
+	sed -i "s/semiphore/$(GAME_NAME)/g" bin/android-project/app/src/main/cpp/CMakeLists.txt
+	sed -i "s#replaceEnginePath#`readlink --canonicalize $(CPP_TOOLS)/engine`#g" bin/android-project/app/src/main/cpp/CMakeLists.txt
+	sed -i "s/\/\([A-Za-z]\)\//\1\:\//g" bin/android-project/app/src/main/cpp/CMakeLists.txt
+	magick convert res/appIcon.png -resize 144x144 bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+	magick convert bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png -resize 144x144 bin/android-project/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+	magick convert bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png -resize 96x96 bin/android-project/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+	magick convert bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png -resize 72x72 bin/android-project/app/src/main/res/mipmap-hdpi/ic_launcher.png
+	magick convert bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png -resize 48x48 bin/android-project/app/src/main/res/mipmap-mdpi/ic_launcher.png
+	magick convert bin/android-project/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png -resize 36x36 bin/android-project/app/src/main/res/mipmap-ldpi/ic_launcher.png
+	cd bin/android-project; ./gradlew.bat assembleDebug -PsemiArgs="$(EXTRA_DEFINES) -DSEMI_SCREEN_ORIENTATION=$(SCREEN_ORIENTATION)"
+	cp $(APK) bin/engine.apk
+	$(MAKE) signApk
+
+installApp:
+	-$(ADB) uninstall com.paraphore.$(GAME_NAME)
+	$(ADB) install -r bin/engine.apk
+
+runApp:
+	$(ADB) shell input keyevent 82
+	$(ADB) logcat -c
+	$(ADB) shell am start -n com.paraphore.$(GAME_NAME)/android.app.NativeActivity
+	# $(ADB) shell monkey -p com.paraphore.$(GAME_NAME) -c android.intent.category.LAUNCHER 1
+
+randroid:
+	$(MAKE) installApp
+	$(MAKE) runApp
+	@printf "\n\nRunning\n"
+	@read -n 1 -s -r -p "Press any key to finish and get log"
+	$(MAKE) getAndroidLog
+
+perfAndroid:
+	$(NDK_PERF_PATH)/android_ndk_perf.cmd --apk bin/android-project/app/build/outputs/apk/app-debug.apk record -o bin/perf.data --adb-device ZY22456XZN
+	# cp $(CPP_TOOLS)/engine/buildSystem/app_profiler.config bin
+	# cd bin; $(APP_PROFILER)
+
+debugAndroid:
+	$(MAKE) installApp
+	$(MAKE) runApp
+	$(NDK_GDB) --project=bin/android-project/app/src/main
+
+getAndroidLog:
+	$(ADB) logcat -d > bin/logcat.txt
+	cat bin/logcat.txt | grep "parapets\|gl2jni\|GL2JNIView\|OpenGLRenderer\|Adreno-EGL\|semiphore\|$(GAME_NAME)" | grep --invert-match "SFPerfTracer"  > bin/paraLogcat.txt
+	cat bin/paraLogcat.txt
+	echo "Log saved in bin/logcat.txt bin/paraLogcat"
+	$(ANDROID_NDK_PATH)/ndk-stack.cmd -sym bin/android-project/app/build/intermediates/cmake/debug/obj/armeabi-v7a -dump bin/logcat.txt
+
+systrace:
+	cmd /c "C:\Python27\python.exe D:\_tools\_sdks\android-sdk\platform-tools\systrace\systrace.py --time=10 -o bin\systrace.hxml gfx"
+
+repackAndroidProject:
+	rm -rf bin/android-project/build/*
+	rm -rf bin/android-project/app/build/*
+	rm -rf bin/android-project/app/.externalNativeBuild
+	rm -rf bin/android-project/.gradle
+	rm -rf bin/android-project/.google
+	cd bin; cp -r android-project ../$(CPP_TOOLS)/engine/buildSystem/android-project
+
+signApk:
+	-rm bin/myKey.jks
+	$(KEYTOOL) -genkey -v -keystore bin/myKey.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias -storepass my-password -keypass my-password \
+		-dname "CN=mqttserver.ibm.com, OU=ID, O=IBM, L=Hursley, S=Hants, C=GB"
+	
+	$(JARSIGNER) -verbose -sigalg SHA1withRSA -digestalg SHA1 -tsa http://sha256timestamp.ws.symantec.com/sha256/timestamp -keystore bin/myKey.jks -storepass my-password $(APK) my-alias
+
+cleanSave:
+	rm -f bin/tempSave
+	rm -rf $(FLASH_SO_DIR)
+
+clean:
+	rm -rf bin
+
+ec2Ssh:
+	ssh -i /d/_backup/DefaultKeys.pem ec2-user@ec2-35-165-67-78.us-west-2.compute.amazonaws.com
+
+packWindows:
+	-rm bin/$(GAME_NAME).zip
+	$(MAKE) b
+	cp $(CPP_TOOLS)/engine/buildSystem/Licenses.txt bin
+	-mkdir -p bin/$(GAME_NAME)
+	
+	cd bin; \
+	cp engine.exe $(GAME_NAME).exe; \
+	cp -r $(GAME_NAME).exe *.dll *.phore Licenses.txt assets $(GAME_NAME); \
+	zip -r $(GAME_NAME).zip $(GAME_NAME)
+
+installPhotoshopExtention:
+	cmd /c "copy $(CPP_TOOLS_WIN)\\engine\\buildSystem\\exportAsset.jsx \"c:\\Program Files\\Adobe\\Adobe Photoshop CS6 (64 Bit)\\Presets\\Scripts\exportAsset.jsx\""
+
+gource:
+	rm -rf bin/gource
+	mkdir bin/gource
+	gource --output-custom-log bin/gource/engineRepo.txt ../engine
+	gource --output-custom-log bin/gource/mintGameRepo.txt ../mintGame
+	gource --output-custom-log bin/gource/mintWriterRepo.txt ../mintWriter
+	gource --output-custom-log bin/gource/sourceAssetsRepo.txt ../sourceAssets
+	sed -i -r "s#(.+)\|#\1|/Engine#" bin/gource/engineRepo.txt
+	sed -i -r "s#(.+)\|#\1|/Semiphore#" bin/gource/mintGameRepo.txt
+	sed -i -r "s#(.+)\|#\1|/Interphore#" bin/gource/mintWriterRepo.txt
+	sed -i -r "s#(.+)\|#\1|/SourceAssets#" bin/gource/sourceAssetsRepo.txt
+	cat bin/gource/*.txt | sort -n > bin/gource/combined.txt
+	sed -i -r "s/MintPaw/FallowWing/g" bin/gource/combined.txt
+	sed -i -r "s/\|.{2}Amaranta.{12}\|/\|Kittery\|/g" bin/gource/combined.txt
+	sed -i -r "s/\|unknown\|/\|Kittery\|/g" bin/gource/combined.txt
+	sed -i -r "/^.*\|\/Engine\/lib\/.*$//d" bin/gource/combined.txt
+	sed -i -r "/^.*\|\/Engine\/include\/.*$//d" bin/gource/combined.txt
+	
+	gource -1280x720 bin/gource/combined.txt --seconds-per-day 0.4 -o - | ffmpeg -y -r 60 -f image2pipe -vcodec ppm -i - -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -crf 1 -threads 0 -bf 0 bin/gource/out.mp4
+
+testVars:
+	printenv
+	# echo $$NEW_WRITER
+
+addImageSizes:
+	for file in `find bin/assets/img -name "*.png"`; do \
+		magick identify -format "%w %h\n" $$file;\
+	done;

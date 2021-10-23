@@ -1,0 +1,28 @@
+#!/usr/local/bin/jsish -u %s
+
+;Number.toPrecision(9.1234,2);
+;Number.toExponential(9.1234,2);
+;Number.toFixed(9.1234,1);
+var j;
+;j = new Number(9.1234);
+;j.toPrecision(2);
+;j.toExponential(2);
+;j.toFixed(1);
+
+var num;
+;num = 15;
+;String.replace(num, /5/, '2');
+
+/*
+=!EXPECTSTART!=
+Number.toPrecision(9.1234,2) ==>  9.1
+Number.toExponential(9.1234,2) ==>  9.12e+00
+Number.toFixed(9.1234,1) ==>  9.1
+j = new Number(9.1234) ==>  9.1234
+j.toPrecision(2) ==>  9.1
+j.toExponential(2) ==>  9.12e+00
+j.toFixed(1) ==>  9.1
+num = 15 ==>  15
+String.replace(num, /5/, '2') ==>  12
+=!EXPECTEND!=
+*/
