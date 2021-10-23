@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build-windows:
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install MSYS2 and dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+            mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-glew mingw-w64-x86_64-openal
+            mingw-w64-x86_64-SDL2 mingw-w64-x86_64-curl
+            mingw-w64-x86_64-ffmpeg make
+        path-type: inherit
+
+    - name: Build
+      shell: msys2 {0}
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/_build && cd ${GITHUB_WORKSPACE}/_build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -G Unix\ Makefiles
+        make -j $(nproc)
+
+    - name: Copy the release to /d/interphore/interphore-${{github.sha}}
+      shell: msys2 {0}
+      run: |
+        cd ${GITHUB_WORKSPACE}/_build
+        mkdir -p /d/interphore/interphore-${{github.sha}}/
+        cp -r interphore.exe assets\
+              /mingw64/bin/{libstdc++-6.dll,libgcc_s_seh-1.dll,libwinpthread-1.dll}\
+              /d/interphore/interphore-${{github.sha}}
+
+    - name: Delete old artifacts
+      uses: c-hive/gha-remove-artifacts@v1.1.0
+      with:
+        age: 7 days
+        skip-tags: true
+
+    - name: Upload the release artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: "interphore-${{github.sha}}"
+        path: "D:\\interphore"
