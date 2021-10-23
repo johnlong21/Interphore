@@ -20,7 +20,6 @@ target_include_directories(interphore PUBLIC
 
 file(GLOB_RECURSE AUDIO_WAVS
   LIST_DIRECTORIES FALSE
-  RELATIVE "${PROJECT_SOURCE_DIR}/sourceAssets/"
   CONFIGURE_DEPENDS
   "${PROJECT_SOURCE_DIR}/sourceAssets/audio/*")
 find_program(FFMPEG "ffmpeg" REQUIRED)
@@ -29,7 +28,7 @@ list(TRANSFORM AUDIO_WAVS
   REPLACE "(.wav)|(.mp3)" ".ogg"
   OUTPUT_VARIABLE AUDIO_OGGS)
 list(TRANSFORM AUDIO_OGGS
-  PREPEND "${PROJECT_BINARY_DIR}/assets/${WAV_DIR}"
+  REPLACE "${PROJECT_SOURCE_DIR}/sourceAssets/" "${PROJECT_BINARY_DIR}/assets/${WAV_DIR}"
   OUTPUT_VARIABLE AUDIO_OGGS)
 
 foreach(AUDIO IN ZIP_LISTS AUDIO_WAVS AUDIO_OGGS)
@@ -37,21 +36,21 @@ foreach(AUDIO IN ZIP_LISTS AUDIO_WAVS AUDIO_OGGS)
   get_filename_component(OUT_DIR ${AUDIO_1} DIRECTORY)
 
   add_custom_command(
-    OUTPUT ${AUDIO_1}
+    OUTPUT "${AUDIO_1}"
+    DEPENDS "${AUDIO_0}"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
-    COMMAND ${FFMPEG} -i "${PROJECT_SOURCE_DIR}/sourceAssets/${AUDIO_0}" -loglevel error -qscale:a 2 ${AUDIO_1} -y)
+    COMMAND ${FFMPEG} -i "${AUDIO_0}" -loglevel error -qscale:a 2 ${AUDIO_1} -y)
 endforeach()
-add_custom_target(audio-ogg SOURCES ${AUDIO_OGGS})
+add_custom_target(audio-ogg SOURCES ${AUDIO_WAVS} ${AUDIO_OGGS})
 
 # === Copy all the other assets ===
 
 file(GLOB_RECURSE ASSETS
   LIST_DIRECTORIES FALSE
-  RELATIVE "${PROJECT_SOURCE_DIR}/sourceAssets/"
   CONFIGURE_DEPENDS
   "${PROJECT_SOURCE_DIR}/sourceAssets/*")
 list(FILTER ASSETS EXCLUDE REGEX "(.wav)|(.mp3)|(.psd)|(/frames/)")
-list(TRANSFORM ASSETS PREPEND "${PROJECT_BINARY_DIR}/assets/" OUTPUT_VARIABLE RESULT_ASSETS)
+list(TRANSFORM ASSETS REPLACE "${PROJECT_SOURCE_DIR}/sourceAssets/" "${PROJECT_BINARY_DIR}/assets/" OUTPUT_VARIABLE RESULT_ASSETS)
 foreach(ASSET IN ZIP_LISTS ASSETS RESULT_ASSETS)
   if(ASSET_1 MATCHES "img/.*/.*_data/")
     list(REMOVE_ITEM RESULT_ASSETS ${ASSET_1})
@@ -63,10 +62,11 @@ foreach(ASSET IN ZIP_LISTS ASSETS RESULT_ASSETS)
   endif()
   add_custom_command(
     OUTPUT "${ASSET_1}"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/sourceAssets/${ASSET_0}" "${ASSET_1}"
+    DEPENDS "${ASSET_0}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ASSET_0}" "${ASSET_1}"
   )
 endforeach()
-add_custom_target(assets SOURCES ${RESULT_ASSETS})
+add_custom_target(assets SOURCES ${ASSETS} ${RESULT_ASSETS})
 add_dependencies(assets audio-ogg)
 add_dependencies(interphore assets)
 
