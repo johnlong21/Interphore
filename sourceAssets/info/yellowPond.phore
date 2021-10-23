@@ -63,19 +63,19 @@ You wander for hours like this, repeatedly pondering over pointless choices. Som
 !`
 choicesPerPage = 1;
 `
-[Right.|nextIndigo]
-[Left.|nextIndigo]
-[Down.|nextIndigo]
-[Up.|nextIndigo]
+[Right.|nextIndigoLoop]
+[Left.|nextIndigoLoop]
+[Down.|nextIndigoLoop]
+[Up.|nextIndigoLoop]
 ---
 :nextIndigoLoop
 
 Still lost.
 
-[Right.|nextIndigo]
-[Left.|nextIndigo]
-[Down.|nextIndigo]
-[Up.|nextIndigo]
+[Right.|nextIndigoLoop]
+[Left.|nextIndigoLoop]
+[Down.|nextIndigoLoop]
+[Up.|nextIndigoLoop]
 [... Hold on. Try heading in the opposite direction.|nextIndigo2]
 ---
 :nextIndigo2
