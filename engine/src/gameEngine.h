@@ -32,7 +32,7 @@
 # define SEMI_DEBUG
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define SEMI_WIN32
 
 # ifdef SEMI_INTERNAL
@@ -41,6 +41,10 @@
 #  include <stdlib.h>
 #  include <crtdbg.h>
 # endif
+
+#if __MINGW32__
+# include <winsock2.h>
+#endif
 
 # include <windows.h>
 #endif

@@ -9,7 +9,13 @@ set(CMAKE_CXX_EXTENSIONS FALSE)
 
 set(ENGINE_SRC
   "src/main.cpp")
-add_executable(interphore ${ENGINE_SRC})
+
+if(WIN32)
+  add_executable(interphore WIN32 ${ENGINE_SRC})
+else()
+  add_executable(interphore ${ENGINE_SRC})
+endif()
+
 target_compile_definitions(interphore PUBLIC STATIC_ASSETS)
 target_include_directories(interphore PUBLIC
   "${PROJECT_SOURCE_DIR}/engine/lib"
@@ -102,6 +108,15 @@ else()
   target_link_libraries(interphore
     GLEW::GLEW OpenGL::GL SDL2::SDL2
     ${OPENAL_LIBRARY} ${CURL_LIBRARIES})
+endif()
+if(WIN32)
+  set(WINDOWS_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/engine/include/")
+
+  target_include_directories(interphore PUBLIC
+    ${WINDOWS_INCLUDE_DIR}/alIncludes
+    ${WINDOWS_INCLUDE_DIR}/curlIncludes
+    ${WINDOWS_INCLUDE_DIR}/glIncludes
+    ${WINDOWS_INCLUDE_DIR}/sdlIncludes)
 endif()
 
 target_link_libraries(interphore tinyxml2 miniz duktape)
