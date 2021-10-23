@@ -321,7 +321,17 @@ gotoPassage("wendyApt2Start");
 [Wendy's Apartment|wendyApt]
 [LLL]
 [Red Pond|introModOriginal]
+[Yellow Pond|yellowPond]
+
 [Back|scratchModStart]
+---
+:yellowPond
+
+!`
+clear();
+execAsset("yellowPond.phore");
+gotoPassage("yellowPondModStart");
+`
 ---
 :stuckTest
 
