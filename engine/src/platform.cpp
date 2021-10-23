@@ -105,6 +105,7 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 	closedir(dir);
 #endif
 
+#ifdef SEMI_HTML5
     std::filesystem::path dir_path = dirn;
     if (!std::filesystem::exists(dir_path)) {
         printf("Asset directory %s does not exist", dirn);
@@ -115,6 +116,7 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
         pathNames[*pathNamesNum] = stringClone(entry.path().string().c_str());
         *pathNamesNum = *pathNamesNum + 1;
     }
+#endif
 
 #ifdef SEMI_FLASH
 	char *filesStr = (char *)Malloc(Megabytes(1));
