@@ -4,9 +4,9 @@
 void emDownloadSucceeded(emscripten_fetch_t *fetch);
 void emDownloadFailed(emscripten_fetch_t *fetch);
 
-void (*emLoadCallback)(char *);
+void (*emLoadCallback)(char *, int);
 
-void loadFromUrl(const char *url, void (*loadCallback)(char *)) {
+void loadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
 	emLoadCallback = loadCallback;
 	emscripten_fetch_attr_t attr;
 	emscripten_fetch_attr_init(&attr);

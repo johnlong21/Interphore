@@ -10,8 +10,7 @@ set(CMAKE_CXX_EXTENSIONS FALSE)
 set(ENGINE_SRC
   "src/main.cpp")
 add_executable(interphore ${ENGINE_SRC})
-target_compile_definitions(interphore PUBLIC
-  DESKTOP_BUILD STATIC_ASSETS)
+target_compile_definitions(interphore PUBLIC STATIC_ASSETS)
 target_include_directories(interphore PUBLIC
   "${PROJECT_SOURCE_DIR}/engine/lib"
   "${PROJECT_SOURCE_DIR}/engine/src"
@@ -79,13 +78,30 @@ add_library(duktape STATIC ${PROJECT_SOURCE_DIR}/engine/lib/duktape.c)
 
 # === Find and add system dependencies
 
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(OpenAL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(CURL REQUIRED)
+if(${CMAKE_C_COMPILER} MATCHES "emcc")
+  set(EMSCRIPTEN TRUE)
+endif()
 
-target_link_libraries(interphore
-  tinyxml2 miniz duktape
-  GLEW::GLEW SDL2::SDL2 OpenGL::GL
-  ${OPENAL_LIBRARY} ${CURL_LIBRARIES})
+if(${EMSCRIPTEN})
+  target_compile_options(interphore PUBLIC "SHELL:-s USE_SDL=2")
+  target_link_options(interphore PUBLIC
+    "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 --emrun --preload-file assets")
+
+  set_target_properties(interphore PROPERTIES SUFFIX ".html")
+
+  # add_custom_command(TARGET interphore POST_BUILD
+  #   COMMAND
+  #   ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/engine/buildSystem/emscriptenTemplate.html" "${CMAKE_BINARY_DIR}/index.html")
+else()
+  find_package(GLEW REQUIRED)
+  find_package(OpenAL REQUIRED)
+  find_package(OpenGL REQUIRED)
+  find_package(SDL2 REQUIRED)
+  find_package(CURL REQUIRED)
+
+  target_link_libraries(interphore
+    GLEW::GLEW OpenGL::GL SDL2::SDL2
+    ${OPENAL_LIBRARY} ${CURL_LIBRARIES})
+endif()
+
+target_link_libraries(interphore tinyxml2 miniz duktape)

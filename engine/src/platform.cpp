@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include <filesystem>
+
 #if defined(SEMI_LINUX) || defined(SEMI_ANDROID)
 #include <unistd.h>
 #include <dirent.h>
@@ -102,6 +104,17 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 	}
 	closedir(dir);
 #endif
+
+    std::filesystem::path dir_path = dirn;
+    if (!std::filesystem::exists(dir_path)) {
+        printf("Asset directory %s does not exist", dirn);
+
+        return;
+    }
+    for (auto const &entry : std::filesystem::recursive_directory_iterator(dir_path)) {
+        pathNames[*pathNamesNum] = stringClone(entry.path().string().c_str());
+        *pathNamesNum = *pathNamesNum + 1;
+    }
 
 #ifdef SEMI_FLASH
 	char *filesStr = (char *)Malloc(Megabytes(1));
