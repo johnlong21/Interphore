@@ -14,3 +14,5 @@ log
 Makefile.secret
 ld.exe.stackdump
 errors.err
+
+_build
