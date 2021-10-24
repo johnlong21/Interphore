@@ -157,7 +157,6 @@
 #include "base64.cpp"
 #include "matrix.cpp"
 #include "random.cpp"
-#include "map.cpp"
 #include "rect.cpp" //@hack This must go after map.cpp to redefine x.inflate() from map.cpp importing miniz
 #include "pathfinder.cpp"
 #include "point.cpp"
