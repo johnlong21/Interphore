@@ -7,9 +7,7 @@ char *textAssetId = (char *)"Text";
 int getWidestFrame(MintSprite *spr);
 int getTallestFrame(MintSprite *spr);
 
-void initMintSprites(void *mintSpriteMemory) {
-  engine->spriteData.tagMap = std::make_unique<std::map<std::string, std::string>>();
-}
+void initMintSprites(void *mintSpriteMemory) { }
 
 bool textureInUse(Asset *asset) {
 	for (int i = 0; i < SPRITE_LIMIT; i++) {

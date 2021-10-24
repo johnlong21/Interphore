@@ -14,7 +14,7 @@ void flashStreamTextures(const char **assetIds, int assetIdsNum);
 void (*flashLoadCallbackToGame)(char *, int);
 char flashTempLoadString[SERIAL_SIZE];
 
-void *initPlatform(int mem) {
+void initPlatform() {
 	AS3_DeclareVar(traceString, String); //@cleanup Do I need this?
 
 	printf("Flash plat initing\n");
@@ -23,10 +23,6 @@ void *initPlatform(int mem) {
 
 	inline_as3("%0 = Console.stageRef.stageWidth;" : "=r"(platWidth) :);
 	inline_as3("%0 = Console.stageRef.stageHeight;" : "=r"(platHeight) :);
-
-	void *memory = Malloc(mem);
-	memset(memory, 0, mem);
-	return memory;
 }
 
 void platformStartFrame() {

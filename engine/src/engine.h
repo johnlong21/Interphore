@@ -1,8 +1,11 @@
 #pragma once
+
 #include "tilemap.h"
 #include "platform.h"
 #include "replay.h"
 #include "mintParticleSystem.h"
+
+#include <memory>
 
 enum KeyState { KEY_JUST_PRESSED=1, KEY_PRESSED=2, KEY_RELEASED=3, KEY_JUST_RELEASED=4 };
 
@@ -55,4 +58,4 @@ void releaseKey(int key);
 void drawText(MintSprite *sprite, FormatRegion *regions, int regionsNum);
 void getBuildDate(char *retDate32Char);
 
-EngineData *engine;
+std::unique_ptr<EngineData> engine;

@@ -23,7 +23,7 @@ char tempSavePath[PATH_LIMIT];
 void androidProcessEvents();
 static int32_t androidHandleInput(struct android_app* app, AInputEvent* event);
 
-void *initPlatform(int mem) {
+void initPlatform() {
 	LOGI("Plat initing\n");
 
 	assetManager = androidApp->activity->assetManager;
@@ -123,10 +123,6 @@ void *initPlatform(int mem) {
 		// ret = ASensorManager_destroyEventQueue(sensor_manager, queue);
 		// if (ret < 0) fprintf(stderr, "Failed to destroy event queue: %s\n", strerror(-ret));
 #endif
-
-	void *memory = Malloc(mem);
-	memset(memory, 0, mem);
-	return memory;
 }
 
 void platformStartFrame() {

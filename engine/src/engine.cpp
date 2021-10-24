@@ -21,7 +21,8 @@ void initEngine(void (*initCallbackFn)(), void (*updateCallbackFn)()) {
 	printf("Engine total: %.3f\n", sizeof(EngineData) / 1024.0 / 1024.0);
 	Assert(sizeof(EngineData) < MEMORY_LIMIT);
 
-	engine = (EngineData *)initPlatform(sizeof(EngineData));
+	initPlatform();
+    engine = std::make_unique<EngineData>();
 
 	engine->platform = platPlatform;
 	if (engine->platform == PLAT_ANDROID) engine->portraitMode = true;
@@ -248,7 +249,6 @@ void cleanupEngine() {
 	}
 
 	if (windowsDiskLoadPath) Free(windowsDiskLoadPath);
-	Free(engine);
 }
 
 int qsortLayerIndex(const void *a, const void *b) {

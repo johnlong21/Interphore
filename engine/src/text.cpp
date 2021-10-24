@@ -66,13 +66,13 @@ void parseText(const char *rawText, char *outText, FormatRegion *outRegions, int
 			strncpy(tag, &rawText[angleIndex+1], tagLen);
 			tag[tagLen] = '\0';
 
-			if (!engine->spriteData.tagMap->contains(tag)) {
+			if (!engine->spriteData.tagMap.contains(tag)) {
 				strcat(text, "<");
 				curChar = angleIndex+1;
 				continue;
 			}
 
-			regions[regionsNum].fontName = (*engine->spriteData.tagMap)[tag].data();
+			regions[regionsNum].fontName = engine->spriteData.tagMap[tag].data();
 			regions[regionsNum].start = strlen(text);
 			inRegion = true;
 		} else {

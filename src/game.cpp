@@ -712,7 +712,7 @@ duk_ret_t setFontTag(duk_context *ctx) {
 	const char *fontName = duk_get_string(ctx, -1);
 	const char *tag = duk_get_string(ctx, -2);
 
-	(*engine->spriteData.tagMap)[tag] = fontName;
+	engine->spriteData.tagMap[tag] = fontName;
 
 	return 0;
 }

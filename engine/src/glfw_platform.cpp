@@ -1,7 +1,7 @@
 #include "platform.h"
 #include "engine.h"
 
-void *initPlatform(int mem) {
+void initPlatform() {
 	printf("Plat initing\n");
 
 	/* Initialize the library */
@@ -18,10 +18,6 @@ void *initPlatform(int mem) {
 	}
 
 	platPlatform = PLAT_GLFW;
-
-	void *memory = Malloc(mem);
-	memset(memory, 0, mem);
-	return memory;
 }
 
 void platformStartFrame() {

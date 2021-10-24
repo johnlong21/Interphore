@@ -14,7 +14,7 @@ HWND windowHandle = {};
 WNDCLASS windowClass = {};
 HMODULE hInstance = {};
 
-void *initPlatform(int mem) {
+void initPlatform() {
 	printf("Plat initing\n");
 	hInstance = GetModuleHandle(NULL);
 
@@ -73,11 +73,6 @@ void *initPlatform(int mem) {
 
 	HGLRC hglrc = 0;
 	hglrc = wglCreateContext(deviceContext);
-
-	void *memory = Malloc(mem);
-	memset(memory, 0, mem);
-
-	return memory;
 }
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

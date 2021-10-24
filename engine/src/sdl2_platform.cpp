@@ -15,7 +15,7 @@ SDL_GLContext sdlContext = NULL;
 
 char tempSavePath[PATH_LIMIT];
 
-void *initPlatform(int mem) {
+void initPlatform() {
 	printf("Plat initing\n");
 
 	char path[PATH_LIMIT];
@@ -71,9 +71,6 @@ void *initPlatform(int mem) {
 
 	platPlatform = PLAT_SDL2;
 
-	void *memory = Malloc(mem);
-	memset(memory, 0, mem);
-
 	printf("Maybe set\n");
 #ifdef SEMI_HTML5
 	printf("Setting inf loop\n");
@@ -81,8 +78,6 @@ void *initPlatform(int mem) {
 	emscripten_set_main_loop(updateEngine, 0, 0);
 	printf("Set\n");
 #endif
-
-	return memory;
 }
 
 void platformStartFrame() {

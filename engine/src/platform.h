@@ -14,7 +14,7 @@ enum Platform { PLAT_NULL, PLAT_SDL2, PLAT_FLASH, PLAT_ANDROID, PLAT_GLFW };
 
 enum PlatformKey { KEY_LEFT=301, KEY_RIGHT=302, KEY_UP=303, KEY_DOWN=304, KEY_SHIFT=305, KEY_BACKSPACE=306, KEY_CTRL=307 };
 
-void *initPlatform(int mem);
+void initPlatform();
 void platformStartFrame();
 void platformEndFrame();
 unsigned long platformGetTime();
