@@ -57,7 +57,7 @@ void initPlatform() {
 	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-	sdlWindow = SDL_CreateWindow("Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, platWidth, platHeight, SDL_WINDOW_OPENGL);
+	sdlWindow = SDL_CreateWindow("Interphore", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, platWidth, platHeight, SDL_WINDOW_OPENGL);
 	// sdlWindow = SDL_CreateWindow("Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, platWidth, platHeight, SDL_WINDOW_SHOWN);
 	Assert(sdlWindow);
 
