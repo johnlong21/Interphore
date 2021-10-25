@@ -1,5 +1,5 @@
 ASSET_PATH := sourceAssets
-EXTRA_DEFINES := 
+EXTRA_DEFINES :=
 # EXTRA_DEFINES += -DFAST_SCRATCH
 GAME_NAME := Interphore
 
@@ -21,11 +21,11 @@ NEEDED_FONTS := "Espresso-Dolce 22" \
 									"NunitoSans-Bold 30" \
 									"NunitoSans-Italic 30" \
 
-CPP_TOOLS := ..
-CPP_TOOLS_WIN := ..
+CPP_TOOLS := .
+CPP_TOOLS_WIN := .
 
 # If you don't have the Makefile.secret file, comment the line below and fill in the args underneath
-include ../other/Makefile.secret
+# include ../other/Makefile.secret
 
 # Needed to build the Flash version
 # CPP_TOOLS_ABS := /c/Dropbox/cpp # The Cygwin path to the directory that contains the engine and game directories
@@ -65,7 +65,7 @@ resetSite:
 	if [[ ! -d "$(PARAPHORE_COM_PATH)" ]]; then \
 		git clone git@github.com:FallowWing/paraphore.com.git $(PARAPHORE_COM_PATH) --depth=1 --recurse; \
 		fi
-	
+
 	cd $(PARAPHORE_COM_PATH) && \
 		git fetch origin && \
 		git reset --hard origin/master && \
@@ -78,7 +78,7 @@ shipInterNewEarlyDir:
 												rm -rf $(PARAPHORE_COM_PATH)/play/early/*; \
 												mkdir -p $$newDirName;
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play/early"
-	
+
 	$(MAKE) shipInterEarly
 	dirName=`ls -d $(PARAPHORE_COM_PATH)/play/early/*`; \
 									echo New url is $$dirName;
@@ -90,14 +90,14 @@ shipInterNewDevDir:
 												rm -rf $(PARAPHORE_COM_PATH)/play/dev/*; \
 												mkdir -p $$newDirName;
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play/dev"
-	
+
 	$(MAKE) shipInter
 	dirName=`ls -d $(PARAPHORE_COM_PATH)/play/dev/*`; \
 									echo New url is $$dirName;
 
 shipInter:
 	$(MAKE) resetSite
-	
+
 	cp res/currentMod.phore bin
 	$(MAKE) boptflash EXTRA_DEFINES+="-D SEMI_DEV" SHIPPING=1
 	$(MAKE) packWindows EXTRA_DEFINES+="-D SEMI_DEV" SHIPPING=1
@@ -107,12 +107,12 @@ shipInter:
 									cp bin/engine.swf $$dirName/interphore.swf; \
 									cp bin/$(GAME_NAME).zip $$dirName/interphore.zip; \
 									cp bin/engine.apk $$dirName/interphore.apk;
-	
+
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play/dev/"
 
 shipInterEarly:
 	$(MAKE) resetSite
-	
+
 	cp res/currentMod.phore bin
 	$(MAKE) boptflash EXTRA_DEFINES+="-D SEMI_DEV" SHIPPING=1
 	$(MAKE) packWindows EXTRA_DEFINES+="-D SEMI_DEV" SHIPPING=1
@@ -122,12 +122,12 @@ shipInterEarly:
 									cp bin/engine.swf $$dirName/interphore.swf; \
 									cp bin/$(GAME_NAME).zip $$dirName/interphore.zip; \
 									cp bin/engine.apk $$dirName/interphore.apk;
-	
+
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play/early/"
 
 shipInterPublic:
 	$(MAKE) resetSite
-	
+
 	cp res/currentMod.phore bin
 	$(MAKE) boptflash SHIPPING=1
 	$(MAKE) packWindows SHIPPING=1
@@ -136,7 +136,7 @@ shipInterPublic:
 									cp bin/engine.swf $(PARAPHORE_COM_PATH)/play/interphore.swf; \
 									cp bin/$(GAME_NAME).zip $(PARAPHORE_COM_PATH)/play/interphore.zip; \
 									cp bin/engine.apk $(PARAPHORE_COM_PATH)/play/interphore.apk;
-	
+
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play"
 
 shipDir:
@@ -158,11 +158,11 @@ shipAll:
 shipCurrent:
 	$(MAKE) shipDir SHIP_DIR="$(PARAPHORE_COM_PATH)/play"
 
-include $(CPP_TOOLS)/engine/buildSystem/Makefile.common
+include engine/buildSystem/Makefile.common
 
 testMod:
 	cd bin/workingMod; \
 	zip currentMod.phore *; \
 	mv currentMod.phore ../
-	
+
 	make fast
