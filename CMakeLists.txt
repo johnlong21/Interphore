@@ -93,11 +93,11 @@ if(${EMSCRIPTEN})
   target_link_options(interphore PUBLIC
     "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 --emrun --preload-file assets")
 
-  set_target_properties(interphore PROPERTIES SUFFIX ".html")
-
-  # add_custom_command(TARGET interphore POST_BUILD
-  #   COMMAND
-  #   ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/engine/buildSystem/emscriptenTemplate.html" "${CMAKE_BINARY_DIR}/index.html")
+  add_custom_command(TARGET interphore POST_BUILD
+    COMMENT "--- Copying results to html5"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/engine/buildSystem/emscriptenTemplate.html" "${PROJECT_BINARY_DIR}/html5/index.html"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/res/appIcon.png" "${PROJECT_BINARY_DIR}/html5/favicon.png"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/interphore.js" "${PROJECT_BINARY_DIR}/interphore.wasm" "${PROJECT_BINARY_DIR}/interphore.data" "${PROJECT_BINARY_DIR}/html5/")
 else()
   find_package(GLEW REQUIRED)
   find_package(OpenAL REQUIRED)
