@@ -14,7 +14,7 @@ uniform vec2 p_u_offset;
 // uniform vec4 color;
 
 void main() {
-	float scale = 10.0f;
+	float scale = 10.0;
 	v_texCoord = p_a_texcoord;
 	// ParticleColor = color;
 	gl_Position = vec4((p_u_matrix * vec3(p_a_position + p_u_offset, 1)).xy, 0, 1);

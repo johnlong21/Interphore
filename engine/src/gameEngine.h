@@ -92,6 +92,7 @@
 # define SEMI_SDL
 // # define SEMI_GL_CORE
 # define SEMI_GL
+# define SEMI_AL
 # define SEMI_STUB_SOUND
 # define SEMI_EM_NETWORK
 #endif

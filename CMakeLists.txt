@@ -91,7 +91,7 @@ endif()
 if(${EMSCRIPTEN})
   target_compile_options(interphore PUBLIC "SHELL:-s USE_SDL=2")
   target_link_options(interphore PUBLIC
-    "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 --emrun --preload-file assets")
+    "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 --emrun --preload-file assets")
 
   set_target_properties(interphore PROPERTIES SUFFIX ".html")
 

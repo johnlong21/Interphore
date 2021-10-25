@@ -132,8 +132,10 @@ void initRenderer(void *rendererMemory) {
 }
 
 void buildShader(const char *vertSrc, const char *fragSrc, ShaderProgram *prog) {
-#ifdef SEMI_GLES
-	const char *versionLine = "#version 300 es\n";
+#if defined(SEMI_HTML5)
+	const char *versionLine = "#version 100\n";
+#elif defined(SEMI_GLES)
+    const char *versionLine = "#version 300 es\n";
 #else
 	const char *versionLine = "#version 330\n";
 #endif
