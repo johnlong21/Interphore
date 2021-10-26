@@ -490,7 +490,6 @@ function saveCheckpoint() {
 }
 
 function saveGame() {
-	msg("Game Saved");
 	playEffect("audio/ui/rewards/checkmark");
 	saveGame_internal(checkpointStr);
 }
