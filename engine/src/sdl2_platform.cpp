@@ -249,6 +249,8 @@ void platformSaveToDisk(const char *str) {
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
+    // Have to use a void pointer here, because EM_JS doesn't understand commas in types,
+    // so a function pointer doesn't work
 	upload_file((void*)loadCallback);
     // TODO: use std::string, the savegame string needs to be freed, otherwise it leaks
 
