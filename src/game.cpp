@@ -473,6 +473,11 @@ void msg(const char *str, ...) {
 	va_end(argptr);
 
 	printf("msg: %s\n", buffer);
+
+    // Show a js message
+    duk_get_global_string(jsContext, "msg");
+    duk_push_string(jsContext, buffer);
+    duk_call(jsContext, 1);
 }
 
 void jsError(const char *message) {
