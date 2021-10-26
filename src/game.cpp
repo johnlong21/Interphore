@@ -585,7 +585,7 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 duk_ret_t saveGame(duk_context *ctx) {
 	const char *data = duk_get_string(ctx, -1);
 	msg("Game saved!");
-#ifdef SEMI_FLASH
+#if defined(SEMI_FLASH) || defined(SEMI_HTML5)
 	platformSaveToDisk(data);
 #else
 	platformSaveToTemp(data);
@@ -594,7 +594,7 @@ duk_ret_t saveGame(duk_context *ctx) {
 }
 
 duk_ret_t loadGame(duk_context *ctx) {
-#ifdef SEMI_FLASH
+#if defined(SEMI_FLASH) || defined(SEMI_HTML5)
 	platformLoadFromDisk(gameLoaded);
 #else
 	char *saveData = platformLoadFromTemp();

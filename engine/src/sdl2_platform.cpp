@@ -10,6 +10,10 @@
 #include <direct.h>
 #endif
 
+#ifdef SEMI_HTML5
+#include <emscripten.h>
+#endif
+
 SDL_Window* sdlWindow = NULL;
 SDL_GLContext sdlContext = NULL;
 
@@ -56,6 +60,10 @@ void initPlatform() {
 
 	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
+#ifdef SEMI_HTML5
+    SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
+#endif
 
 	sdlWindow = SDL_CreateWindow("Interphore", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, platWidth, platHeight, SDL_WINDOW_OPENGL);
 	// sdlWindow = SDL_CreateWindow("Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, platWidth, platHeight, SDL_WINDOW_SHOWN);
@@ -178,8 +186,80 @@ char *platformLoadFromTemp() {
 	return str;
 }
 
+#ifdef SEMI_HTML5
+
+EM_JS(void,
+      download_file,
+      (const char* text),
+      {
+          var element = document.createElement("a");
+          element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(UTF8ToString(text)));
+          element.setAttribute("download", "Interphore.txt");
+          element.setAttribute("style", "display: none;");
+
+          try {
+              document.body.appendChild(element);
+
+              element.click();
+          } finally {
+              document.body.removeChild(element);
+          }
+      }
+);
+
+EM_JS(void,
+      upload_file,
+      ( void *loadCallback ),
+      {
+          var element = document.createElement("input");
+          element.setAttribute("type", "file");
+          element.setAttribute("name", "file");
+
+          try {
+              document.body.appendChild(element);
+
+              element.click();
+              element.onchange = function() {
+                  var file = element.files[0];
+
+                  // Don't do anything unless we actually have a file
+                  if (file === undefined) return;
+
+                  var fileReader = new FileReader();
+                  fileReader.readAsText(file);
+                  fileReader.onload = function() {
+                      var fileData = fileReader.result;
+
+                      // Lenght + \0
+                      var lenght = lengthBytesUTF8(fileData) + 1;
+                      var wasmHeapStr = _malloc(lenght);
+                      stringToUTF8(fileData, wasmHeapStr, lenght);
+
+                      dynCall("vii", loadCallback, [wasmHeapStr, lenght]);
+                  };
+              }
+          } finally {
+              document.body.removeChild(element);
+          }
+      }
+);
+
+void platformSaveToDisk(const char *str) {
+    download_file(str);
+}
+
+void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
+	upload_file((void*)loadCallback);
+    // TODO: use std::string, the savegame string needs to be freed, otherwise it leaks
+
+	// str[fileLen] = '\0';
+}
+
+#else
+
 void platformSaveToDisk(const char *str) {
 	// platformSaveToTemp(str);
+    download_file(str);
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
@@ -203,6 +283,8 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
 	str[fileLen] = '\0';
 	loadCallback(str, fileLen);
 }
+
+#endif
 
 void platformLoadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
 	loadFromUrl(url, loadCallback);
