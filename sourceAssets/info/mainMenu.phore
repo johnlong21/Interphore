@@ -205,9 +205,11 @@ container.addChild(loadRect);
 loadRect.onRelease = function() {
 	getAudio("music").destroy();
 	playEffect("audio/ui/newChoiceClick");
-	clearNodes();
-	gotoThirstyCaves();
-	loadGame();
+
+	loadGame(function() {
+	    clearNodes();
+	    gotoThirstyCaves();
+    });
 }
 
 var loadText = addEmptyImage(buttonWidth, buttonHeight);

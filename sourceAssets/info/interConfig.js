@@ -494,39 +494,45 @@ function saveGame() {
 	saveGame_internal(checkpointStr);
 }
 
-function loadGame() {
+function loadGame(callback) {
 	msg("Loading game...");
 
-	//Legacy world maps
-	if (data.metCart) {
-		worldMap.unlockEntry("Femme Ren's");
-		worldMap.unlockEntry("Moving In");
-		worldMap.unlockEntry("Yellow Pond");
-		worldMap.unlockEntry("L.L.L.");
-		worldMap.unlockEntry("Wet Transmission");
-		worldMap.unlockEntry("Down: Archiepelago");
-	}
+    loadGame_internal(function() {
+        // After the game is loaded..
 
-	if (data.heardTransmission) {
-		worldMap.unlockEntry("Wet Cartography");
-	}
+	    //Legacy world maps
+	    if (data.metCart) {
+		    worldMap.unlockEntry("Femme Ren's");
+		    worldMap.unlockEntry("Moving In");
+		    worldMap.unlockEntry("Yellow Pond");
+		    worldMap.unlockEntry("L.L.L.");
+		    worldMap.unlockEntry("Wet Transmission");
+		    worldMap.unlockEntry("Down: Archiepelago");
+	    }
 
-	if (data.metRen) {
-		worldMap.unlockEntry("Bullying Lone");
-	}
+	    if (data.heardTransmission) {
+		    worldMap.unlockEntry("Wet Cartography");
+	    }
 
-	if (data.leftMynt) {
-		worldMap.unlockEntry("Olitippo's Stream");
-		worldMap.unlockEntry("Down: Foodland");
-		worldMap.unlockEntry("Taro & Lulu");
-		worldMap.unlockEntry("Mynt's Day Off");
-	}
+	    if (data.metRen) {
+		    worldMap.unlockEntry("Bullying Lone");
+	    }
 
-	if (data.metPatch) {
-		worldMap.unlockEntry("Indigo Pond");
-	}
+	    if (data.leftMynt) {
+		    worldMap.unlockEntry("Olitippo's Stream");
+		    worldMap.unlockEntry("Down: Foodland");
+		    worldMap.unlockEntry("Taro & Lulu");
+		    worldMap.unlockEntry("Mynt's Day Off");
+	    }
 
-	loadGame_internal();
+	    if (data.metPatch) {
+		    worldMap.unlockEntry("Indigo Pond");
+	    }
+
+        // Call whatever was passed as a callback
+        if (callback)
+            callback()
+    });
 }
 
 function loadMod() {

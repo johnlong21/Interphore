@@ -72,9 +72,9 @@ foreach(ASSET IN ZIP_LISTS ASSETS RESULT_ASSETS)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ASSET_0}" "${ASSET_1}"
   )
 endforeach()
-add_custom_target(assets SOURCES ${ASSETS} ${RESULT_ASSETS})
+add_custom_target(assets ALL SOURCES ${ASSETS} ${RESULT_ASSETS})
 add_dependencies(assets audio-ogg)
-add_dependencies(interphore assets)
+add_dependencies(assets interphore)
 
 # === Build libraries
 
@@ -84,20 +84,22 @@ add_library(duktape STATIC ${PROJECT_SOURCE_DIR}/engine/lib/duktape.c)
 
 # === Find and add system dependencies
 
-if(${CMAKE_C_COMPILER} MATCHES "emcc")
-  set(EMSCRIPTEN TRUE)
-endif()
-
 if(${EMSCRIPTEN})
   target_compile_options(interphore PUBLIC "SHELL:-s USE_SDL=2")
   target_link_options(interphore PUBLIC
-    "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 --emrun --preload-file assets")
+    "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 -s FORCE_FILESYSTEM=1 --emrun")
 
-  add_custom_command(TARGET interphore POST_BUILD
-    COMMENT "--- Copying results to html5"
+  set(HTML5_OUTPUT
+    "${PROJECT_BINARY_DIR}/html5/index.html" "${PROJECT_BINARY_DIR}/html5/favicon.png"
+    "${PROJECT_BINARY_DIR}/html5/interphore.js" "${PROJECT_BINARY_DIR}/html5/interphore.wasm"
+    "${PROJECT_BINARY_DIR}/html5/assets.data" "${PROJECT_BINARY_DIR}/html5/assets.js")
+  add_custom_command(TARGET assets POST_BUILD
+    DEPENDS interphore
+    COMMAND "${EMSCRIPTEN_ROOT_PATH}/tools/file_packager" assets.data --preload assets --js-output=assets.js &> /dev/null
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/engine/buildSystem/emscriptenTemplate.html" "${PROJECT_BINARY_DIR}/html5/index.html"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/res/appIcon.png" "${PROJECT_BINARY_DIR}/html5/favicon.png"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/interphore.js" "${PROJECT_BINARY_DIR}/interphore.wasm" "${PROJECT_BINARY_DIR}/interphore.data" "${PROJECT_BINARY_DIR}/html5/")
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/interphore.js" "${PROJECT_BINARY_DIR}/interphore.wasm"
+    "${PROJECT_BINARY_DIR}/assets.data" "${PROJECT_BINARY_DIR}/assets.js" "${PROJECT_BINARY_DIR}/html5/")
 else()
   find_package(GLEW REQUIRED)
   find_package(OpenAL REQUIRED)

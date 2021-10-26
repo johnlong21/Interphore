@@ -189,7 +189,7 @@ void initGame() {
 	addJsFunction("setMasterVolume", setMasterVolume, 1);
 
 	addJsFunction("saveGame_internal", saveGame, 1);
-	addJsFunction("loadGame_internal", loadGame, 0);
+	addJsFunction("loadGame_internal", loadGame, 1);
 	addJsFunction("loadMod_internal", loadMod, 0);
 
 	addJsFunction("moveTextArea_internal", moveTextArea, 2);
@@ -599,6 +599,12 @@ duk_ret_t saveGame(duk_context *ctx) {
 }
 
 duk_ret_t loadGame(duk_context *ctx) {
+    // Save the callback
+    duk_require_function(ctx, 0);
+    duk_push_global_stash(ctx);
+    duk_dup(ctx, 0);
+    duk_put_prop_string(ctx, -2, "loadGameCallback");
+
 #if defined(SEMI_FLASH) || defined(SEMI_HTML5)
 	platformLoadFromDisk(gameLoaded);
 #else
@@ -607,9 +613,6 @@ duk_ret_t loadGame(duk_context *ctx) {
 #endif
 	return 0;
 }
-
-
-
 
 void gameLoaded(char *data, int size) {
 	// printf("Loaded: %s\n", data);
@@ -624,6 +627,15 @@ void gameLoaded(char *data, int size) {
 	} else {
 		msg("No save game found");
 	}
+
+    // Call the callback now
+    duk_push_global_stash(jsContext);
+    duk_push_string(jsContext, "loadGameCallback");
+    duk_call_prop(jsContext, -2, 0);
+    duk_pop(jsContext);
+
+    duk_push_global_stash(jsContext);
+    duk_del_prop_string(jsContext, -1, "loadGameCallback");
 
 	Free(data);
 }

@@ -261,7 +261,6 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
 
 void platformSaveToDisk(const char *str) {
 	// platformSaveToTemp(str);
-    download_file(str);
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
