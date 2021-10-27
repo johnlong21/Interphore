@@ -619,11 +619,17 @@ void gameLoaded(char *data, int size) {
 
 	if (!streq(data, "none") && !streq(data, "(null)")) {
 		msg("Game loaded!");
-		char *buf = (char *)Malloc(strlen(data) + 1024);
-		sprintf(buf, "checkpointStr = '%s'; data = JSON.parse(checkpointStr);", data);
+
+        duk_push_string(jsContext, data);
+        // Duplicate the string for use in both checkpointStr and data
+        duk_dup(jsContext, -1);
+        // Set checkpointStr
+        duk_put_global_string(jsContext, "checkpointStr");
+        // Set data
+        duk_json_decode(jsContext, -1);
+        duk_put_global_string(jsContext, "data");
+
 		// printf("Running: %s\n", buf);
-		runJs(buf);
-		Free(buf);
 	} else {
 		msg("No save game found");
 	}

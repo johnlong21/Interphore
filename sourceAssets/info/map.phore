@@ -1,6 +1,6 @@
 //TODO(fallow): Do save fixups
 
-data.mapEntries = [];
+data.mapEntries = {};
 
 var worldMap = {
 	nodes: [],
@@ -344,6 +344,8 @@ worldMap.update = function() {
 
 	if (worldMap.curPhase == 2) {
 		if (worldMap.saveButton.justReleased) {
+            // Save whatever the checkpoint string is, since we're on the map it should be fine
+            saveCheckpoint();
 			saveGame();
 		}
 
