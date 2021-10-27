@@ -208,7 +208,10 @@ loadRect.onRelease = function() {
 
 	loadGame(function() {
 	    clearNodes();
-	    gotoThirstyCaves();
+        // If no current map is set, fall back to thirstyCaves
+        // Otherwise, loadGame goes to the last map
+        if (!data.currentMap)
+           gotoThirstyCaves();
     });
 }
 

@@ -529,6 +529,8 @@ function loadGame(callback) {
 		    worldMap.unlockEntry("Indigo Pond");
 	    }
 
+        gotoLastMap();
+
         // Call whatever was passed as a callback
         if (callback)
             callback()
