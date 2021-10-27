@@ -77,6 +77,7 @@
 # define SEMI_GL
 # define SEMI_AL
 # define SEMI_CURL_NETWORK
+# define SEMI_DESKTOP
 #endif
 
 #ifdef SEMI_LINUX
@@ -85,6 +86,7 @@
 # define SEMI_GL
 # define SEMI_AL
 # define SEMI_CURL_NETWORK
+# define SEMI_DESKTOP
 #endif
 
 #ifdef SEMI_HTML5
@@ -104,6 +106,7 @@
 # undef SEMI_AL
 # define SEMI_STUB_SOUND
 # define SEMI_CURL_NETWORK
+# define SEMI_DESKTOP
 #endif
 
 #ifdef SEMI_ANDROID

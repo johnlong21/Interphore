@@ -590,11 +590,8 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 duk_ret_t saveGame(duk_context *ctx) {
 	const char *data = duk_get_string(ctx, -1);
 	msg("Game saved!");
-#if defined(SEMI_FLASH) || defined(SEMI_HTML5)
 	platformSaveToDisk(data);
-#else
-	platformSaveToTemp(data);
-#endif
+
 	return 0;
 }
 
@@ -605,12 +602,8 @@ duk_ret_t loadGame(duk_context *ctx) {
     duk_dup(ctx, 0);
     duk_put_prop_string(ctx, -2, "loadGameCallback");
 
-#if defined(SEMI_FLASH) || defined(SEMI_HTML5)
 	platformLoadFromDisk(gameLoaded);
-#else
-	char *saveData = platformLoadFromTemp();
-	gameLoaded(saveData, strlen(saveData));
-#endif
+
 	return 0;
 }
 

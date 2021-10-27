@@ -84,7 +84,7 @@ add_library(duktape STATIC ${PROJECT_SOURCE_DIR}/engine/lib/duktape.c)
 
 # === Find and add system dependencies
 
-if(${EMSCRIPTEN})
+if(EMSCRIPTEN)
   target_compile_options(interphore PUBLIC "SHELL:-s USE_SDL=2")
   target_link_options(interphore PUBLIC
     "SHELL:-s USE_SDL=2 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 -s FETCH=1 -s ASYNCIFY=1 -s FORCE_FILESYSTEM=1 --emrun")
@@ -122,3 +122,8 @@ if(WIN32)
 endif()
 
 target_link_libraries(interphore tinyxml2 miniz duktape)
+
+if (NOT EMSCRIPTEN)
+  add_subdirectory(externalDeps/nativefiledialog-extended)
+  target_link_libraries(interphore nfd)
+endif()

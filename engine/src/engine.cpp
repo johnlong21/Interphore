@@ -62,6 +62,10 @@ void initEngine(void (*initCallbackFn)(), void (*updateCallbackFn)()) {
 	while (!platformShouldClose) {
 		updateEngine();
 	}
+
+#ifdef SEMI_DESKTOP
+    deinitPlatform();
+#endif
 }
 
 void updateEngine() {

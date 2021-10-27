@@ -14,6 +14,12 @@
 #include <emscripten.h>
 #endif
 
+#ifdef SEMI_DESKTOP
+#include <fstream>
+#include <sstream>
+#include "nfd.h"
+#endif
+
 SDL_Window* sdlWindow = NULL;
 SDL_GLContext sdlContext = NULL;
 
@@ -86,7 +92,17 @@ void initPlatform() {
 	emscripten_set_main_loop(updateEngine, 0, 0);
 	printf("Set\n");
 #endif
+
+#ifdef SEMI_DESKTOP
+    NFD_Init();
+#endif
 }
+
+#ifdef SEMI_DESKTOP
+void deinitPlatform() {
+    NFD_Quit();
+}
+#endif
 
 void platformStartFrame() {
 	platformMouseWheel = 0;
@@ -157,36 +173,7 @@ void platformSleepMs(int millis) {
 #endif
 }
 
-void platformSaveToTemp(const char *str) {
-	FILE *f = fopen(tempSavePath, "w");
-	Assert(f);
-
-	fprintf(f, "%s", str);
-	fclose(f);
-}
-
-char *platformLoadFromTemp() {
-	FILE *f = fopen(tempSavePath, "r");
-	if (f == NULL) {
-		printf("Save file doesn't exist\n");
-
-		char *str = (char *)"none";
-		return stringClone(str);
-	}
-
-	fseek(f, 0, SEEK_END);
-	long fileLen = ftell(f);
-	rewind(f);
-
-	char *str = (char *)Malloc((fileLen + 1) * sizeof(char));
-	fread(str, fileLen, 1, f);
-	fclose(f);
-
-	str[fileLen] = '\0';
-	return str;
-}
-
-#ifdef SEMI_HTML5
+#if defined(SEMI_HTML5)
 
 EM_JS(void,
       download_file,
@@ -257,32 +244,45 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
 	// str[fileLen] = '\0';
 }
 
-#else
+#elif defined(SEMI_DESKTOP)
 
 void platformSaveToDisk(const char *str) {
-	// platformSaveToTemp(str);
+    nfdchar_t *savePath;
+
+    nfdresult_t result = NFD_SaveDialog(&savePath, nullptr, 0, nullptr, "Interphore.txt");
+    if (result == NFD_OKAY) {
+        std::ofstream saveFile(savePath);
+        saveFile << std::string(str);
+
+        NFD_FreePath(savePath);
+    }   
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
-	FILE *f = fopen(windowsDiskLoadPath, "rb");
-	if (f == NULL) {
-		printf("Disk file doesn't exist\n");
+    nfdchar_t *savePath;
 
-		char *str = stringClone("none");
-		loadCallback(str, 0);
-		return;
-	}
+    nfdresult_t result = NFD_OpenDialog(&savePath, nullptr, 0, nullptr);
+    if (result == NFD_OKAY) {
+        std::ifstream saveFile(savePath);
 
-	fseek(f, 0, SEEK_END);
-	long fileLen = ftell(f);
-	rewind(f);
+        std::stringstream ss;
+        ss << saveFile.rdbuf();
 
-	char *str = (char *)Malloc((fileLen + 1) * sizeof(char));
-	fread(str, fileLen, 1, f);
-	fclose(f);
+        NFD_FreePath(savePath);
 
-	str[fileLen] = '\0';
-	loadCallback(str, fileLen);
+        auto savegameString = ss.str();
+        loadCallback(stringClone(savegameString.data()), strlen(savegameString.data()));
+    }    
+}
+
+#else
+
+void platformSaveToDisk(const char *str) {
+    msg("Not implemented");
+}
+
+void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
+    msg("Not implemented");
 }
 
 #endif
