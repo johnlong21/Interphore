@@ -13,6 +13,28 @@ Dev Menu
 
 !`if (data.playerName === "" || data.playerName === undefined) append("Hi, no-name. Make sure you play through the intro or go to Hub and visit Red Pond to set your player variables."); else append("Hi "+data.playerName);`
 
+Changelog 0.2.0
+~~~~~~~~~~~~~~~
+
+> Fixed the yellow pond scene
+- It used to loop endlessly on one scene, now it doesn't
+
+> Fixed the game crashing on windows
+- Something to do with different number / pointer sizes and not initializing classes properly
+
+> Made the game work in the browser
+- Should run pretty much the same as on desktop, saving and loading works too
+
+> Actually made saving save things and loading load things
+- Saves the scenes you've visited
+- Saves the fact that you've seen them be unlocked
+- Saves the current map you're on
+- Loading restores all these to how they're supposed to be
+
+> Added a dialogue to allow file selection on desktop when saving/loading
+- Choose a file to save/load
+- Also works for loading mods
+
 Changelog 0.1.4
 ~~~~~~~~~~~~~~~
 
