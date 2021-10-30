@@ -18,7 +18,7 @@ else()
   add_executable(interphore ${ENGINE_SRC})
 endif()
 
-target_compile_definitions(interphore PUBLIC STATIC_ASSETS)
+target_compile_definitions(interphore PUBLIC STATIC_ASSETS SEMI_SOUND_NEW)
 target_include_directories(interphore PUBLIC
   "${PROJECT_SOURCE_DIR}/engine/lib"
   "${PROJECT_SOURCE_DIR}/engine/src"

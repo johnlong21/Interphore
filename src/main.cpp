@@ -1,5 +1,3 @@
-#define SEMI_SOUND_NEW
-
 #include "gameEngine.h"
 #include "debugOverlay.cpp"
 #include "textArea.cpp"
