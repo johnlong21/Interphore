@@ -20,6 +20,9 @@
 #include "nfd.h"
 #endif
 
+#include <vector>
+#include <functional>
+
 SDL_Window* sdlWindow = NULL;
 SDL_GLContext sdlContext = NULL;
 
@@ -120,54 +123,74 @@ void deinitPlatform() {
 }
 #endif
 
+// Callbacks to run after everything is done in platformStartFrame, on the main thread
+std::vector<std::function<void()>> startFrameCallbacksOnce;
+
 void platformStartFrame() {
 	platformMouseWheel = 0;
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
-		if (e.type == SDL_QUIT) {
-			platformShouldClose = true;
-		} else if (e.type == SDL_KEYDOWN) {
-			int key = e.key.keysym.sym;
+		switch (e.type) {
+			case SDL_QUIT:
+				platformShouldClose = true;
+				break;
+			case SDL_KEYDOWN: {
+				int key = e.key.keysym.sym;
 
-			if (key >= 'a' && key <= 'z') key -= 'a'-'A';
-			if (key == SDLK_LSHIFT) key = KEY_SHIFT;
-			if (key == SDLK_RSHIFT) key = KEY_SHIFT;
-			if (key == SDLK_BACKSPACE) key = KEY_BACKSPACE;
-			if (key == SDLK_LCTRL) key = KEY_CTRL;
-			if (key == SDLK_RCTRL) key = KEY_CTRL;
-			if (key == SDLK_UP) key = KEY_UP;
-			if (key == SDLK_DOWN) key = KEY_DOWN;
-			if (key == SDLK_LEFT) key = KEY_LEFT;
-			if (key == SDLK_RIGHT) key = KEY_RIGHT;
+				if (key >= 'a' && key <= 'z') key -= 'a' - 'A';
+				if (key == SDLK_LSHIFT) key = KEY_SHIFT;
+				if (key == SDLK_RSHIFT) key = KEY_SHIFT;
+				if (key == SDLK_BACKSPACE) key = KEY_BACKSPACE;
+				if (key == SDLK_LCTRL) key = KEY_CTRL;
+				if (key == SDLK_RCTRL) key = KEY_CTRL;
+				if (key == SDLK_UP) key = KEY_UP;
+				if (key == SDLK_DOWN) key = KEY_DOWN;
+				if (key == SDLK_LEFT) key = KEY_LEFT;
+				if (key == SDLK_RIGHT) key = KEY_RIGHT;
 
-			if (key == 27) platformShouldClose = true;
-			pressKey(key);
-		} else if (e.type == SDL_KEYUP) {
-			int key = e.key.keysym.sym;
+				if (key == 27) platformShouldClose = true;
+				pressKey(key);
 
-			if (key >= 'a' && key <= 'z') key -= 'a'-'A';
-			if (key == SDLK_LSHIFT) key = KEY_SHIFT;
-			if (key == SDLK_RSHIFT) key = KEY_SHIFT;
-			if (key == SDLK_BACKSPACE) key = KEY_BACKSPACE;
-			if (key == SDLK_LCTRL) key = KEY_CTRL;
-			if (key == SDLK_RCTRL) key = KEY_CTRL;
-			if (key == SDLK_UP) key = KEY_UP;
-			if (key == SDLK_DOWN) key = KEY_DOWN;
-			if (key == SDLK_LEFT) key = KEY_LEFT;
-			if (key == SDLK_RIGHT) key = KEY_RIGHT;
+				break;
+			}
+			case SDL_KEYUP: {
+				int key = e.key.keysym.sym;
 
-			releaseKey(key);
-		}	else if (e.type == SDL_MOUSEMOTION) {
-			SDL_GetMouseState(&platformMouseX, &platformMouseY);
-		} else if (e.type == SDL_MOUSEBUTTONDOWN) {
-			platformMouseLeftDown = true;
-		} else if (e.type == SDL_MOUSEBUTTONUP) {
-			platformMouseLeftDown = false;
-		} else if (e.type == SDL_MOUSEWHEEL) {
-			platformMouseWheel = e.wheel.y;
+				if (key >= 'a' && key <= 'z') key -= 'a' - 'A';
+				if (key == SDLK_LSHIFT) key = KEY_SHIFT;
+				if (key == SDLK_RSHIFT) key = KEY_SHIFT;
+				if (key == SDLK_BACKSPACE) key = KEY_BACKSPACE;
+				if (key == SDLK_LCTRL) key = KEY_CTRL;
+				if (key == SDLK_RCTRL) key = KEY_CTRL;
+				if (key == SDLK_UP) key = KEY_UP;
+				if (key == SDLK_DOWN) key = KEY_DOWN;
+				if (key == SDLK_LEFT) key = KEY_LEFT;
+				if (key == SDLK_RIGHT) key = KEY_RIGHT;
+
+				releaseKey(key);
+
+				break;
+			}
+			case SDL_MOUSEMOTION:
+				SDL_GetMouseState(&platformMouseX, &platformMouseY);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				platformMouseLeftDown = true;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				platformMouseLeftDown = false;
+				break;
+			case SDL_MOUSEWHEEL:
+				platformMouseWheel = e.wheel.y;
+				break;
 		}
 	}
+
+	for (auto &callback : startFrameCallbacksOnce) {
+		callback();
+	}
+	startFrameCallbacksOnce.clear();
 }
 
 void platformEndFrame() {
@@ -314,7 +337,9 @@ Java_com_paraphore_interphore_InterphoreGameActivity_loadFromDiskCallback(JNIEnv
 	auto loadCallback = reinterpret_cast<void (*)(const char *, int)>(callback);
 
 	const char *loadData = env->GetStringUTFChars(data, nullptr);
-	loadCallback(loadData, strlen(loadData));
+	// Schedule a callback on the main thread, otherwise OpenGL can't find the context,
+	// because this function is called from the activity thread
+	startFrameCallbacksOnce.push_back([=]() { loadCallback(loadData, strlen(loadData)); });
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
