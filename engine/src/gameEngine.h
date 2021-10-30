@@ -78,6 +78,7 @@
 # define SEMI_AL
 # define SEMI_CURL_NETWORK
 # define SEMI_DESKTOP
+# define _USE_MATH_DEFINES
 #endif
 
 #ifdef SEMI_LINUX
