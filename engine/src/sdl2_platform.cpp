@@ -291,14 +291,41 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
     }    
 }
 
-#else
+#elif defined(SEMI_ANDROID)
 
 void platformSaveToDisk(const char *str) {
-    // msg("Not implemented");
+	jobject activity = (jobject)SDL_AndroidGetActivity();
+	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+
+    jstring saveDataString = env->NewStringUTF(str);
+
+    // Call the JVM function to handle the saving of the game
+	jclass activityClass = env->GetObjectClass(activity);
+	jmethodID saveToDiskID = env->GetMethodID(activityClass, "saveToDisk", "(Ljava/lang/String;)V");
+	env->CallVoidMethod(activity, saveToDiskID, saveDataString);
+
+	env->DeleteLocalRef(saveDataString);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_paraphore_interphore_InterphoreGameActivity_loadFromDiskCallback(JNIEnv *env, jobject obj, jlong callback, jstring data) {
+	// Cast the callback back to the actual type
+	auto loadCallback = reinterpret_cast<void (*)(const char *, int)>(callback);
+
+	const char *loadData = env->GetStringUTFChars(data, nullptr);
+	loadCallback(loadData, strlen(loadData));
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
-    // msg("Not implemented");
+    jobject activity = (jobject)SDL_AndroidGetActivity();
+    JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+
+    jclass activityClass = env->GetObjectClass(activity);
+    jmethodID loadFromDiskID = env->GetMethodID(activityClass, "loadFromDisk", "(J)V");
+
+	// Call the jvm function to handle loading and pass the callback as a long
+    env->CallVoidMethod(activity, loadFromDiskID, reinterpret_cast<long>(loadCallback));
 }
 
 #endif
