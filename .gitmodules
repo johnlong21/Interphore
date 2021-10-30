@@ -1,3 +1,6 @@
 [submodule "externalDeps/nativefiledialog-extended"]
 	path = externalDeps/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended
+[submodule "externalDeps/SDL"]
+	path = externalDeps/SDL
+	url = https://github.com/libsdl-org/SDL/

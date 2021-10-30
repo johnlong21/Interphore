@@ -1,6 +1,11 @@
 #include "renderer.h"
 #include "engine.h"
 
+#ifdef SEMI_ANDROID
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#endif
+
 RendererData *renderer;
 
 void buildShader(const char *vertSrc, const char *fragSrc, ShaderProgram *prog);

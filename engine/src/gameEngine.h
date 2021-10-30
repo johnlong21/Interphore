@@ -110,12 +110,13 @@
 #endif
 
 #ifdef SEMI_ANDROID
-# define SEMI_CURL_NETWORK
-# define SEMI_GL_CORE
+// # define SEMI_CURL_NETWORK
+// # define SEMI_GL_CORE
 # define SEMI_GLES
 # define SEMI_GL
 # define SEMI_EGL
 # define SEMI_SL
+# define SEMI_SDL
 #endif
 
 #ifndef SEMI_WIN32
@@ -142,10 +143,15 @@
 #include "miniz.h"
 
 #ifdef SEMI_SDL
-# include <SDL2/SDL.h>
-# define GLEW_STATIC
-# include <GL/glew.h>
-# include <SDL2/SDL_opengl.h>
+# include <SDL.h>
+
+#  ifndef SEMI_ANDROID
+#    define GLEW_STATIC
+#    include <GL/glew.h>
+#  else
+#    include <SDL_opengles2.h>
+#endif
+
 #endif
 
 #ifdef SEMI_HTML5
@@ -172,6 +178,10 @@
 
 #ifdef SEMI_WIN32
 # include "win32_platform.cpp"
+#endif
+
+#ifdef SEMI_ANDROID
+#include <GLES3/gl3.h>
 #endif
 
 #include "asset.cpp" // Assets after platform because of gl stuff?
@@ -214,10 +224,6 @@
 # ifndef SEMI_SOUND_NEW
 #  include "flash_sound.cpp"
 # endif
-#endif
-
-#ifdef SEMI_ANDROID
-# include "android_platform.cpp"
 #endif
 
 #ifdef SEMI_GL

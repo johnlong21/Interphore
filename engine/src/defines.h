@@ -106,6 +106,8 @@ int flashPrintf(const char *fmt, ...) {
 #endif
 
 #ifdef SEMI_ANDROID
+#include <android/log.h>
+
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "semiphore", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "semiphore", __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "semiphore", __VA_ARGS__))

@@ -52,11 +52,15 @@ void initPlatform() {
 	// exit(1);
 	Assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
 
-#ifdef SEMI_GL_CORE
+#if defined(SEMI_GL_CORE)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	// SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#elif defined(SEMI_GLES) && defined(SEMI_ANDROID)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -71,7 +75,17 @@ void initPlatform() {
     SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
 #endif
 
-	sdlWindow = SDL_CreateWindow("Interphore", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, platWidth, platHeight, SDL_WINDOW_OPENGL);
+    int flags = SDL_WINDOW_OPENGL;
+#ifdef SEMI_ANDROID
+    flags |= SDL_WINDOW_FULLSCREEN;
+
+    SDL_DisplayMode displayMode;
+    SDL_GetCurrentDisplayMode(0, &displayMode);
+    platWidth = displayMode.w;
+    platHeight = displayMode.h;
+#endif
+
+	sdlWindow = SDL_CreateWindow("Interphore", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, platWidth, platHeight, flags);
 	// sdlWindow = SDL_CreateWindow("Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, platWidth, platHeight, SDL_WINDOW_SHOWN);
 	Assert(sdlWindow);
 
@@ -80,8 +94,10 @@ void initPlatform() {
 
 	Assert(!SDL_GL_SetSwapInterval(1));
 
-	glewExperimental = GL_TRUE; 
+#ifdef GLEW_STATIC
+    glewExperimental = GL_TRUE;
 	Assert(glewInit() == GLEW_OK);
+#endif
 
 	platPlatform = PLAT_SDL2;
 
@@ -278,17 +294,17 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
 #else
 
 void platformSaveToDisk(const char *str) {
-    msg("Not implemented");
+    // msg("Not implemented");
 }
 
 void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
-    msg("Not implemented");
+    // msg("Not implemented");
 }
 
 #endif
 
 void platformLoadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
-	loadFromUrl(url, loadCallback);
+	// loadFromUrl(url, loadCallback);
 }
 
 void platformClearTemp() {

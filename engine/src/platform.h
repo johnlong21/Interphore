@@ -48,8 +48,4 @@ Platform platPlatform = PLAT_NULL;
 
 char *windowsDiskLoadPath = NULL;
 
-#ifdef SEMI_ANDROID
-AAssetManager *assetManager = NULL;
-#endif
-
 int platformLoadedStringSize;

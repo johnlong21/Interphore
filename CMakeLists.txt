@@ -12,6 +12,8 @@ set(ENGINE_SRC
 
 if(WIN32)
   add_executable(interphore WIN32 ${ENGINE_SRC})
+elseif(ANDROID)
+  add_library(interphore SHARED ${ENGINE_SRC})
 else()
   add_executable(interphore ${ENGINE_SRC})
 endif()
@@ -100,6 +102,16 @@ if(EMSCRIPTEN)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/res/appIcon.png" "${PROJECT_BINARY_DIR}/html5/favicon.png"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/interphore.js" "${PROJECT_BINARY_DIR}/interphore.wasm"
     "${PROJECT_BINARY_DIR}/assets.data" "${PROJECT_BINARY_DIR}/assets.js" "${PROJECT_BINARY_DIR}/html5/")
+elseif(ANDROID)
+  add_subdirectory("${PROJECT_SOURCE_DIR}/externalDeps/SDL")
+  target_link_libraries(interphore SDL2::SDL2 SDL2::SDL2main)
+  target_link_libraries(interphore GLESv2 EGL OpenSLES android log)
+
+  add_custom_command(TARGET assets POST_BUILD
+    DEPENDS interphore
+    COMMAND COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_BINARY_DIR}/assets"
+    "${CMAKE_SOURCE_DIR}/engine/buildSystem/android-project/app/src/main/assets/")
 else()
   find_package(GLEW REQUIRED)
   find_package(OpenAL REQUIRED)
@@ -123,7 +135,7 @@ endif()
 
 target_link_libraries(interphore tinyxml2 miniz duktape)
 
-if (NOT EMSCRIPTEN)
+if (NOT EMSCRIPTEN AND NOT ANDROID)
   add_subdirectory(externalDeps/nativefiledialog-extended)
   target_link_libraries(interphore nfd)
 endif()

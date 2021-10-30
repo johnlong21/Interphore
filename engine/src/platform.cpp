@@ -7,6 +7,15 @@
 #include <dirent.h>
 #endif
 
+#ifdef SEMI_ANDROID
+#include <regex>
+
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+
+AAssetManager *assetManager;
+#endif
+
 void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 #ifdef SEMI_WIN32
 	char dirnPath[PATH_LIMIT];
@@ -40,47 +49,67 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 	FindClose(h);
 #endif
 
-#ifdef	SEMI_ANDROID
-	AAsset *aListFile = AAssetManager_open(assetManager, "fullAssetList.txt", AASSET_MODE_UNKNOWN);
-	Assert(aListFile);
+#ifdef SEMI_ANDROID
+    JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
 
-	long fileSize = AAsset_getLength(aListFile);
-	char *assetsString = (char *)Malloc(fileSize + 1);
+    auto context_object = (jobject)SDL_AndroidGetActivity();
+    auto getAssets_method = env->GetMethodID(env->GetObjectClass(context_object), "getAssets", "()Landroid/content/res/AssetManager;");
+    auto assetManager_object = env->CallObjectMethod(context_object, getAssets_method);
+    auto list_method = env->GetMethodID(env->GetObjectClass(assetManager_object), "list", "(Ljava/lang/String;)[Ljava/lang/String;");
 
-	AAsset_read(aListFile, assetsString, fileSize);
-	assetsString[fileSize] = '\0';
+    assetManager = AAssetManager_fromJava(env, assetManager_object);
 
-	char *fileStart = assetsString;
-	for (;;) {
-		char *fileEnd = strstr(fileStart, "\n");
-		bool lastEntry = false;
-		if (!fileEnd) {
-			fileEnd = &assetsString[strlen(assetsString)-1];
-			lastEntry = true;
-		}
+    std::function<void (const char *,char **, int *)> android_iterate = [&](const char *dirn, char **pathNames, int *pathNamesNum) {
+        jstring path_object = env->NewStringUTF(dirn);
 
-		char fileName[PATH_LIMIT];
+        auto files_object = (jobjectArray)env->CallObjectMethod(assetManager_object, list_method, path_object);
 
-		if (!lastEntry) {
-			fileName[fileEnd - fileStart] = '\0';
-			strncpy(fileName, fileStart, fileEnd - fileStart);
-		} else {
-			fileName[fileEnd - fileStart + 1] = '\0';
-			strncpy(fileName, fileStart, fileEnd - fileStart+1);
-		}
+        env->DeleteLocalRef(path_object);
 
-		if (strstr(fileName, dirn)) {
-			pathNames[*pathNamesNum] = stringClone(fileName);
-			*pathNamesNum = *pathNamesNum + 1;
-		}
+        auto length = env->GetArrayLength(files_object);
 
-		fileStart = fileEnd + 1;
-		if (lastEntry) break;
-	}
+        for (int i = 0; i < length; i++)
+        {
+            jstring jstr = (jstring)env->GetObjectArrayElement(files_object, i);
 
-	Free(assetsString);
-	AAsset_close(aListFile);
+            const char * filename = env->GetStringUTFChars(jstr, nullptr);
 
+            if (filename != nullptr) {
+                std::string strDirname(dirn);
+                std::string strFilename(filename);
+
+                std::filesystem::path filePath;
+                if (strDirname != "") {
+                    filePath = std::filesystem::path(dirn) / strFilename;
+                } else {
+                    filePath = strFilename;
+                }
+
+                auto filePathString = filePath.string();
+                const char *filePathCStr = filePathString.c_str();
+                AAsset *asset = AAssetManager_open(assetManager, filePathCStr, AASSET_MODE_UNKNOWN);
+
+                if (asset == nullptr) {
+                    // Is a directory
+                    android_iterate(filePathCStr, pathNames, pathNamesNum);
+                } else {
+                    // Add "assets" at the beginning
+                    filePathString = std::filesystem::path("assets") / filePathString;
+                    filePathCStr = filePathString.c_str();
+
+                    pathNames[*pathNamesNum] = stringClone(filePathCStr);
+                    *pathNamesNum = *pathNamesNum + 1;
+
+                    AAsset_close(asset);
+                }
+
+                env->ReleaseStringUTFChars(jstr, filename);
+            }
+
+            env->DeleteLocalRef(jstr);
+        }
+    };
+    android_iterate("", pathNames, pathNamesNum);
 #endif
 
 #ifdef SEMI_LINUX
@@ -180,7 +209,9 @@ bool fileExists(const char *filename) {
 
 long readFile(const char *filename, void **storage) {
 #ifdef SEMI_ANDROID
-	AAsset *aFile = AAssetManager_open(assetManager, filename, AASSET_MODE_UNKNOWN);
+    std::string strFilename = std::regex_replace(filename, std::regex("assets/"), "");
+
+	AAsset *aFile = AAssetManager_open(assetManager, strFilename.c_str(), AASSET_MODE_UNKNOWN);
 	Assert(aFile);
 
 	long fileSize = AAsset_getLength(aFile);
