@@ -50,3 +50,30 @@ jobs:
       with:
         name: "interphore-${{github.sha}}-windows"
         path: "D:\\interphore"
+
+  build-android:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Install deps
+      run: |
+        sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build ffmpeg
+
+    - name: Build
+      run: |
+        cd $GITHUB_WORKSPACE/engine/buildSystem/android-project && ./gradlew :app:assembleDebug
+        sudo cp app/build/outputs/apk/debug/interphore-debug.apk /interphore-debug.apk
+
+    - name: Upload the release artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: "interphore-debug.apk"
+        path: "/interphore-debug.apk"
