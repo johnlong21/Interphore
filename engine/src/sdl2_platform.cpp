@@ -1,20 +1,12 @@
 #include "platform.h"
 #include "engine.h"
 
-#ifdef SEMI_LINUX
-#include <unistd.h>
-#include <dirent.h>
-#endif
-
-#ifdef SEMI_WIN32
-#include <direct.h>
-#endif
-
 #ifdef SEMI_HTML5
 #include <emscripten.h>
 #endif
 
 #ifdef SEMI_DESKTOP
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include "nfd.h"
@@ -26,33 +18,14 @@
 SDL_Window* sdlWindow = NULL;
 SDL_GLContext sdlContext = NULL;
 
-char tempSavePath[PATH_LIMIT];
-
 void initPlatform() {
 	printf("Plat initing\n");
 
-	char path[PATH_LIMIT];
-
-#if defined(SEMI_LINUX) || defined(SEMI_MAC)
-	printf("argv: %s\n", platformArgV[0]);
-	strcpy(path, platformArgV[0]);
-	*strrchr(path, '/') = '\0';
-	chdir(path);
-	// strcat(path, "/");
+#ifdef SEMI_DESKTOP
+	// Change cwd to where the program is
+    std::filesystem::current_path(std::filesystem::path(platformArgV[0]).parent_path());
 #endif
 
-#ifdef SEMI_WIN32
-		HMODULE hModule = GetModuleHandleW(NULL);
-		GetModuleFileName(NULL, path, PATH_LIMIT);
-		*strrchr(path, '\\') = '\0';
-		_chdir(path);
-		// strcat(path, "\\");
-#endif
-
-	memset(tempSavePath, 0, PATH_LIMIT);
-	// strcat(tempSavePath, path);
-	strcat(tempSavePath, "tempSave");
-	// exit(1);
 	Assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
 
 #if defined(SEMI_GL_CORE)
@@ -365,10 +338,6 @@ void platformLoadFromDisk(void (*loadCallback)(char *, int)) {
 
 void platformLoadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
 	// loadFromUrl(url, loadCallback);
-}
-
-void platformClearTemp() {
-	remove(tempSavePath);
 }
 
 void displayKeyboard(bool show) {
