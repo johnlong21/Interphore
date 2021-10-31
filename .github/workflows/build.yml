@@ -48,7 +48,7 @@ jobs:
     - name: Upload the release artifact
       uses: actions/upload-artifact@v2
       with:
-        name: "interphore-${{github.sha}}-windows"
+        name: "interphore-windows"
         path: "D:\\interphore"
 
   build-android:
