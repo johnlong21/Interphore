@@ -216,14 +216,20 @@ void updateSound() {
 }
 
 void disableSound() {
-#ifdef SEMI_FLASH
+#if defined(SEMI_FLASH)
 	inline_as3("Console.globalChannel.stop();"::);
+#elif defined(SEMI_SL)
+	SLPlayItf playerPlay = engine->soundData.bqPlayerPlay;
+	(*playerPlay)->SetPlayState(playerPlay, SL_PLAYSTATE_PAUSED);
 #endif
 }
 
 void enableSound() {
-#ifdef SEMI_FLASH
+#if defined(SEMI_FLASH)
 	inline_as3("Console.globalChannel = Console.globalSound.play();"::);
+#elif defined(SEMI_SL)
+	SLPlayItf playerPlay = engine->soundData.bqPlayerPlay;
+	(*playerPlay)->SetPlayState(playerPlay, SL_PLAYSTATE_PLAYING);
 #endif
 }
 

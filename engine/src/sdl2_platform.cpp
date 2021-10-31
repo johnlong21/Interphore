@@ -184,6 +184,14 @@ void platformStartFrame() {
 			case SDL_MOUSEWHEEL:
 				platformMouseWheel = e.wheel.y;
 				break;
+#ifdef SEMI_ANDROID
+			case SDL_APP_WILLENTERBACKGROUND:
+			    disableSound();
+			    break;
+			case SDL_APP_WILLENTERFOREGROUND:
+			    enableSound();
+			    break;
+#endif
 		}
 	}
 
