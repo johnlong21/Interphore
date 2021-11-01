@@ -130,6 +130,11 @@ duk_ret_t destroyAudio(duk_context *ctx);
 duk_ret_t setAudioFlags(duk_context *ctx);
 duk_ret_t setMasterVolume(duk_context *ctx);
 
+duk_ret_t isMobile(duk_context *ctx);
+#ifdef SEMI_ANDROID
+duk_ret_t startTextInput(duk_context *ctx);
+#endif
+
 Game *game = NULL;
 char tempBytes[Megabytes(2)];
 
@@ -205,6 +210,11 @@ void initGame() {
 	addJsFunction("setTextAreaRainbow_internal", setTextAreaRainbow, 0);
 	addJsFunction("setTextAreaWave_internal", setTextAreaWave, 3);
 	addJsFunction("resetTextAreaModes_internal", resetTextAreaModes, 0);
+
+    addJsFunction("isMobile", isMobile, 0);
+#ifdef SEMI_ANDROID
+    addJsFunction("startTextInput", startTextInput, 0);
+#endif
 
 	game = (Game *)zalloc(sizeof(Game));
 
@@ -1355,6 +1365,23 @@ duk_ret_t setMasterVolume(duk_context *ctx) {
 
 	return 0;
 }
+
+duk_ret_t isMobile(duk_context *ctx) {
+#ifdef SEMI_ANDROID
+    duk_push_true(ctx);
+#else
+    duk_push_false(ctx);
+#endif
+    return 1;
+}
+
+#ifdef SEMI_ANDROID
+duk_ret_t startTextInput(duk_context *ctx) {
+    SDL_StartTextInput();
+
+    return 0;
+}
+#endif
 
 //
 //

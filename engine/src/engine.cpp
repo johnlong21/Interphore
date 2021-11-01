@@ -184,6 +184,12 @@ void pressKey(int key) {
 
 	engine->keys[key] = KEY_JUST_PRESSED;
 	if (jsContext) setJsKeyStatus(key, KEY_JUST_PRESSED);
+#ifdef SEMI_ANDROID
+	// Android doesn't send a key released event for backspace for some reason?
+	if (key == KEY_BACKSPACE && jsContext) {
+	    releaseKey(key);
+	}
+#endif
 }
 
 void releaseKey(int key) {

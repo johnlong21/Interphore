@@ -1262,6 +1262,10 @@ function realUpdate() {
 			}
 		}
 
+        if (isMobile() && img.justPressed && img.inInputField) {
+            startTextInput();
+        }
+
 		if (img.hovering) {
 			img.hoveringTime += 1/60.0;
 		} else {
