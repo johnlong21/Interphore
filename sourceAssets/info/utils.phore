@@ -277,11 +277,24 @@ function gainExp(amount) {
 }
 
 function gotoLastMap() {
-	if (data.currentMap === "thirstyCaves") gotoThirstyCaves();
-	if (data.currentMap === "LLL") gotoLLL();
-	if (data.currentMap === "earth") gotoEarth();
-	if (data.currentMap === "archiepelago") gotoArchiepelago();
-	if (data.currentMap === "foodland") gotoFoodland();
+    switch (data.currentMap) {
+        case "thirstyCaves":
+        default:
+            gotoThirstyCaves()
+            break;
+        case "LLL":
+            gotoLLL();
+            break;
+        case "earth":
+            gotoEarth();
+            break;
+        case "archiepelago":
+            gotoArchiepelago();
+            break;
+        case "foodland":
+            gotoFoodland();
+            break;
+    }
 }
 
 function explore(explorables) {

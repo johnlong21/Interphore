@@ -593,7 +593,13 @@ duk_ret_t gotoPassage(duk_context *ctx) {
 		}
 	}
 
-	msg("Failed to find passage %s\n", passageName);
+	msg("Failed to find passage %s", passageName);
+    // Go to the last map as a fallack
+    duk_get_global_string(ctx, "gotoLastMap");
+    duk_call(ctx, 0);
+    // Pop returned undefined from the stack
+    duk_pop(ctx);
+
 	return 0;
 }
 
