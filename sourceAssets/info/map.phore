@@ -208,17 +208,17 @@ worldMap.show = function() {
 	var buttonPad = 10;
 	var buttonEdgePad = 10;
 	worldMap.saveButton = addImage("writer/save");
-	worldMap.saveButton.scaleX = worldMap.saveButton.scaleY = 2;
+	worldMap.saveButton.scaleX = worldMap.saveButton.scaleY = exitButton.scaleX;
 	worldMap.saveButton.x = exitButton.x;
 	worldMap.saveButton.y = exitButton.y + exitButton.height * exitButton.scaleY + buttonPad;
 
 	worldMap.loadButton = addImage("writer/load");
-	worldMap.loadButton.scaleX = worldMap.loadButton.scaleY = 2;
+	worldMap.loadButton.scaleX = worldMap.loadButton.scaleY = exitButton.scaleX;
 	worldMap.loadButton.x = worldMap.saveButton.x;
 	worldMap.loadButton.y = worldMap.saveButton.y + worldMap.saveButton.height * worldMap.saveButton.scaleY  + buttonPad;
 
 	worldMap.extrasButton = addImage("writer/extras");
-	worldMap.extrasButton.scaleX = worldMap.extrasButton.scaleY = 2;
+	worldMap.extrasButton.scaleX = worldMap.extrasButton.scaleY = exitButton.scaleX;
 	worldMap.extrasButton.x = worldMap.loadButton.x;
 	worldMap.extrasButton.y = worldMap.loadButton.y + worldMap.loadButton.height * worldMap.loadButton.scaleY   + buttonPad;
 

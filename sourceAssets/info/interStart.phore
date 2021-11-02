@@ -44,8 +44,8 @@ prevArrow.y = prevChoices.height/2 - prevArrow.height/2;
 
 var exitButton = addImage("writer/exit.png");
 exitButton.temp = false;
-exitButton.scaleX = exitButton.scaleY = 2;
-exitButton.x = gameWidth - exitButton.width*exitButton.scaleX - 16;
+exitButton.scaleX = exitButton.scaleY = isMobile() ? 4 : 2;
+exitButton.x = gameWidth - exitButton.width*exitButton.scaleX - (isMobile() ? 32 : 16);
 exitButton.y = 16;
 exitButton.onRelease = function() {
 	if (exitButton.alpha != 1) return;
