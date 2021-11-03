@@ -31,7 +31,6 @@ void platformClearTemp();
 void gotoUrl(const char *url);
 void getDirList(const char *dirn, char **pathNames, int *pathNamesNum);
 long readFile(const char *filename, void **storage);
-void displayKeyboard(bool show);
 void writeFile(const char *filename, const char *str);
 bool fileExists(const char *filename);
 

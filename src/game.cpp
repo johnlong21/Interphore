@@ -80,7 +80,6 @@ void modLoaded(char *data, int size);
 duk_ret_t interTweenEase(duk_context *ctx);
 duk_ret_t setFontTag(duk_context *ctx);
 duk_ret_t streamEmbeddedTexture(duk_context *ctx);
-duk_ret_t openSoftwareKeyboard(duk_context *ctx);
 duk_ret_t interRnd(duk_context *ctx);
 duk_ret_t iterTweens(duk_context *ctx);
 duk_ret_t getUrl(duk_context *ctx);
@@ -130,9 +129,9 @@ duk_ret_t destroyAudio(duk_context *ctx);
 duk_ret_t setAudioFlags(duk_context *ctx);
 duk_ret_t setMasterVolume(duk_context *ctx);
 
-duk_ret_t isMobile(duk_context *ctx);
 #ifdef SEMI_ANDROID
 duk_ret_t startTextInput(duk_context *ctx);
+duk_ret_t inputtingText(duk_context *ctx);
 #endif
 
 Game *game = NULL;
@@ -160,7 +159,6 @@ void initGame() {
 	addJsFunction("tweenEase", interTweenEase, 2);
 	addJsFunction("setFontTag", setFontTag, 2);
 	addJsFunction("streamEmbeddedTexture", streamEmbeddedTexture, 1);
-	addJsFunction("openSoftwareKeyboard", openSoftwareKeyboard, 0);
 	addJsFunction("rnd_internal", interRnd, 0);
 	addJsFunction("iterTweens_internal", iterTweens, 1);
 	addJsFunction("getUrl_internal", getUrl, 1);
@@ -211,9 +209,17 @@ void initGame() {
 	addJsFunction("setTextAreaWave_internal", setTextAreaWave, 3);
 	addJsFunction("resetTextAreaModes_internal", resetTextAreaModes, 0);
 
-    addJsFunction("isMobile", isMobile, 0);
+    addJsVariable(
+        "isMobile",
+#ifdef SEMI_ANDROID
+        true
+#else
+        false
+#endif
+    );
 #ifdef SEMI_ANDROID
     addJsFunction("startTextInput", startTextInput, 0);
+    addJsFunction("inputtingText", inputtingText, 0);
 #endif
 
 	game = (Game *)zalloc(sizeof(Game));
@@ -755,12 +761,6 @@ duk_ret_t streamEmbeddedTexture(duk_context *ctx) {
 	const char *textures[1] = {assetId};
 
 	streamTextures(textures, 1, 1);
-
-	return 0;
-}
-
-duk_ret_t openSoftwareKeyboard(duk_context *ctx) {
-	displayKeyboard(true);
 
 	return 0;
 }
@@ -1372,20 +1372,17 @@ duk_ret_t setMasterVolume(duk_context *ctx) {
 	return 0;
 }
 
-duk_ret_t isMobile(duk_context *ctx) {
-#ifdef SEMI_ANDROID
-    duk_push_true(ctx);
-#else
-    duk_push_false(ctx);
-#endif
-    return 1;
-}
-
 #ifdef SEMI_ANDROID
 duk_ret_t startTextInput(duk_context *ctx) {
     SDL_StartTextInput();
 
     return 0;
+}
+
+duk_ret_t inputtingText(duk_context *ctx) {
+    duk_push_boolean(ctx, SDL_IsScreenKeyboardShown(sdlWindow));
+
+    return 1;
 }
 #endif
 

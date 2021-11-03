@@ -294,7 +294,7 @@ function addChoice(choiceText, result, config) {
 		if (config.icons) {
 			config.icons.forEach(function(iconName, i) {
 				var icon = addImage(iconDatabase[iconName]);
-				if (isAndroid) icon.scaleX = icon.scaleY = 2;
+				if (isMobile) icon.scaleX = icon.scaleY = 2;
 
 				icon.x = i * icon.width * icon.scaleX + 2;
 				icon.y = -icon.height * icon.scaleY - 2;
@@ -969,14 +969,13 @@ function realUpdate() {
 	tooltipShowing = false;
 
 	/// Input field
-	if (keyboardOpened) inputFieldBg.y = 20
+	if (isMobile && inputtingText()) inputFieldBg.y = 20
 	else inputFieldBg.y = gameHeight - BUTTON_HEIGHT - inputFieldBg.height - 32;
 
 	inputField.x = inputFieldBg.width/2 - inputField.textWidth/2;
 	inputField.y = inputFieldBg.height/2 - inputField.textHeight/2;
-	if (isAndroid && inputField.justReleased && inputFieldBg.alpha == 1) {
-		keyboardOpened = true;
-		openSoftwareKeyboard();
+	if (isMobile && inputField.justReleased && inputFieldBg.alpha == 1) {
+		startTextInput();
 	}
 
 	inputTitle.x = inputField.x - inputTitle.textWidth - 16;
@@ -1261,10 +1260,6 @@ function realUpdate() {
 				}
 			}
 		}
-
-        if (isMobile() && img.justPressed && img.inInputField) {
-            startTextInput();
-        }
 
 		if (img.hovering) {
 			img.hoveringTime += 1/60.0;

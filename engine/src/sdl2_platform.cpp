@@ -340,9 +340,6 @@ void platformLoadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
 	// loadFromUrl(url, loadCallback);
 }
 
-void displayKeyboard(bool show) {
-}
-
 void gotoUrl(const char *url) {
 // #ifdef SEMI_WIN32
 // 	winGotoUrl(url);

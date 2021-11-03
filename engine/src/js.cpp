@@ -44,7 +44,6 @@ void initJs() {
 		"var gameWidth = %d;"
 		"var gameHeight = %d;"
 		"var isFlash = %d;"
-		"var isAndroid = %d;"
 		"var internal = %d;"
 		"var debug = %d;"
 		"var early = %d;"
@@ -88,7 +87,6 @@ void initJs() {
 	engine->width,
 	engine->height,
 	engine->platform == PLAT_FLASH,
-	engine->platform == PLAT_ANDROID,
 	internalBool,
 	debugBool,
 	earlyBool,
@@ -146,6 +144,11 @@ void jsFatalHandler(void *udata, const char *msg) {
 void addJsFunction(const char *name, duk_c_function fn, int args) {
 	duk_push_c_function(jsContext, fn, args);
 	duk_put_global_string(jsContext, name);
+}
+
+void addJsVariable(const char *name, bool boolean) {
+    duk_push_boolean(jsContext, boolean);
+    duk_put_global_string(jsContext, name);
 }
 
 void runJs(const char *js) {
