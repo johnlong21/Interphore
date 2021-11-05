@@ -102,7 +102,7 @@ void engineFree(void *mem, const char *filename, int lineNum) {
 
 void printReadableSize(size_t size) {
 	if (size < Kilobytes(1)) {
-		printf("%db", size);
+		printf("%zub", size);
 	} else if (size < Megabytes(1)) {
 		printf("%0.2fkb", (float)size/Kilobytes(1));
 	} else if (size < Gigabytes(1)) {

@@ -186,7 +186,7 @@ unsigned char *getPngBitmapData(const char *assetId, int *returnWidth, int *retu
 	textureMem += (*returnWidth) * (*returnHeight) * 4;
 	// printf("Textures using %0.1fmb (if stored)\n", textureMem/1024.0/1024.0);
 	if (!img) {
-		printf("Failed to load %s(%d)\n", assetId, pngAsset->dataLen);
+		printf("Failed to load %s(%zu)\n", assetId, pngAsset->dataLen);
 		// printf("Png data is: %p (%d)\n", pngAsset->data, pngAsset->dataLen);
 		// dumpHex(pngAsset->data, pngAsset->dataLen);
 		// for (int i = 0; i < assetData->assetsNum; i++) {
@@ -219,7 +219,7 @@ Asset *getTextureAsset(const char *assetId) {
 	unsigned long startTime = platformGetTime();
 	generateTexture(img, textureAsset);
 	unsigned long endTime = platformGetTime();
-	if (endTime - startTime >= 5) printf("Texture %s took %dms to load!\n", assetId, endTime - startTime);
+	if (endTime - startTime >= 5) printf("Texture %s took %lums to load!\n", assetId, endTime - startTime);
 
 	textureAsset->level = 1;
 	return textureAsset;
