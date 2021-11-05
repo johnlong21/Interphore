@@ -341,7 +341,23 @@ void platformLoadFromUrl(const char *url, void (*loadCallback)(char *, int)) {
 }
 
 void gotoUrl(const char *url) {
-// #ifdef SEMI_WIN32
-// 	winGotoUrl(url);
-// #endif
+#if defined(SEMI_LINUX)
+    std::string open("xdg-open ");
+    open += std::string(url);
+
+    std::system(open.c_str());
+#elif defined(SEMI_WIN32)
+    ShellExecute(nullptr, "open", url, nullptr, nullptr, SW_SHOWNORMAL);
+#elif defined(SEMI_HTML5)
+    EM_ASM({ window.open(UTF8ToString($0)); }, url);
+#elif defined(SEMI_ANDROID)
+    JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+    jobject activity = (jobject)SDL_AndroidGetActivity();
+
+    jstring urlString = env->NewStringUTF(url);
+
+    jclass activityClass = env->GetObjectClass(activity);
+    jmethodID openUrlMethod = env->GetMethodID(activityClass, "gotoUrl", "(Ljava/lang/String;)V");
+    env->CallVoidMethod(activity, openUrlMethod, urlString);
+#endif
 }

@@ -866,9 +866,7 @@ duk_ret_t iterTweens(duk_context *ctx) {
 duk_ret_t getUrl(duk_context *ctx) {
 	const char *url = duk_get_string(ctx, -1);
 
-#ifdef SEMI_FLASH
 	gotoUrl(url);
-#endif
 
 	return 0;
 }

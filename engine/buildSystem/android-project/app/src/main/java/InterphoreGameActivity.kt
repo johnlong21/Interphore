@@ -1,6 +1,7 @@
 package com.paraphore.interphore
 
 import android.content.Intent
+import android.net.Uri
 import org.libsdl.app.SDLActivity
 import java.io.InputStreamReader
 
@@ -38,6 +39,11 @@ class InterphoreGameActivity : SDLActivity() {
             type = "text/plain"
         }
         startActivityForResult(intent, loadSave);
+    }
+
+    private fun gotoUrl(url: String) {
+        val view = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(view)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
