@@ -11,6 +11,8 @@ extern "C" void entryPoint();
 
 #ifdef SEMI_WIN32
 INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
+    platformArgC = __argc;
+    platformArgV = __argv;
 #else
 int main(int argc, char **argv) {
 	platformArgC = argc;
