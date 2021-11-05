@@ -19,7 +19,7 @@ addChoice("Examine Paraphores", "examineParaphores");
 addChoice("Rules of Operation for Paraphores.");
 addChoice("Examine Earth.", "layerSpilledPaint");
 addChoice("Examine G.C.D.", "layerLLL");
-addChoice("F.A.Q.", "layerFAQ");
+addChoice("F.A.Q.", "lllFAQ");
 addChoice("Terms & Definitions", "Terms");
 addChoice("Move along.", function() {
 	clear();
