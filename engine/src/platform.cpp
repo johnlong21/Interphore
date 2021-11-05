@@ -1,11 +1,8 @@
 #include "platform.h"
 
 #include <filesystem>
-
-#if defined(SEMI_LINUX) || defined(SEMI_ANDROID)
-#include <unistd.h>
-#include <dirent.h>
-#endif
+#include <sstream>
+#include <fstream>
 
 #ifdef SEMI_ANDROID
 #include <regex>
@@ -17,39 +14,7 @@ AAssetManager *assetManager;
 #endif
 
 void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
-#ifdef SEMI_WIN32
-	char dirnPath[PATH_LIMIT];
-	sprintf(dirnPath, "%s\\*", dirn);
-
-	WIN32_FIND_DATA f;
-	HANDLE h = FindFirstFile(dirnPath, &f);
-
-	if (h == INVALID_HANDLE_VALUE) return;
-
-	do {
-		const char *name = f.cFileName;
-
-		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
-
-		char filePath[1024];
-		sprintf(filePath, "%s%s%s", dirn, "\\", name);
-
-		if (!(f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			for (int i = 0; i < strlen(filePath); i++)
-				if (filePath[i] == '\\') filePath[i] = '/';
-			pathNames[*pathNamesNum] = stringClone(filePath);
-			*pathNamesNum = *pathNamesNum + 1;
-		}
-		if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			getDirList(filePath, pathNames, pathNamesNum);
-		}
-
-	} while (FindNextFile(h, &f));
-
-	FindClose(h);
-#endif
-
-#ifdef SEMI_ANDROID
+#if defined(SEMI_ANDROID)
     JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
 
     auto context_object = (jobject)SDL_AndroidGetActivity();
@@ -110,45 +75,8 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
         }
     };
     android_iterate("", pathNames, pathNamesNum);
-#endif
-
-#ifdef SEMI_LINUX
-	DIR *dir;
-	dirent *entry;
-
-	if (!(dir = opendir(dirn))) return;
-
-	while ((entry = readdir(dir)) != NULL) {
-		if (entry->d_type == DT_DIR) {
-			char path[PATH_LIMIT+2];
-			if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-			snprintf(path, PATH_LIMIT+2, "%s/%s", dirn, entry->d_name);
-			getDirList(path, pathNames, pathNamesNum);
-		} else {
-			char fullPath[PATH_LIMIT+2];
-			snprintf(fullPath, PATH_LIMIT+2, "%s/%s", dirn, entry->d_name);
-			pathNames[*pathNamesNum] = stringClone(fullPath);
-			*pathNamesNum = *pathNamesNum + 1;
-		}
-	}
-	closedir(dir);
-#endif
-
-#ifdef SEMI_HTML5
-    std::filesystem::path dir_path = dirn;
-    if (!std::filesystem::exists(dir_path)) {
-        printf("Asset directory %s does not exist", dirn);
-
-        return;
-    }
-    for (auto const &entry : std::filesystem::recursive_directory_iterator(dir_path)) {
-        pathNames[*pathNamesNum] = stringClone(entry.path().string().c_str());
-        *pathNamesNum = *pathNamesNum + 1;
-    }
-#endif
-
-#ifdef SEMI_FLASH
-	char *filesStr = (char *)Malloc(Megabytes(1));
+#elif defined(SEMI_FLASH)
+    char *filesStr = (char *)Malloc(Megabytes(1));
 	inline_as3("Console.getAssetNames(%0);" :: "r"(filesStr));
 
 	char *fileStart = filesStr;
@@ -180,30 +108,34 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 	}
 
 	Free(filesStr);
+#else
+    std::filesystem::path dir_path = dirn;
+    if (!std::filesystem::exists(dir_path)) {
+        printf("Asset directory %s does not exist", dirn);
+
+        return;
+    }
+    for (auto const &entry : std::filesystem::recursive_directory_iterator(dir_path)) {
+        if (!std::filesystem::is_directory(entry.path())) {
+            pathNames[*pathNamesNum] = stringClone(entry.path().string().c_str());
+            *pathNamesNum = *pathNamesNum + 1;
+        }
+    }
 #endif
 }
 
 void writeFile(const char *filename, const char *str) {
-	FILE *f = fopen(filename, "w");
-
-	if (f == NULL) {
+    std::ofstream file(filename);
+    if (!file.good()) {
 		printf("Failed to open file %s to write\n", filename);
 		return;
-	}
+    }
 
-	fprintf(f, "%s", str);
-	fclose(f);
+    file << std::string(str);
 }
 
 bool fileExists(const char *filename) {
-	FILE *f = fopen(filename, "r");
-
-	if (f) {
-		fclose(f);
-		return true;
-	}
-
-	return false;
+    return std::filesystem::exists(filename);
 }
 
 
@@ -224,22 +156,22 @@ long readFile(const char *filename, void **storage) {
 	*storage = str;
 	return fileSize;
 #else
-	FILE *filePtr = fopen(filename, "rb");
-	if (!filePtr) return 0;
+    std::ifstream fileStream(filename, std::ios_base::in | std::ios_base::binary);
+    if (!fileStream.good())
+        return 0;
 
-	fseek(filePtr, 0, SEEK_END);
-	long fileSize = ftell(filePtr);
-	fseek(filePtr, 0, SEEK_SET);  //same as rewind(f);
+    // Read the file into a string
+    std::stringstream contents;
+    contents << fileStream.rdbuf();
 
-	char *str = (char *)malloc(fileSize + 1);
-	fread(str, 1, fileSize, filePtr);
-	fclose(filePtr);
+    // + 1 for the null byte
+    auto fileLength = long(fileStream.tellg()) + 1;
 
-	str[fileSize] = '\0';
+    // Copy the string into a newly allocated place
+    *storage = Malloc(fileLength);
+    memcpy(*storage, contents.str().data(), fileLength);
 
-	*storage = str;
-
-	return fileSize;
+    return fileLength;
 #endif
 }
 

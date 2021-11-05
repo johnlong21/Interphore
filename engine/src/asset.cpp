@@ -35,7 +35,6 @@ void initAssets(void *assetsMemory) {
 	}
 }
 
-void assetAdd(const char *assetName, const char *data, unsigned int dataLen) {addAsset(assetName, data, dataLen);} //@cleanup Remove this name
 void addAsset(const char *assetName, const char *data, unsigned int dataLen) {
 #ifdef LOG_ASSET_ADD
 	printf("Adding asset %s\n", assetName);
