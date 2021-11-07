@@ -16,5 +16,5 @@ ld.exe.stackdump
 errors.err
 
 _build
-.ccls-cache
+.cache
 compile_commands.json
