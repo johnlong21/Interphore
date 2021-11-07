@@ -1,8 +1,22 @@
 #pragma once
-#include "mintSprite.h"
-#include "mintParticleSystem.h"
+
+#ifndef SEMI_ANDROID
+#  define GLEW_STATIC
+#  include <GL/glew.h>
+#else
+#  include <SDL_opengles2.h>
+#endif
+
+#include "defines.h"
+#include "rect.h"
+#include "matrix.h"
+
+struct Asset;
+struct MintSprite;
+struct MintParticleSystem;
 
 #ifdef SEMI_GL
+
 struct ShaderProgram {
 	GLuint vert;
 	GLuint frag;
@@ -88,8 +102,6 @@ struct RenderProps {
 	float scaleY;
 	bool bleed;
 };
-
-#include "mintSprite.h"
 
 void initRenderer(void *rendererMemory);
 void rendererStartFrame();

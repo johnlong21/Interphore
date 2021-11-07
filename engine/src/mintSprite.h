@@ -1,8 +1,14 @@
 #pragma once
-#include "renderer.h"
+
 #include "mathTools.h"
+#include "mintParticleSystem.h"
+#include "point.h"
+#include "matrix.h"
 
 #include <map>
+#include <string>
+
+struct MintSprite;
 
 struct Frame {
 	char name[SHORT_STR];

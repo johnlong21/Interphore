@@ -1,3 +1,4 @@
+#include "defines.h"
 #include "point.h"
 
 void pointSetTo(Point *point, float x, float y) {
@@ -43,4 +44,12 @@ bool Point::equals(Point *other) {
 void Point::multiply(double value) {
 	this->x *= value;
 	this->y *= value;
+}
+
+void Point::setTo(float x, float y) {
+    pointSetTo(this, x, y);
+}
+
+void Point::rotate(float cx, float cy, float degrees) {
+    pointRotate(this, cx, cy, degrees);
 }

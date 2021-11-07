@@ -1,4 +1,5 @@
 #include "js.h"
+#include "engine.h"
 
 duk_ret_t js_print(duk_context *ctx);
 duk_ret_t js_clampMap(duk_context *ctx);
@@ -7,7 +8,11 @@ duk_ret_t js_norm(duk_context *ctx);
 duk_ret_t js_lerp(duk_context *ctx);
 void jsFatalHandler(void *udata, const char *msg);
 
-void *jsUdata = NULL;
+void (*jsErrorFn)(const char *) = NULL;
+
+void *jsUdata = nullptr;
+duk_context *jsContext = nullptr;
+int jsKeys[KEY_LIMIT];
 
 void initJs() {
 	jsContext = duk_create_heap(NULL, NULL, NULL, jsUdata, jsFatalHandler);

@@ -1,3 +1,7 @@
+#include <cstring>
+
+#include "mathTools.h"
+#include "stringTools.h"
 #include "mintSprite.h"
 #include "text.h"
 #include "engine.h"

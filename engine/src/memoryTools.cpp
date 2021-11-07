@@ -1,7 +1,9 @@
-#include "memoryTools.h"
-#define MEMORY_CHUNK_LIMIT 8192
+#include <cstring>
 
-#define ConsumeBytes(dest, src, count) memcpy(dest, src, count); src += count;
+#include "stringTools.h"
+#include "memoryTools.h"
+
+#define MEMORY_CHUNK_LIMIT 8192
 
 struct MemoryChunk {
 	bool exists;

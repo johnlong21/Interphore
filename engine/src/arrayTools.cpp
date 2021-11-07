@@ -1,6 +1,6 @@
-#include "arrayTools.h"
+#include <stdio.h>
 
-#define ArrayLength(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+#include "arrayTools.h"
 
 // Only works on things of pointer size!
 void arraySwapPop(void **arr, int *len, void *element) {

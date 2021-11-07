@@ -1,3 +1,6 @@
+#include <cstring>
+
+#include "defines.h"
 #include "platform.h"
 #include "networking.h"
 #include "curl/curl.h"

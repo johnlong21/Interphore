@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "pathfinder.h"
 #include "micropather.h"
 

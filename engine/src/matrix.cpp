@@ -1,8 +1,8 @@
 // #define MMX_IMPLEMENTATION
 // #include "../lib/mm_vec.h"
 
+#include "defines.h"
 #include "matrix.h"
-#include <stdlib.h>
 
 /*
 a, b, c
@@ -10,7 +10,7 @@ d, e, f
 g, h, i
 */
 
-void inline matrixMultiplyByArray(Matrix *mat, float *array);
+void matrixMultiplyByArray(Matrix *mat, float *array);
 
 Matrix *matrixCreate() {
 	Matrix *mat = (Matrix *)Malloc(sizeof(Matrix));
@@ -18,7 +18,7 @@ Matrix *matrixCreate() {
 	return mat;
 }
 
-void inline matrixIdentity(Matrix *mat) {
+void matrixIdentity(Matrix *mat) {
 	matrixSetTo(mat,
 		1, 0, 0,
 		0, 1, 0,
@@ -26,11 +26,11 @@ void inline matrixIdentity(Matrix *mat) {
 	);
 }
 
-void inline matrixSetToArray(Matrix *mat, float *array) {
+void matrixSetToArray(Matrix *mat, float *array) {
 	matrixSetTo(mat, array[0], array[1], array[2], array[3], array[4], array[5], array[6], array[7], array[8]);
 }
 
-void inline matrixSetTo(Matrix *mat, float a, float b, float c, float d, float e, float f, float g, float h, float i) {
+void matrixSetTo(Matrix *mat, float a, float b, float c, float d, float e, float f, float g, float h, float i) {
 	mat->data[0] = a;
 	mat->data[1] = b;
 	mat->data[2] = c;
@@ -42,7 +42,7 @@ void inline matrixSetTo(Matrix *mat, float a, float b, float c, float d, float e
 	mat->data[8] = i;
 }
 
-void inline matrixProject(Matrix *mat, float width, float height) {
+void matrixProject(Matrix *mat, float width, float height) {
 	float array[9] = {
 		2/width, 0, 0,
 		0, -2/height, 0,
@@ -52,7 +52,7 @@ void inline matrixProject(Matrix *mat, float width, float height) {
 }
 
 
-void inline matrixTranslate(Matrix *mat, float x, float y) {
+void matrixTranslate(Matrix *mat, float x, float y) {
 	float array[9] = {
 		1, 0, 0,
 		0, 1, 0,
@@ -61,7 +61,7 @@ void inline matrixTranslate(Matrix *mat, float x, float y) {
 	matrixMultiplyByArray(mat, array);
 }
 
-void inline matrixRotate(Matrix *mat, float degrees) {
+void matrixRotate(Matrix *mat, float degrees) {
 	float s = sin(degrees*M_PI/180);
 	float c = cos(degrees*M_PI/180);
 	float array[9] = {
@@ -72,7 +72,7 @@ void inline matrixRotate(Matrix *mat, float degrees) {
 	matrixMultiplyByArray(mat, array);
 }
 
-void inline matrixScale(Matrix *mat, float x, float y) {
+void matrixScale(Matrix *mat, float x, float y) {
 	float array[9] = {
 		x, 0, 0,
 		0, y, 0,
@@ -81,7 +81,7 @@ void inline matrixScale(Matrix *mat, float x, float y) {
 	matrixMultiplyByArray(mat, array);
 }
 
-void inline matrixSkew(Matrix *mat, float x, float y) {
+void matrixSkew(Matrix *mat, float x, float y) {
 	float array[9] = {
 		1             , (float)tan(y) , 0 ,
 		(float)tan(x) , 1             , 0 ,
@@ -90,7 +90,7 @@ void inline matrixSkew(Matrix *mat, float x, float y) {
 	matrixMultiplyByArray(mat, array);
 }
 
-void inline matrixInvert(Matrix *mat) {
+void matrixInvert(Matrix *mat) {
 	double det =
 		mat->data[0] * (mat->data[4] * mat->data[8] - mat->data[7] * mat->data[5]) -
 		mat->data[1] * (mat->data[3] * mat->data[8] - mat->data[5] * mat->data[6]) +
@@ -112,7 +112,7 @@ void inline matrixInvert(Matrix *mat) {
 	matrixSetToArray(mat, temp);
 }
 
-bool inline matrixEqual(Matrix *mat1, Matrix *mat2) {
+bool matrixEqual(Matrix *mat1, Matrix *mat2) {
 	if (mat1->data[0] != mat2->data[0]) return false;
 	if (mat1->data[1] != mat2->data[1]) return false;
 	if (mat1->data[2] != mat2->data[2]) return false;
@@ -125,7 +125,7 @@ bool inline matrixEqual(Matrix *mat1, Matrix *mat2) {
 	return true;
 }
 
-void inline matrixMultiplyPoint(Matrix *mat, Point *point) {
+void matrixMultiplyPoint(Matrix *mat, Point *point) {
 	Point newPoint = {};
 	newPoint.x = mat->data[0]*point->x + mat->data[3]*point->y + mat->data[6];
 	newPoint.y = mat->data[1]*point->x + mat->data[4]*point->y + mat->data[7];
@@ -135,7 +135,7 @@ void inline matrixMultiplyPoint(Matrix *mat, Point *point) {
 	point->y = newPoint.y/w;
 }
 
-void inline matrixMultiplyByArray(Matrix *mat, float *array) {
+void matrixMultiplyByArray(Matrix *mat, float *array) {
 	float temp[9] = {};
 
 	temp[0] += mat->data[0] * array[0] + mat->data[3] * array[1] + mat->data[6] * array[2];
@@ -151,11 +151,11 @@ void inline matrixMultiplyByArray(Matrix *mat, float *array) {
 	matrixSetToArray(mat, temp);
 }
 
-void inline matrixMultiply(Matrix *a, Matrix *b) {
+void matrixMultiply(Matrix *a, Matrix *b) {
 	matrixMultiplyByArray(a, b->data);
 }
 
-void inline matrixPrint(Matrix *mat) {
+void matrixPrint(Matrix *mat) {
 	printf(
 		"%0.1f %0.1f %0.1f\n%0.1f %0.1f %0.1f\n%0.1f %0.1f %0.1f\n",
 		mat->data[0],

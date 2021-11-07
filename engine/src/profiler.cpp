@@ -1,25 +1,6 @@
-#define PROFILES_MAX 128
-#define PROFILER_AVERAGE_FRAMES 30
+#include <cstring>
 
-struct Profile {
-	bool exists;
-	NanoTime startTime;
-	NanoTime endTime;
-
-	float pastMs[PROFILER_AVERAGE_FRAMES];
-};
-
-struct Profiler {
-	Profile profiles[PROFILES_MAX];
-	int profilesNum;
-
-	void startProfile(int id);
-	void endProfile(int id);
-	float getMsResult(int id);
-	float getAverage(int id);
-	void getResult(int id, NanoTime *time);
-	void printAll();
-};
+#include "profiler.hpp"
 
 Profiler *profiler;
 

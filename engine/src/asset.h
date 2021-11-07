@@ -1,8 +1,11 @@
 #pragma once
 
-enum AssetType { DONTCARE_ASSET = 0, BINARY_ASSET, PNG_ASSET, SPR_FILE_ASSET, TMX_ASSET, TSX_ASSET, TEXTURE_ASSET, OGG_ASSET, BITMAP_FONT_ASSET, ANGEL_CODE_ASSET, SHADER_ASSET };
+#include "defines.h"
+#include "renderer.h"
 
 struct Frame;
+
+enum AssetType { DONTCARE_ASSET = 0, BINARY_ASSET, PNG_ASSET, SPR_FILE_ASSET, TMX_ASSET, TSX_ASSET, TEXTURE_ASSET, OGG_ASSET, BITMAP_FONT_ASSET, ANGEL_CODE_ASSET, SHADER_ASSET };
 
 struct Asset {
 	bool exists;
@@ -72,3 +75,5 @@ struct FormatRegion {
 	int end;
 	char *fontName;
 };
+
+Asset *getBitmapFontAsset(const char *assetId);

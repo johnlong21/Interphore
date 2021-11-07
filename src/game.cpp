@@ -1,3 +1,17 @@
+#include "game.hpp"
+#include "profiler.hpp"
+#include "debugOverlay.hpp"
+#include "textArea.hpp"
+#include "unzipper.hpp"
+#include "mintSprite.h"
+#include "asset.h"
+#include "js.h"
+#include "stringTools.h"
+#include "engine.h"
+#include "memoryTools.h"
+#include "random.h"
+#include "newSound.h"
+
 #define PASSAGE_MAX 1024
 #define IMAGES_MAX 256
 #define AUDIOS_MAX 256
@@ -54,10 +68,6 @@ struct Game {
 	MintSprite *images[IMAGES_MAX];
 	Channel *audios[AUDIOS_MAX];
 };
-
-void initGame();
-void deinitGame();
-void updateGame();
 
 void runMod(char *serialData);
 void msg(const char *str, ...);
@@ -1371,6 +1381,10 @@ duk_ret_t setMasterVolume(duk_context *ctx) {
 }
 
 #ifdef SEMI_ANDROID
+#include <SDL.h>
+
+extern SDL_Window* sdlWindow;
+
 duk_ret_t startTextInput(duk_context *ctx) {
     SDL_StartTextInput();
 

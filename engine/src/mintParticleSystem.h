@@ -1,5 +1,15 @@
 #pragma once
 
+#include <memory>
+
+#include "point.h"
+#include "asset.h"
+
+struct MintSprite;
+struct EngineData;
+
+extern std::unique_ptr<EngineData> engine;
+
 struct MintParticle {
 	bool exists;
 	int frame;

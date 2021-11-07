@@ -1,3 +1,10 @@
+#pragma once
+
+#include <math.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #define Gigabytes(x) (Megabytes(x)*1024)
 #define Megabytes(x) (Kilobytes(x)*1024)
 #define Kilobytes(x) ((x)*1024)
@@ -113,19 +120,5 @@ int flashPrintf(const char *fmt, ...) {
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "semiphore", __VA_ARGS__))
 #define printf(...) androidPrintf(__VA_ARGS__)
 
-void androidPrintf(const char *fmt, ...) {
-	char buffer[10240];
-
-	va_list argptr;
-	va_start(argptr, fmt);
-	int bufferLen = vsprintf(buffer, fmt, argptr);
-	va_end(argptr);
-
-	if (buffer[bufferLen-1] == '\n') {
-		buffer[bufferLen-1] = '\0';
-		bufferLen--;
-	}
-
-	LOGI("%s\n", buffer);
-}
+void androidPrintf(const char *fmt, ...);
 #endif

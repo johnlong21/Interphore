@@ -1,11 +1,5 @@
 #include "mathTools.h"
 
-#define Clamp(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
-#define Max(x, y) ((x)>(y)?(x):(y))
-#define Min(x, y) ((x)<(y)?(x):(y))
-
-#define GetRgbaPixel(data, imgWidth, x, y) argbToHex((data)[((y)*(imgWidth)+(x))*4 + 3], (data)[((y)*(imgWidth)+(x))*4 + 0], (data)[((y)*(imgWidth)+(x))*4 + 1], (data)[((y)*(imgWidth)+(x))*4 + 2])
-
 #ifndef M_PI_2
 # define M_PI_2 ((M_PI)*0.5)
 #endif

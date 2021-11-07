@@ -1,8 +1,13 @@
 #pragma once
 
+#include "defines.h"
+
 #define REPLAY_FRAMES_LIMIT (5*60*60)
 #define REPLAY_VERSION 1
 #define REPLAY_DATA_LINE_LEN 128
+
+struct Asset;
+struct MintSprite;
 
 struct ReplayFrame {
 	int mouseX;

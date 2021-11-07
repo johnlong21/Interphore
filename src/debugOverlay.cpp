@@ -1,11 +1,7 @@
-struct DebugOverlay {
-	bool active;
-	int bottomLayer;
+#include <cstring>
 
-	MintSprite *info;
-
-	void update();
-};
+#include "debugOverlay.hpp"
+#include "engine.h"
 
 void initDebugOverlay(DebugOverlay *newOverlay) {
 	memset(newOverlay, 0, sizeof(DebugOverlay));

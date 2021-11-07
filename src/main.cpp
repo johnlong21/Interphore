@@ -1,8 +1,12 @@
-#include "gameEngine.h"
-#include "debugOverlay.cpp"
-#include "textArea.cpp"
-#include "unzipper.cpp"
-#include "game.cpp"
+#include "game.hpp"
+#include "platform.h"
+#include "engine.h"
+
+#if SEMI_MINGW
+# include <winsock2.h>
+#endif
+
+#include <SDL.h>
 
 void updateMain();
 void initMain();
@@ -17,7 +21,7 @@ INT WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nC
 int main(int argc, char **argv) {
 	platformArgC = argc;
 	platformArgV = argv;
-#endif
+#endif    
 	entryPoint();
 	return 0;
 }

@@ -1,4 +1,11 @@
+#define STB_VORBIS_MAX_CHANNELS 2
+#include "stb_vorbis.c"
+
+#include "stringTools.h"
+#include "mathTools.h"
+#include "random.h"
 #include "newSound.h"
+#include "engine.h"
 
 #ifdef SEMI_FLASH
 extern "C" int getFlashSoundBuffer();
@@ -7,6 +14,10 @@ extern "C" int getFlashSoundBuffer();
 #ifdef SEMI_SL
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 void slSendSoundBuffer();
+#endif
+
+#ifdef SEMI_ANDROID
+#include "arrayTools.h"
 #endif
 
 void checkSoundError(int lineNum);

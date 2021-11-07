@@ -1,5 +1,9 @@
 #pragma once
 
+#include "defines.h"
+#include "rect.h"
+#include "mintSprite.h"
+
 struct TiledLayer {
 	char prefix[SHORT_STR];
 	char name[SHORT_STR];
@@ -57,3 +61,5 @@ struct Tilemap {
 	MetaObject *getMeta(const char *name);
 	void destroy();
 };
+
+void initTilemap(void *tilemapMemory);

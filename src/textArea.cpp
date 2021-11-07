@@ -1,43 +1,9 @@
-#define TEXT_AREA_MODES_LIMIT 16
+#include <cstring>
 
-enum TextAreaMode {
-	TEXT_MODE_NONE,
-	TEXT_MODE_JIGGLE,
-	TEXT_MODE_ZOOM_OUT,
-	TEXT_MODE_ZOOM_IN,
-	TEXT_MODE_RAINBOW,
-	TEXT_MODE_WAVE,
-};
-
-struct TextArea {
-	bool exists;
-	MintSprite *sprite;
-
-	CharRenderDef defs[HUGE_STR];
-	int defsNum;
-	int textWidth;
-	int textHeight;
-	const char *defaultFont;
-	int fontColour;
-
-	TextAreaMode modes[TEXT_AREA_MODES_LIMIT];
-	int modesNum;
-	float modeStartTime;
-
-	int jiggleX;
-	int jiggleY;
-	float zoomTime;
-	int waveX;
-	int waveY;
-	float waveSpeed;
-
-	void resize(int width, int height);
-	void setFont(const char *fontName);
-	void setText(const char *text);
-	void addMode(TextAreaMode mode);
-	void resetModes();
-	void update();
-};
+#include "textArea.hpp"
+#include "engine.h"
+#include "text.h"
+#include "random.h"
 
 void initTextArea(TextArea *area) {
 	memset(area, 0, sizeof(TextArea));

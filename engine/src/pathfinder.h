@@ -1,5 +1,8 @@
 #pragma once
 
+#include "defines.h"
+#include "point.h"
+
 int pathfinderMap[TILES_WIDE_LIMIT * TILES_HIGH_LIMIT];
 int pathfinderMapWidth = 0;
 int pathfinderMapHeight = 0;

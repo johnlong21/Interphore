@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "renderer.h"
 #include "engine.h"
 

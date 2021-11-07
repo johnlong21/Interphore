@@ -2,7 +2,6 @@
 #include <time.h>
 
 #define VERSION "0.0.1"
-#include "gameEngine.h"
 
 #ifndef STATIC_ASSETS
 #include "../bin/assetLib.cpp"

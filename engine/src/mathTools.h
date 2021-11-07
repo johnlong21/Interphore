@@ -1,5 +1,16 @@
 #pragma once
 
+#include <math.h>
+
+#include "point.h"
+#include "rect.h"
+
+#define Clamp(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
+#define GetRgbaPixel(data, imgWidth, x, y) argbToHex((data)[((y)*(imgWidth)+(x))*4 + 3], (data)[((y)*(imgWidth)+(x))*4 + 0], (data)[((y)*(imgWidth)+(x))*4 + 1], (data)[((y)*(imgWidth)+(x))*4 + 2])
+
+#define Max(x, y) ((x)>(y)?(x):(y))
+#define Min(x, y) ((x)<(y)?(x):(y))
+
 enum Dir8 {
 	DIR8_CENTER = 0,
 	DIR8_LEFT,

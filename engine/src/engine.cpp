@@ -1,6 +1,10 @@
-#include "engine.h"
-#include "js.h"
 #include <time.h>
+
+#include "engine.h"
+#include "text.h"
+#include "js.h"
+
+std::unique_ptr<EngineData> engine;
 
 void cleanupEngine();
 int qsortLayerIndex(const void *a, const void *b);
@@ -282,7 +286,7 @@ void engineAssert(bool expr, const char *filename, int lineNum) {
 #endif
 
 #ifdef SEMI_ANDROID
-		assert(0);
+		Assert(0);
 #endif
 
 		exit(1);

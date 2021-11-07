@@ -1,5 +1,9 @@
 #pragma once
 
+#include "defines.h"
+
+#define ConsumeBytes(dest, src, count) memcpy(dest, src, count); src += count;
+
 void *zalloc(unsigned long size);
 void dumpHex(const void* data, size_t size);
 

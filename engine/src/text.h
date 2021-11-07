@@ -1,4 +1,11 @@
 #pragma once
+
+#include "rect.h"
+#include "point.h"
+
+struct Asset;
+struct FormatRegion;
+
 struct CharRenderDef {
 	char glyph;
 	Asset *sourceTextureAsset;

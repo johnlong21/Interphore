@@ -1,3 +1,6 @@
+#include <SDL.h>
+
+#include "stringTools.h"
 #include "platform.h"
 #include "engine.h"
 

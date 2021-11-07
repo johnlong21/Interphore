@@ -1,12 +1,12 @@
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "asset.h"
 #include "renderer.h"
 #include "platform.h"
-
-#ifdef SEMI_SOUND_NEW
-# include "newSound.h"
-#else
-# include "sound.h"
-#endif
+#include "mintSprite.h"
+#include "stringTools.h"
+#include "newSound.h"
 
 AssetData *assetData;
 

@@ -1,8 +1,11 @@
-#include "platform.h"
-
 #include <filesystem>
 #include <sstream>
 #include <fstream>
+#include <cstring>
+
+#include "platform.h"
+#include "stringTools.h"
+#include "defines.h"
 
 #ifdef SEMI_ANDROID
 #include <regex>
@@ -10,8 +13,25 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
+#include <SDL.h>
+
 AAssetManager *assetManager;
 #endif
+
+bool platformShouldClose = false;
+int platformMouseX;
+int platformMouseY;
+int platformMouseWheel;
+int platformMouseLeftDown;
+int platWidth = 1280;
+int platHeight = 720;
+int platformArgC;
+char **platformArgV;
+Platform platPlatform = PLAT_NULL;
+
+char *windowsDiskLoadPath = nullptr;
+
+int platformLoadedStringSize;
 
 void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
 #if defined(SEMI_ANDROID)

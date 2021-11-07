@@ -34,17 +34,19 @@ long readFile(const char *filename, void **storage);
 void writeFile(const char *filename, const char *str);
 bool fileExists(const char *filename);
 
-bool platformShouldClose = false;
-int platformMouseX;
-int platformMouseY;
-int platformMouseWheel;
-int platformMouseLeftDown;
-int platWidth = 1280;
-int platHeight = 720;
-int platformArgC;
-char **platformArgV;
-Platform platPlatform = PLAT_NULL;
+extern bool platformShouldClose;
+extern int platformMouseX;
+extern int platformMouseY;
+extern int platformMouseWheel;
+extern int platformMouseLeftDown;
+extern int platWidth;
+extern int platHeight;
+extern int platformArgC;
+extern char **platformArgV;
+extern Platform platPlatform;
 
-char *windowsDiskLoadPath = NULL;
+extern char *windowsDiskLoadPath;
 
-int platformLoadedStringSize;
+extern int platformLoadedStringSize;
+
+void getNanoTime(NanoTime *time);

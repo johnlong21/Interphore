@@ -100,11 +100,7 @@ extern "C" {
 // will occur from it as described above. Otherwise just pass NULL
 // to use malloc()/alloca()
 
-typedef struct
-{
-   char *alloc_buffer;
-   int   alloc_buffer_length_in_bytes;
-} stb_vorbis_alloc;
+#include "stb_vorbis_alloc.hpp"
 
 
 ///////////   FUNCTIONS USEABLE WITH ALL INPUT MODES

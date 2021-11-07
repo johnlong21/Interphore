@@ -2,20 +2,53 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-project(Interphore CXX C)
+project(Interphore)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
+set(GAME_SRC
+  src/debugOverlay.cpp
+  src/textArea.cpp
+  src/unzipper.cpp
+  src/game.cpp
+  src/main.cpp)
+
 set(ENGINE_SRC
-  "src/main.cpp")
+  engine/src/perlin.cpp
+  engine/src/base64.cpp
+  engine/src/matrix.cpp
+  engine/src/random.cpp
+  engine/src/rect.cpp
+  engine/src/pathfinder.cpp
+  engine/src/point.cpp
+  engine/src/mathTools.cpp
+  engine/src/arrayTools.cpp
+  engine/src/stringTools.cpp
+  engine/src/memoryTools.cpp
+  engine/src/strings.cpp
+  engine/src/asset.cpp
+  engine/src/newSound.cpp
+  engine/src/mintSprite.cpp
+  engine/src/mintParticleSystem.cpp
+  engine/src/tilemap.cpp
+  engine/src/profiler.cpp
+  engine/src/text.cpp
+  engine/src/engine.cpp
+  engine/src/replay.cpp
+  engine/src/js.cpp
+  engine/src/platform.cpp
+  engine/src/)
+
+set(ALL_SRC
+  ${ENGINE_SRC} ${GAME_SRC})
 
 if(WIN32)
-  add_executable(interphore WIN32 ${ENGINE_SRC})
+  add_executable(interphore WIN32 ${ALL_SRC})
 elseif(ANDROID)
-  add_library(interphore SHARED ${ENGINE_SRC})
+  add_library(interphore SHARED ${ALL_SRC})
 else()
-  add_executable(interphore ${ENGINE_SRC})
+  add_executable(interphore ${ALL_SRC})
 endif()
 
 target_compile_definitions(interphore PUBLIC STATIC_ASSETS SEMI_SOUND_NEW)
@@ -138,4 +171,60 @@ target_link_libraries(interphore tinyxml2 miniz duktape)
 if (NOT EMSCRIPTEN AND NOT ANDROID)
   add_subdirectory(externalDeps/nativefiledialog-extended)
   target_link_libraries(interphore nfd)
+endif()
+
+function(definition_and_variable)
+  target_compile_definitions(interphore PUBLIC ${ARGV})
+
+  foreach(var ${ARGV})
+    set(${var} TRUE CACHE BOOL "" FORCE)
+  endforeach()
+endfunction()
+
+# Platform defines
+if(UNIX AND NOT ANDROID AND NOT APPLE)
+  definition_and_variable(
+    SEMI_LINUX
+
+    SEMI_SDL SEMI_GL_CORE SEMI_GL SEMI_AL SEMI_CURL_NETWORK
+    SEMI_DESKTOP)
+elseif(WIN32 OR MINGW)
+  definition_and_variable(
+    SEMI_WIN32
+
+    SEMI_SDL SEMI_GL_CORE SEMI_GL SEMI_AL
+    SEMI_CURL_NETWORK SEMI_DESKTOP _USE_MATH_DEFINES)
+  if(MINGW)
+    definition_and_variable(interphore SEMI_MINGW)
+  endif()
+elseif(ANDROID)
+  definition_and_variable(
+    SEMI_ANDROID
+
+    SEMI_GLES SEMI_GL SEMI_EGL SEMI_SL SEMI_SDL)
+  target_sources(interphore PUBLIC engine/src/androidPrintf.cpp)
+elseif(EMSCRIPTEN)
+  definition_and_variable(
+    SEMI_HTML5
+
+    SEMI_SDL SEMI_GL SEMI_AL SEMI_EM_NETWORK)
+elseif(APPLE)
+  definition_and_variable(
+    SEMI_MAC
+
+    SEMI_SDL SEMI_GL_CORE SEMI_GL SEMI_AL
+    SEMI_CURL_NETWORK SEMI_DESKTOP)
+endif()
+
+if(SEMI_CURL_NETWORK)
+  target_sources(interphore PUBLIC engine/src/curl_networking.cpp)
+elseif(SEMI_EM_NETWORK)
+  target_sources(interphore PUBLIC engine/src/em_networking.cpp)
+endif()
+
+if(SEMI_GL)
+  target_sources(interphore PUBLIC engine/src/gl_renderer.cpp)
+endif()
+if(SEMI_SDL)
+  target_sources(interphore PUBLIC engine/src/sdl2_platform.cpp)
 endif()

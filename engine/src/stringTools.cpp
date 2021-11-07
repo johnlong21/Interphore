@@ -1,3 +1,7 @@
+#include <cstring>
+#include <cctype>
+
+#include "defines.h"
 #include "stringTools.h"
 
 char *stringClone(const char *str) {

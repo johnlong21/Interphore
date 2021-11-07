@@ -1,4 +1,9 @@
+#include <cstring>
+
 #include "replay.h"
+#include "mintSprite.h"
+#include "engine.h"
+#include "strings.hpp"
 
 void startRecording() {
 	ReplayData *replay = &engine->replay;

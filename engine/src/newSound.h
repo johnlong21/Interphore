@@ -1,5 +1,10 @@
 #pragma once
 
+#include <memory>
+
+#include "defines.h"
+#include "stb_vorbis_alloc.hpp"
+
 #ifdef SEMI_AL
 # include <AL/al.h>
 # include <AL/alc.h>
@@ -10,8 +15,10 @@
 # include <SLES/OpenSLES_Android.h>
 #endif
 
-#define STB_VORBIS_MAX_CHANNELS 2
-#include "stb_vorbis.c"
+struct EngineData;
+extern std::unique_ptr<EngineData> engine;
+
+struct stb_vorbis;
 
 struct Sound {
 	bool exists;
@@ -91,6 +98,7 @@ void enableSound();
 void updateSound();
 void stopChannel(const char *channelName);
 void cleanupSound();
+void addSoundTweak(const char *assetId, float volume);
 
 Channel *playEffect(const char *assetId, const char *channelName=NULL);
 Channel *playMusic(const char *assetId, const char *channelName=NULL);
