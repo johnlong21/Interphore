@@ -1,10 +1,15 @@
 #pragma once
 
+#if SEMI_WIN32
+#include <windows.h>
+#include <winnt.h>
+#endif
+
 struct NanoTime {
 	unsigned int seconds;
 	unsigned int nanos;
 
-#ifdef _WIN32
+#ifdef SEMI_WIN32
 	LARGE_INTEGER winFreq;
 	LARGE_INTEGER time;
 #endif

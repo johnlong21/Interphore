@@ -281,11 +281,7 @@ int qsortLayerIndex(const void *a, const void *b) {
 void engineAssert(bool expr, const char *filename, int lineNum) {
 	if (!expr) {
 		printf("Assert failed at %s line %d\n", filename, lineNum);
-#ifdef SEMI_WIN32
-		assert(0);
-#endif
-
-#ifdef SEMI_ANDROID
+#if defined(SEMI_WIN32) || defined(SEMI_ANDROID)
 		Assert(0);
 #endif
 

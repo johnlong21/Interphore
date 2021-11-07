@@ -1,3 +1,8 @@
+#ifdef SEMI_WIN32
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #define STB_VORBIS_MAX_CHANNELS 2
 #include "stb_vorbis.c"
 

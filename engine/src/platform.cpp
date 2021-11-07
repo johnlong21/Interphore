@@ -137,7 +137,7 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
     }
     for (auto const &entry : std::filesystem::recursive_directory_iterator(dir_path)) {
         if (!std::filesystem::is_directory(entry.path())) {
-            pathNames[*pathNamesNum] = stringClone(entry.path().string().c_str());
+            pathNames[*pathNamesNum] = stringClone(entry.path().generic_string().c_str());
             *pathNamesNum = *pathNamesNum + 1;
         }
     }
