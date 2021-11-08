@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include "renderer.h"
-#include "engine.h"
+#include "renderer.hpp"
+#include "engine.hpp"
 
 #ifdef SEMI_ANDROID
 #include <GLES2/gl2.h>

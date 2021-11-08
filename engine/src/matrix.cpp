@@ -1,8 +1,8 @@
 // #define MMX_IMPLEMENTATION
 // #include "../lib/mm_vec.h"
 
-#include "defines.h"
-#include "matrix.h"
+#include "defines.hpp"
+#include "matrix.hpp"
 
 /*
 a, b, c

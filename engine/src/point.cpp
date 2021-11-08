@@ -1,5 +1,5 @@
-#include "defines.h"
-#include "point.h"
+#include "point.hpp"
+#include "defines.hpp"
 
 void pointSetTo(Point *point, float x, float y) {
 	point->x = x;

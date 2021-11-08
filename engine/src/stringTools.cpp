@@ -1,8 +1,8 @@
 #include <cstring>
 #include <cctype>
 
-#include "defines.h"
-#include "stringTools.h"
+#include "defines.hpp"
+#include "stringTools.hpp"
 
 char *stringClone(const char *str) {
 	char *ret = (char *)Malloc((strlen(str)+1) * sizeof(char));

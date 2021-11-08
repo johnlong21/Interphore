@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include "stringTools.h"
-#include "memoryTools.h"
+#include "stringTools.hpp"
+#include "memoryTools.hpp"
 
 #define MEMORY_CHUNK_LIMIT 8192
 

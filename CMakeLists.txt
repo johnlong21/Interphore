@@ -20,7 +20,6 @@ set(ENGINE_SRC
   engine/src/matrix.cpp
   engine/src/random.cpp
   engine/src/rect.cpp
-  engine/src/pathfinder.cpp
   engine/src/point.cpp
   engine/src/mathTools.cpp
   engine/src/arrayTools.cpp
@@ -38,7 +37,9 @@ set(ENGINE_SRC
   engine/src/replay.cpp
   engine/src/js.cpp
   engine/src/platform.cpp
-  engine/src/)
+  # Unused
+  # engine/src/pathfinder.cpp
+  )
 
 set(ALL_SRC
   ${ENGINE_SRC} ${GAME_SRC})

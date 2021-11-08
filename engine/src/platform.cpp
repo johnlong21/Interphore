@@ -3,9 +3,9 @@
 #include <fstream>
 #include <cstring>
 
-#include "platform.h"
-#include "stringTools.h"
-#include "defines.h"
+#include "platform.hpp"
+#include "stringTools.hpp"
+#include "defines.hpp"
 
 #ifdef SEMI_ANDROID
 #include <regex>

@@ -2,8 +2,8 @@
 
 #include <math.h>
 
-#include "point.h"
-#include "rect.h"
+#include "point.hpp"
+#include "rect.hpp"
 
 #define Clamp(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
 #define GetRgbaPixel(data, imgWidth, x, y) argbToHex((data)[((y)*(imgWidth)+(x))*4 + 3], (data)[((y)*(imgWidth)+(x))*4 + 0], (data)[((y)*(imgWidth)+(x))*4 + 1], (data)[((y)*(imgWidth)+(x))*4 + 2])

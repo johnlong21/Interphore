@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include "mintParticleSystem.h"
-#include "engine.h"
+#include "mintParticleSystem.hpp"
+#include "engine.hpp"
 
 MintParticleSystem *createMintParticleSystem(const char *assetId, int maxParticles) {
 	MintParticleSystemData *systemData = &engine->particleSystemData;

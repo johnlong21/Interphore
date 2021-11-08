@@ -1,8 +1,8 @@
 #include <SDL.h>
 
-#include "stringTools.h"
-#include "platform.h"
-#include "engine.h"
+#include "stringTools.hpp"
+#include "platform.hpp"
+#include "engine.hpp"
 
 #ifdef SEMI_HTML5
 #include <emscripten.h>

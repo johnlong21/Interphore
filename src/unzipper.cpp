@@ -3,9 +3,9 @@
 #include "miniz.h"
 
 #include "unzipper.hpp"
-#include "mathTools.h"
-#include "defines.h"
-#include "memoryTools.h"
+#include "mathTools.hpp"
+#include "defines.hpp"
+#include "memoryTools.hpp"
 
 unsigned char inBuffer[INFLATE_BUFFER_SIZE];
 unsigned char outBuffer[INFLATE_BUFFER_SIZE];

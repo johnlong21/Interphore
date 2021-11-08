@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.h"
+#include "defines.hpp"
 
 #define ConsumeBytes(dest, src, count) memcpy(dest, src, count); src += count;
 

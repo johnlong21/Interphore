@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "engine.h"
-#include "text.h"
-#include "asset.h"
+#include "engine.hpp"
+#include "text.hpp"
+#include "asset.hpp"
 
 BitmapCharDef *getCharDef(BitmapFont *font, int ch);
 int getKern(BitmapFont *font, int first, int second);

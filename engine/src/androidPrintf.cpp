@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "defines.hpp"
 
 void androidPrintf(const char *fmt, ...) {
     char buffer[10240];

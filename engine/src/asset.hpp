@@ -1,7 +1,7 @@
 #pragma once
 
-#include "defines.h"
-#include "renderer.h"
+#include "defines.hpp"
+#include "renderer.hpp"
 
 struct Frame;
 

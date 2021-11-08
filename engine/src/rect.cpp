@@ -1,4 +1,4 @@
-#include "rect.h"
+#include "rect.hpp"
 
 void Rect::setTo(float x, float y, float width, float height) {
 	this->x = x;

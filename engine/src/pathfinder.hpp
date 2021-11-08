@@ -1,11 +1,11 @@
 #pragma once
 
-#include "defines.h"
-#include "point.h"
+#include "defines.hpp"
+#include "point.hpp"
 
-int pathfinderMap[TILES_WIDE_LIMIT * TILES_HIGH_LIMIT];
-int pathfinderMapWidth = 0;
-int pathfinderMapHeight = 0;
+extern int pathfinderMap[TILES_WIDE_LIMIT * TILES_HIGH_LIMIT];
+extern int pathfinderMapWidth;
+extern int pathfinderMapHeight;
 
 void pathfinderFind(int startX, int startY, int endX, int endY, Point *result, int *resultLen);
 bool pathfinderGetLos(int x1, int y1, int x2, int y2);

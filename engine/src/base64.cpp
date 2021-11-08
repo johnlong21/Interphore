@@ -8,8 +8,8 @@
 
 #include <cstring>
 
-#include "base64.h"
-#include "defines.h"
+#include "base64.hpp"
+#include "defines.hpp"
 
 static const unsigned char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

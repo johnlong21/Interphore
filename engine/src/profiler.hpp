@@ -1,5 +1,5 @@
-#include "defines.h"
-#include "platform.h"
+#include "defines.hpp"
+#include "platform.hpp"
 
 #define PROFILES_MAX 128
 #define PROFILER_AVERAGE_FRAMES 30

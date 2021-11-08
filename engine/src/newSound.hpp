@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "defines.h"
+#include "defines.hpp"
 #include "stb_vorbis_alloc.hpp"
 
 #ifdef SEMI_AL

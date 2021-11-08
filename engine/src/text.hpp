@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rect.h"
-#include "point.h"
+#include "rect.hpp"
+#include "point.hpp"
 
 struct Asset;
 struct FormatRegion;

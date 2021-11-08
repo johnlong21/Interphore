@@ -1,4 +1,4 @@
-#include "mintSprite.h"
+#include "mintSprite.hpp"
 
 struct DebugOverlay {
     bool active;

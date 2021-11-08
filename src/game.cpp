@@ -3,14 +3,14 @@
 #include "debugOverlay.hpp"
 #include "textArea.hpp"
 #include "unzipper.hpp"
-#include "mintSprite.h"
-#include "asset.h"
-#include "js.h"
-#include "stringTools.h"
-#include "engine.h"
-#include "memoryTools.h"
-#include "random.h"
-#include "newSound.h"
+#include "mintSprite.hpp"
+#include "asset.hpp"
+#include "js.hpp"
+#include "stringTools.hpp"
+#include "engine.hpp"
+#include "memoryTools.hpp"
+#include "random.hpp"
+#include "newSound.hpp"
 
 #define PASSAGE_MAX 1024
 #define IMAGES_MAX 256

@@ -2,8 +2,8 @@
 
 #include "tinyxml2.h"
 
-#include "tilemap.h"
-#include "stringTools.h"
+#include "tilemap.hpp"
+#include "stringTools.hpp"
 
 Tilemap *tilemapData;
 

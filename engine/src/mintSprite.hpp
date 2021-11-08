@@ -1,9 +1,9 @@
 #pragma once
 
-#include "mathTools.h"
-#include "mintParticleSystem.h"
-#include "point.h"
-#include "matrix.h"
+#include "mathTools.hpp"
+#include "mintParticleSystem.hpp"
+#include "point.hpp"
+#include "matrix.hpp"
 
 #include <map>
 #include <string>

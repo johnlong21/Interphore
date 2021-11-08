@@ -1,7 +1,7 @@
 #pragma once
 
 #include "duktape.h"
-#include "defines.h"
+#include "defines.hpp"
 
 void initJs();
 void deinitJs();

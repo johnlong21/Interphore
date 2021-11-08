@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "arrayTools.h"
+#include "arrayTools.hpp"
 
 // Only works on things of pointer size!
 void arraySwapPop(void **arr, int *len, void *element) {

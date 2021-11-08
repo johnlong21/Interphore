@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "point.h"
-#include "asset.h"
+#include "point.hpp"
+#include "asset.hpp"
 
 struct MintSprite;
 struct EngineData;

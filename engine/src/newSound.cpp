@@ -6,11 +6,11 @@
 #define STB_VORBIS_MAX_CHANNELS 2
 #include "stb_vorbis.c"
 
-#include "stringTools.h"
-#include "mathTools.h"
-#include "random.h"
-#include "newSound.h"
-#include "engine.h"
+#include "stringTools.hpp"
+#include "mathTools.hpp"
+#include "random.hpp"
+#include "newSound.hpp"
+#include "engine.hpp"
 
 #ifdef SEMI_FLASH
 extern "C" int getFlashSoundBuffer();
@@ -22,7 +22,7 @@ void slSendSoundBuffer();
 #endif
 
 #ifdef SEMI_ANDROID
-#include "arrayTools.h"
+#include "arrayTools.hpp"
 #endif
 
 void checkSoundError(int lineNum);

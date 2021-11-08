@@ -1,5 +1,5 @@
-#include "mintSprite.h"
-#include "text.h"
+#include "mintSprite.hpp"
+#include "text.hpp"
 
 #define TEXT_AREA_MODES_LIMIT 16
 

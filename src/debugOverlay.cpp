@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "debugOverlay.hpp"
-#include "engine.h"
+#include "engine.hpp"
 
 void initDebugOverlay(DebugOverlay *newOverlay) {
 	memset(newOverlay, 0, sizeof(DebugOverlay));

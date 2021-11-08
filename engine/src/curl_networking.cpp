@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "defines.h"
-#include "platform.h"
-#include "networking.h"
+#include "defines.hpp"
+#include "platform.hpp"
+#include "networking.hpp"
 #include "curl/curl.h"
 
 struct CurlMemoryStruct {

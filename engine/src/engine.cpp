@@ -1,8 +1,8 @@
 #include <time.h>
 
-#include "engine.h"
-#include "text.h"
-#include "js.h"
+#include "engine.hpp"
+#include "text.hpp"
+#include "js.hpp"
 
 std::unique_ptr<EngineData> engine;
 

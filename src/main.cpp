@@ -1,6 +1,6 @@
 #include "game.hpp"
-#include "platform.h"
-#include "engine.h"
+#include "platform.hpp"
+#include "engine.hpp"
 
 #if SEMI_MINGW
 # include <winsock2.h>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "defines.h"
-#include "rect.h"
-#include "mintSprite.h"
+#include "defines.hpp"
+#include "rect.hpp"
+#include "mintSprite.hpp"
 
 struct TiledLayer {
 	char prefix[SHORT_STR];

@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "replay.h"
-#include "mintSprite.h"
-#include "engine.h"
+#include "replay.hpp"
+#include "mintSprite.hpp"
+#include "engine.hpp"
 #include "strings.hpp"
 
 void startRecording() {

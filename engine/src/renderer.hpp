@@ -7,9 +7,9 @@
 #  include <SDL_opengles2.h>
 #endif
 
-#include "defines.h"
-#include "rect.h"
-#include "matrix.h"
+#include "defines.hpp"
+#include "rect.hpp"
+#include "matrix.hpp"
 
 struct Asset;
 struct MintSprite;

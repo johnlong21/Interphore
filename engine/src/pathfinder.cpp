@@ -1,7 +1,11 @@
 #include <string.h>
 
-#include "pathfinder.h"
-#include "micropather.h"
+#include "pathfinder.hpp"
+#include "micropather.hpp"
+
+int pathfinderMap[TILES_WIDE_LIMIT * TILES_HIGH_LIMIT];
+int pathfinderMapWidth = 0;
+int pathfinderMapHeight = 0;
 
 struct PointKV {
 	Point key;

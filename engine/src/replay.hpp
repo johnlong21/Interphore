@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.h"
+#include "defines.hpp"
 
 #define REPLAY_FRAMES_LIMIT (5*60*60)
 #define REPLAY_VERSION 1

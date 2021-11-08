@@ -2,12 +2,12 @@
 
 #include <memory>
 
-#include "tilemap.h"
-#include "platform.h"
-#include "replay.h"
-#include "mintParticleSystem.h"
-#include "renderer.h"
-#include "newSound.h"
+#include "tilemap.hpp"
+#include "platform.hpp"
+#include "replay.hpp"
+#include "mintParticleSystem.hpp"
+#include "renderer.hpp"
+#include "newSound.hpp"
 
 enum KeyState { KEY_JUST_PRESSED=1, KEY_PRESSED=2, KEY_RELEASED=3, KEY_JUST_RELEASED=4 };
 

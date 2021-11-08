@@ -1,10 +1,10 @@
 #include <cstring>
 
-#include "mathTools.h"
-#include "stringTools.h"
-#include "mintSprite.h"
-#include "text.h"
-#include "engine.h"
+#include "mathTools.hpp"
+#include "stringTools.hpp"
+#include "mintSprite.hpp"
+#include "text.hpp"
+#include "engine.hpp"
 
 char *textAssetId = (char *)"Text";
 

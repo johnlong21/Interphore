@@ -1,5 +1,6 @@
-#include "networking.h"
 #include <emscripten/fetch.h>
+
+#include "networking.hpp"
 
 void emDownloadSucceeded(emscripten_fetch_t *fetch);
 void emDownloadFailed(emscripten_fetch_t *fetch);

@@ -1,12 +1,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "asset.h"
-#include "renderer.h"
-#include "platform.h"
-#include "mintSprite.h"
-#include "stringTools.h"
-#include "newSound.h"
+#include "asset.hpp"
+#include "renderer.hpp"
+#include "platform.hpp"
+#include "mintSprite.hpp"
+#include "stringTools.hpp"
+#include "newSound.hpp"
 
 AssetData *assetData;
 

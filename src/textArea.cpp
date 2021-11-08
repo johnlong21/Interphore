@@ -1,9 +1,9 @@
 #include <cstring>
 
 #include "textArea.hpp"
-#include "engine.h"
-#include "text.h"
-#include "random.h"
+#include "engine.hpp"
+#include "text.hpp"
+#include "random.hpp"
 
 void initTextArea(TextArea *area) {
 	memset(area, 0, sizeof(TextArea));

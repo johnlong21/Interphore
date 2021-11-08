@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include "defines.h"
-#include "stringTools.h"
+#include "defines.hpp"
+#include "stringTools.hpp"
 #include "strings.hpp"
 
 String *newString(char *value, int len) {

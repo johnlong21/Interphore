@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "defines.hpp"
 
 #define ZIP_HEADERS_MAX 2048
 

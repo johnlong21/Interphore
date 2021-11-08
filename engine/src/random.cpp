@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "defines.h"
-#include "random.h"
+#include "defines.hpp"
+#include "random.hpp"
 
 float rnd() {
 	return (float)rand()/(float)RAND_MAX;

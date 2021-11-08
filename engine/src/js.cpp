@@ -1,5 +1,5 @@
-#include "js.h"
-#include "engine.h"
+#include "js.hpp"
+#include "engine.hpp"
 
 duk_ret_t js_print(duk_context *ctx);
 duk_ret_t js_clampMap(duk_context *ctx);
