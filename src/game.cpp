@@ -159,65 +159,70 @@ void initGame() {
 	initJs();
 	jsErrorFn = jsError;
 
-	addJsFunction("addPassage", addPassage, 2);
-	addJsFunction("streamAsset", streamAsset, 2);
-	addJsFunction("execAsset", execAsset, 1);
+    const duk_function_list_entry global_functions[] = {
+        { "addPassage", addPassage, 2 },
+        { "streamAsset", streamAsset, 2 },
+        { "execAsset", execAsset, 1 },
 
-	addJsFunction("append_internal", append, 1);
-	addJsFunction("setMainText", setMainText, 1);
-	addJsFunction("gotoPassage_internal", gotoPassage, 1);
-	addJsFunction("tweenEase", interTweenEase, 2);
-	addJsFunction("setFontTag", setFontTag, 2);
-	addJsFunction("streamEmbeddedTexture", streamEmbeddedTexture, 1);
-	addJsFunction("rnd_internal", interRnd, 0);
-	addJsFunction("iterTweens_internal", iterTweens, 1);
-	addJsFunction("getUrl_internal", getUrl, 1);
+        { "append_internal", append, 1 },
+        { "setMainText", setMainText, 1 },
+        { "gotoPassage_internal", gotoPassage, 1 },
+        { "tweenEase", interTweenEase, 2 },
+        { "setFontTag", setFontTag, 2 },
+        { "streamEmbeddedTexture", streamEmbeddedTexture, 1 },
+        { "rnd_internal", interRnd, 0 },
+        { "iterTweens_internal", iterTweens, 1 },
+        { "getUrl_internal", getUrl, 1 },
 
-	addJsFunction("addImage_internal", addImage, 1);
-	addJsFunction("addCanvasImage_internal", addCanvasImage, 3);
-	addJsFunction("addRectImage_internal", addRectImage, 3);
-	addJsFunction("add9SliceImage_internal", add9SliceImage, 7);
-	addJsFunction("addEmptyImage_internal", addEmptyImage, 2);
-	addJsFunction("setImageProps", setImageProps, 14);
-	addJsFunction("setImageText_internal", setImageText, 2);
-	addJsFunction("getImageSize", getImageSize, 2);
-	addJsFunction("getTextSize", getTextSize, 2);
-	addJsFunction("getImageFrames", getImageFrames, 1);
-	addJsFunction("getImageProps_internal", getImageProps, 1);
-	addJsFunction("destroyImage", destroyImage, 1);
-	addJsFunction("addChild_internal", addChild, 2);
-	addJsFunction("gotoFrameNamed", gotoFrameNamed, 3);
-	addJsFunction("gotoFrameNum", gotoFrameNum, 3);
-	addJsFunction("copyPixels_internal", copyPixels, 7);
-	addJsFunction("setImageFont", setImageFont, 2);
-	addJsFunction("getTextureWidth_internal", getTextureWidth, 1);
-	addJsFunction("getTextureHeight_internal", getTextureHeight, 1);
-	addJsFunction("setWordWrapWidth_internal", setWordWrapWidth, 2);
+        { "addImage_internal", addImage, 1 },
+        { "addCanvasImage_internal", addCanvasImage, 3 },
+        { "addRectImage_internal", addRectImage, 3 },
+        { "add9SliceImage_internal", add9SliceImage, 7 },
+        { "addEmptyImage_internal", addEmptyImage, 2 },
+        { "setImageProps", setImageProps, 14 },
+        { "setImageText_internal", setImageText, 2 },
+        { "getImageSize", getImageSize, 2 },
+        { "getTextSize", getTextSize, 2 },
+        { "getImageFrames", getImageFrames, 1 },
+        { "getImageProps_internal", getImageProps, 1 },
+        { "destroyImage", destroyImage, 1 },
+        { "addChild_internal", addChild, 2 },
+        { "gotoFrameNamed", gotoFrameNamed, 3 },
+        { "gotoFrameNum", gotoFrameNum, 3 },
+        { "copyPixels_internal", copyPixels, 7 },
+        { "setImageFont", setImageFont, 2 },
+        { "getTextureWidth_internal", getTextureWidth, 1 },
+        { "getTextureHeight_internal", getTextureHeight, 1 },
+        { "setWordWrapWidth_internal", setWordWrapWidth, 2 },
 
-	addJsFunction("addSoundTweak", addSoundTweakJs, 2);
-	addJsFunction("playMusic_internal", playMusic, 1);
-	addJsFunction("playEffect_internal", playEffect, 1);
-	addJsFunction("destroyAudio", destroyAudio, 1);
-	addJsFunction("setAudioFlags", setAudioFlags, 3);
-	addJsFunction("setMasterVolume", setMasterVolume, 1);
+        { "addSoundTweak", addSoundTweakJs, 2 },
+        { "playMusic_internal", playMusic, 1 },
+        { "playEffect_internal", playEffect, 1 },
+        { "destroyAudio", destroyAudio, 1 },
+        { "setAudioFlags", setAudioFlags, 3 },
+        { "setMasterVolume", setMasterVolume, 1 },
 
-	addJsFunction("saveGame_internal", saveGame, 1);
-	addJsFunction("loadGame_internal", loadGame, 1);
-	addJsFunction("loadMod_internal", loadMod, 0);
+        { "saveGame_internal", saveGame, 1 },
+        { "loadGame_internal", loadGame, 1 },
+        { "loadMod_internal", loadMod, 0 },
 
-	addJsFunction("moveTextArea_internal", moveTextArea, 2);
-	addJsFunction("resizeTextArea_internal", resizeTextArea, 2);
-	addJsFunction("setTextArea_internal", setTextArea, 1);
-	addJsFunction("getTextAreaWidth_internal", getTextAreaWidth, 0);
-	addJsFunction("getTextAreaHeight_internal", getTextAreaHeight, 0);
-	addJsFunction("setTextAreaTint_internal", setTextAreaTint, 1);
-	addJsFunction("setTextAreaZoomTime_internal", setTextAreaZoomTime, 1);
-	addJsFunction("setTextAreaZoomOut_internal", setTextAreaZoomOut, 0);
-	addJsFunction("setTextAreaZoomIn_internal", setTextAreaZoomIn, 0);
-	addJsFunction("setTextAreaJiggle_internal", setTextAreaJiggle, 2);
-	addJsFunction("setTextAreaRainbow_internal", setTextAreaRainbow, 0);
-	addJsFunction("setTextAreaWave_internal", setTextAreaWave, 3);
-	addJsFunction("resetTextAreaModes_internal", resetTextAreaModes, 0);
+        { "moveTextArea_internal", moveTextArea, 2 },
+        { "resizeTextArea_internal", resizeTextArea, 2 },
+        { "setTextArea_internal", setTextArea, 1 },
+        { "getTextAreaWidth_internal", getTextAreaWidth, 0 },
+        { "getTextAreaHeight_internal", getTextAreaHeight, 0 },
+        { "setTextAreaTint_internal", setTextAreaTint, 1 },
+        { "setTextAreaZoomTime_internal", setTextAreaZoomTime, 1 },
+        { "setTextAreaZoomOut_internal", setTextAreaZoomOut, 0 },
+        { "setTextAreaZoomIn_internal", setTextAreaZoomIn, 0 },
+        { "setTextAreaJiggle_internal", setTextAreaJiggle, 2 },
+        { "setTextAreaRainbow_internal", setTextAreaRainbow, 0 },
+        { "setTextAreaWave_internal", setTextAreaWave, 3 },
+        { "resetTextAreaModes_internal", resetTextAreaModes, 0 },
+        { nullptr, nullptr, 0 }
+    };
+    duk_push_global_object(jsContext);
+    duk_put_function_list(jsContext, -1, global_functions);
 
     addJsVariable(
         "isMobile",

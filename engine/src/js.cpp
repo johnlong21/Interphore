@@ -26,114 +26,71 @@ void initJs() {
 	addJsFunction("clampMap_internal", js_clampMap, 6);
 
 #ifdef SEMI_INTERNAL
-	bool internalBool = true;
+	const bool internalBool = true;
 #else
-	bool internalBool = false;
+	const bool internalBool = false;
 #endif
 
 #ifdef SEMI_DEBUG
-	bool debugBool = true;
+	const bool debugBool = true;
 #else
-	bool debugBool = false;
+	const bool debugBool = false;
 #endif
 
 #ifdef SEMI_EARLY
-	bool earlyBool = true;
+	const bool earlyBool = true;
 #else
-	bool earlyBool = false;
+	const bool earlyBool = false;
 #endif
 
-	char buf[2048];
-	sprintf(
-		buf,
-		"var gameWidth = %d;"
-		"var gameHeight = %d;"
-		"var isFlash = %d;"
-		"var internal = %d;"
-		"var debug = %d;"
-		"var early = %d;"
-		"var KEY_JUST_PRESSED = %d;"
-		"var KEY_PRESSED = %d;"
-		"var KEY_RELEASED = %d;"
-		"var KEY_JUST_RELEASED = %d;"
-		"var KEY_SHIFT = %d;"
-		"var KEY_BACKSPACE = %d;"
-		"var LINEAR = %d;"
-		"var QUAD_IN = %d;"
-		"var QUAD_OUT = %d;"
-		"var QUAD_IN_OUT = %d;"
-		"var CUBIC_IN = %d;"
-		"var CUBIC_OUT = %d;"
-		"var CUBIC_IN_OUT = %d;"
-		"var QUART_IN = %d;"
-		"var QUART_OUT = %d;"
-		"var QUART_IN_OUT = %d;"
-		"var QUINT_IN = %d;"
-		"var QUINT_OUT = %d;"
-		"var QUINT_IN_OUT = %d;"
-		"var SINE_IN = %d;"
-		"var SINE_OUT = %d;"
-		"var SINE_IN_OUT = %d;"
-		"var CIRC_IN = %d;"
-		"var CIRC_OUT = %d;"
-		"var CIRC_IN_OUT = %d;"
-		"var EXP_IN = %d;"
-		"var EXP_OUT = %d;"
-		"var EXP_IN_OUT = %d;"
-		"var ELASTIC_IN = %d;"
-		"var ELASTIC_OUT = %d;"
-		"var ELASTIC_IN_OUT = %d;"
-		"var BACK_IN = %d;"
-		"var BACK_OUT = %d;"
-		"var BACK_IN_OUT = %d;"
-		"var BOUNCE_IN = %d;"
-		"var BOUNCE_OUT = %d;"
-		"var BOUNCE_IN_OUT = %d;",
-	engine->width,
-	engine->height,
-	engine->platform == PLAT_FLASH,
-	internalBool,
-	debugBool,
-	earlyBool,
-	KEY_JUST_PRESSED,
-	KEY_PRESSED,
-	KEY_RELEASED,
-	KEY_JUST_RELEASED,
-	KEY_SHIFT,
-	KEY_BACKSPACE,
-	LINEAR,
-	QUAD_IN,
-	QUAD_OUT,
-	QUAD_IN_OUT,
-	CUBIC_IN,
-	CUBIC_OUT,
-	CUBIC_IN_OUT,
-	QUART_IN,
-	QUART_OUT,
-	QUART_IN_OUT,
-	QUINT_IN,
-	QUINT_OUT,
-	QUINT_IN_OUT,
-	SINE_IN,
-	SINE_OUT,
-	SINE_IN_OUT,
-	CIRC_IN,
-	CIRC_OUT,
-	CIRC_IN_OUT,
-	EXP_IN,
-	EXP_OUT,
-	EXP_IN_OUT,
-	ELASTIC_IN,
-	ELASTIC_OUT,
-	ELASTIC_IN_OUT,
-	BACK_IN,
-	BACK_OUT,
-	BACK_IN_OUT,
-	BOUNCE_IN,
-	BOUNCE_OUT,
-	BOUNCE_IN_OUT
-		);
-	runJs(buf);
+    const duk_number_list_entry globalValues[] = {
+        { "gameWidth", (double)engine->width },
+        { "gameHeight", (double)engine->height },
+        { "KEY_JUST_PRESSED", KEY_JUST_PRESSED },
+        { "KEY_PRESSED", KEY_PRESSED },
+        { "KEY_RELEASED", KEY_RELEASED },
+        { "KEY_JUST_RELEASED", KEY_JUST_RELEASED },
+        { "KEY_SHIFT", KEY_SHIFT },
+        { "KEY_BACKSPACE", KEY_BACKSPACE },
+        { "LINEAR", LINEAR },
+        { "QUAD_IN", QUAD_IN },
+        { "QUAD_OUT", QUAD_OUT },
+        { "QUAD_IN_OUT", QUAD_IN_OUT },
+        { "CUBIC_IN", CUBIC_IN },
+        { "CUBIC_OUT", CUBIC_OUT },
+        { "CUBIC_IN_OUT", CUBIC_IN_OUT },
+        { "QUART_IN", QUART_IN },
+        { "QUART_OUT", QUART_OUT },
+        { "QUART_IN_OUT", QUART_IN_OUT },
+        { "QUINT_IN", QUINT_IN },
+        { "QUINT_OUT", QUINT_OUT },
+        { "QUINT_IN_OUT", QUINT_IN_OUT },
+        { "SINE_IN", SINE_IN },
+        { "SINE_OUT", SINE_OUT },
+        { "SINE_IN_OUT", SINE_IN_OUT },
+        { "CIRC_IN", CIRC_IN },
+        { "CIRC_OUT", CIRC_OUT },
+        { "CIRC_IN_OUT", CIRC_IN_OUT },
+        { "EXP_IN", EXP_IN },
+        { "EXP_OUT", EXP_OUT },
+        { "EXP_IN_OUT", EXP_IN_OUT },
+        { "ELASTIC_IN", ELASTIC_IN },
+        { "ELASTIC_OUT", ELASTIC_OUT },
+        { "ELASTIC_IN_OUT", ELASTIC_IN_OUT },
+        { "BACK_IN", BACK_IN },
+        { "BACK_OUT", BACK_OUT },
+        { "BACK_IN_OUT", BACK_IN_OUT },
+        { "BOUNCE_IN", BOUNCE_IN },
+        { "BOUNCE_OUT", BOUNCE_OUT },
+        { "BOUNCE_IN_OUT", BOUNCE_IN_OUT },
+        { nullptr, 0.0 }
+    };
+    duk_push_global_object(jsContext);
+    duk_put_number_list(jsContext, -1, globalValues);
+
+    addJsVariable("internal", internalBool);
+    addJsVariable("debug", debugBool);
+    addJsVariable("early", earlyBool);
 }
 
 void deinitJs() {
