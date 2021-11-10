@@ -35,6 +35,21 @@ Changelog 0.2.0
 - Choose a file to save/load
 - Also works for loading mods
 
+> Added/Fixed android support
+- Saves / Loads the game same way as on desktop
+- Resolution can't be controlled so the backgrounds look a bit funky with a lot of empty space
+- Text input shows software keyboard and moves the input field to the top of the screen, so you can see what you type
+- Some buttons and icons are bigger
+
+> Made pressing the browser-opening url buttons actually work
+- Should open the links in browser on dektop or mobile and in a new tab when playing the browser version
+
+> Fixed the LLL faq scene
+- Now the button to go to that scene actually works
+
+> Made the game not softlock when trying to go to an invalid passage
+- Instead of just breaking it will throw you out to the last map
+
 Changelog 0.1.4
 ~~~~~~~~~~~~~~~
 
