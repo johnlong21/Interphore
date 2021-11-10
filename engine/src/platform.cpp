@@ -95,39 +95,6 @@ void getDirList(const char *dirn, char **pathNames, int *pathNamesNum) {
         }
     };
     android_iterate("", pathNames, pathNamesNum);
-#elif defined(SEMI_FLASH)
-    char *filesStr = (char *)Malloc(Megabytes(1));
-	inline_as3("Console.getAssetNames(%0);" :: "r"(filesStr));
-
-	char *fileStart = filesStr;
-	for (;;) {
-		char *fileEnd = strstr(fileStart, ",");
-		bool lastEntry = false;
-		if (!fileEnd) {
-			fileEnd = &filesStr[strlen(filesStr)-1];
-			lastEntry = true;
-		}
-
-		char fileName[PATH_LIMIT];
-
-		if (!lastEntry) {
-			fileName[fileEnd - fileStart] = '\0';
-			strncpy(fileName, fileStart, fileEnd - fileStart);
-		} else {
-			fileName[fileEnd - fileStart + 1] = '\0';
-			strncpy(fileName, fileStart, fileEnd - fileStart+1);
-		}
-
-		if (strstr(fileName, ".")) {
-			pathNames[*pathNamesNum] = stringClone(fileName);
-			*pathNamesNum = *pathNamesNum + 1;
-		}
-
-		fileStart = fileEnd + 1;
-		if (lastEntry) break;
-	}
-
-	Free(filesStr);
 #else
     std::filesystem::path dir_path = dirn;
     if (!std::filesystem::exists(dir_path)) {

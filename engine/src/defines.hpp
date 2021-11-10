@@ -90,28 +90,6 @@ void engineFree(void *mem, const char *filename, int lineNum);
 # define Free(expr) free(expr)
 #endif
 
-#ifdef SEMI_FLASH
-#define printf(...) flashPrintf(__VA_ARGS__)
-
-int flashPrintf(const char *fmt, ...) {
-	char buffer[HUGE_STR];
-
-	va_list argptr;
-	va_start(argptr, fmt);
-	vsprintf(buffer, fmt, argptr);
-	va_end(argptr);
-
-	int bufferLen = strlen(buffer);
-	if (buffer[bufferLen-1] == '\n') bufferLen--;
-
-	inline_as3(
-		"trace(\"trace: \" + CModule.readString(%0, %1));\n"
-		: : "r"(buffer), "r"(bufferLen)
-	);
-	return 0;
-}
-#endif
-
 #ifdef SEMI_ANDROID
 #include <android/log.h>
 

@@ -83,13 +83,6 @@ struct RendererData {
 };
 #endif
 
-#ifdef SEMI_FLASH
-struct RendererData {
-	void *tempAnimMem;
-	int tempAnimMemSize;
-};
-#endif
-
 struct RenderProps {
 	int x;
 	int y;

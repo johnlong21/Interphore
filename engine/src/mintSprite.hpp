@@ -139,10 +139,6 @@ struct MintSprite {
 	bool uniqueTexture;
 #endif
 
-#ifdef SEMI_FLASH
-	int bitmapIndex;
-#endif
-
 	MintSprite *recreate(const char *assetId);
 	void setupRect(int width, int height, int rgb=0xFF0000);
 	void setupEmpty(int width, int height);

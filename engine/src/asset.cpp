@@ -364,32 +364,12 @@ void destroyAsset(Asset *asset) {
 void streamTextures(const char **assetIds, int assetIdsNum, int cacheLevel) {
 	assetData->nextStreamCacheLevel = cacheLevel;
 	//@incomplete Set cache level even if not flash
-
-#ifdef SEMI_FLASH
-	for (int i = 0; i < assetIdsNum; i++) {
-		assetData->memoryStreamingAssetsNum++;
-		Asset *pngAsset = getAsset(assetIds[i], PNG_ASSET);
-
-#ifdef LOG_TEXTURE_STREAM
-		printf("%s Stream started.\n", pngAsset->name);
-#endif
-
-		inline_as3(
-			"Console.streamTexture(%0, %1, %2, %3);"
-			:: "r"(pngAsset->name), "r"(strlen(pngAsset->name)), "r"(pngAsset->data), "r"(pngAsset->dataLen)
-		);
-	}
-#endif
 }
 
 void bulkGetTextures(const char **assetIds, int assetIdsNum) {
 	Assert(assetIdsNum < ASSET_BULK_LOAD_LIMIT);
 
-#ifdef SEMI_FLASH
-	disableSound();
-	for (int i = 0; i < assetIdsNum; i++) getTextureAsset(assetIds[i]);
-	enableSound();
-#elif SEMI_MULTITHREAD
+#if defined(SEMI_MULTITHREAD)
 	int MAX_THREADS = 4;
 	pthread_t threads[ASSET_BULK_LOAD_LIMIT] = {};
 	int threadsNum = 0;

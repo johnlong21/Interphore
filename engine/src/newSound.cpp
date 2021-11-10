@@ -12,10 +12,6 @@
 #include "newSound.hpp"
 #include "engine.hpp"
 
-#ifdef SEMI_FLASH
-extern "C" int getFlashSoundBuffer();
-#endif
-
 #ifdef SEMI_SL
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 void slSendSoundBuffer();
@@ -34,7 +30,7 @@ void initSound() {
 	SoundData *sm = &engine->soundData;
 	sm->masterVolume = 1;
 
-#ifdef SEMI_AL
+#if defined(SEMI_AL)
 	printf("Openal initing\n");
 
 	sm->device = alcOpenDevice(NULL);
@@ -86,9 +82,7 @@ void initSound() {
 	alGetSourcei(sm->source, AL_SOURCE_STATE, &isPlaying);
 
 	checkSoundError(__LINE__);
-#endif
-
-#ifdef SEMI_SL
+#elif defined(SEMI_SL)
 	const SLuint32 lEngineMixIIDCount = 1;
 	const SLInterfaceID lEngineMixIIDs[] = {SL_IID_ENGINE};
 	const SLboolean lEngineMixReqs[] = {SL_BOOLEAN_TRUE};
@@ -148,17 +142,6 @@ void initSound() {
 	// sm->curBuffer ^= 1;
 	Assert((*sm->bqPlayerPlay)->SetPlayState(sm->bqPlayerPlay, SL_PLAYSTATE_PLAYING) == SL_RESULT_SUCCESS);
 #endif
-
-#ifdef SEMI_FLASH
-	inline_as3(
-		"import flash.media.*;"
-		"import flash.events.*;"
-		"Console.globalSound = new Sound();"
-		"Console.globalSound.addEventListener(SampleDataEvent.SAMPLE_DATA, Console.sampleGlobal);"
-		"Console.globalChannel = Console.globalSound.play();"
-		::
-	);
-#endif
 }
 
 void updateSound() {
@@ -188,7 +171,7 @@ void updateSound() {
 		}
 	}
 
-#ifdef SEMI_AL
+#if defined(SEMI_AL)
 	int toProcess;
 	alGetSourcei(sm->source, AL_BUFFERS_PROCESSED, &toProcess);
 
@@ -219,9 +202,7 @@ void updateSound() {
 	}
 
 	checkSoundError(__LINE__);
-#endif
-
-#ifdef SEMI_SL
+#elif defined(SEMI_SL)
 	if (sm->bufferDead) {
 		sm->bufferDead = false;
 		mixSound();
@@ -232,18 +213,14 @@ void updateSound() {
 }
 
 void disableSound() {
-#if defined(SEMI_FLASH)
-	inline_as3("Console.globalChannel.stop();"::);
-#elif defined(SEMI_SL)
+#if defined(SEMI_SL)
 	SLPlayItf playerPlay = engine->soundData.bqPlayerPlay;
 	(*playerPlay)->SetPlayState(playerPlay, SL_PLAYSTATE_PAUSED);
 #endif
 }
 
 void enableSound() {
-#if defined(SEMI_FLASH)
-	inline_as3("Console.globalChannel = Console.globalSound.play();"::);
-#elif defined(SEMI_SL)
+#if defined(SEMI_SL)
 	SLPlayItf playerPlay = engine->soundData.bqPlayerPlay;
 	(*playerPlay)->SetPlayState(playerPlay, SL_PLAYSTATE_PLAYING);
 #endif
@@ -568,16 +545,5 @@ void slSendSoundBuffer() {
 	Assert((*sm->bqPlayerBufferQueue)->Enqueue(sm->bqPlayerBufferQueue, (sm->curBuffer ? sm->bufferA : sm->bufferB), SAMPLE_BUFFER_LIMIT*sizeof(short)) == SL_RESULT_SUCCESS);
 	sm->bufferDead = true;
 	sm->curBuffer = !sm->curBuffer;
-}
-#endif
-
-#ifdef SEMI_FLASH
-int getFlashSoundBuffer() {
-	SoundData *sm = &engine->soundData;
-	mixSound();
-	return (int)&sm->sampleBuffer;
-	printf("Don't call this\n");
-	Assert(0);
-	return 0;
 }
 #endif

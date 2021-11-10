@@ -59,9 +59,7 @@ void initEngine(void (*initCallbackFn)(), void (*updateCallbackFn)()) {
 	srand(time(NULL));
 	engine->initCallback();
 
-#ifndef SEMI_FLASH
 	atexit(cleanupEngine);
-#endif
 
 	while (!platformShouldClose) {
 		updateEngine();
