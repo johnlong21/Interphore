@@ -25,7 +25,6 @@ set(ENGINE_SRC
   engine/src/arrayTools.cpp
   engine/src/stringTools.cpp
   engine/src/memoryTools.cpp
-  engine/src/strings.cpp
   engine/src/asset.cpp
   engine/src/newSound.cpp
   engine/src/mintSprite.cpp

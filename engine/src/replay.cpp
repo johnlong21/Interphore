@@ -3,7 +3,6 @@
 #include "replay.hpp"
 #include "mintSprite.hpp"
 #include "engine.hpp"
-#include "strings.hpp"
 
 void startRecording() {
 	ReplayData *replay = &engine->replay;
@@ -19,20 +18,20 @@ void endRecording() {
 	ReplayData *replay = &engine->replay;
 	printf("Ending recording, got %d frames\n", replay->framesNum);
 
-	String *saveStr = newString(1024);
-	saveStr->append(SEMI_STRINGIFY(REPLAY_VERSION));
-	saveStr->append("\n");
+    std::string saveStr;
+	saveStr.append(SEMI_STRINGIFY(REPLAY_VERSION));
+	saveStr.append("\n");
 
 	char buf[128];
 	sprintf(buf, "%d\n%ld\n", replay->framesNum, replay->seed);
-	saveStr->append(buf);
+	saveStr.append(buf);
 
 	for (int i = 0; i < REPLAY_FRAMES_LIMIT; i++) {
 		ReplayFrame *frame = &replay->frames[i];
 
 		char buf[REPLAY_DATA_LINE_LEN];
 		sprintf(buf, "%d %d %d\n", frame->mouseX, frame->mouseY, frame->mousePressed);
-		saveStr->append(buf);
+		saveStr.append(buf);
 	}
 
 	for (int i = replay->selectedSlot; ; i++) {
@@ -40,12 +39,10 @@ void endRecording() {
 		sprintf(buf, "replay%d.rpl", i);
 		if (!fileExists(buf)) {
 			printf("Saving to %s\n", buf);
-			writeFile(buf, saveStr->cStr);
+			writeFile(buf, saveStr.c_str());
 			break;
 		}
 	}
-
-	saveStr->destroy();
 
 	replay->recording = false;
 	replay->playbackCurrentReplay = true;
