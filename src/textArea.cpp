@@ -35,10 +35,10 @@ void TextArea::addMode(TextAreaMode mode) {
 	TextArea *area = this;
 	area->modes[area->modesNum++] = mode;
 
-	if (mode == TEXT_MODE_JIGGLE) {
+	if (mode == TextAreaMode::Jiggle) {
 		area->jiggleX = 0;
 		area->jiggleY = 0;
-	} else if (mode == TEXT_MODE_ZOOM_OUT) {
+	} else if (mode == TextAreaMode::ZoomOut) {
 		area->zoomTime = 1;
 	}
 }
@@ -76,12 +76,17 @@ void TextArea::update() {
 		Point scale = {1, 1};
 
 		for (int modeI = 0; modeI < area->modesNum; modeI++) {
+            using enum TextAreaMode;
+
 			TextAreaMode mode = area->modes[modeI];
-			if (mode == TEXT_MODE_JIGGLE) {
+
+            switch (mode) {
+            case Jiggle:
 				destPoint.x += rndInt(-area->jiggleX, area->jiggleX);
 				destPoint.y += rndInt(-area->jiggleY, area->jiggleY);
-			} else if (mode == TEXT_MODE_ZOOM_OUT) {
-				float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
+                break;
+            case ZoomOut: {
+                float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
 				if (charPerc > i+1) {
 					continue;
 				} else if (charPerc < i) {
@@ -99,8 +104,10 @@ void TextArea::update() {
 					destPoint.x -= sizeDiffX/2;
 					destPoint.y -= sizeDiffY/2;
 				}
-			} else if (mode == TEXT_MODE_ZOOM_IN) {
-				float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
+                break;
+            }
+            case ZoomIn: {
+                float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
 				if (charPerc > i+1) {
 					continue;
 				} else if (charPerc < i) {
@@ -117,13 +124,18 @@ void TextArea::update() {
 					float sizeDiffY = sourceRect.height*scale.y - sourceRect.height;
 					destPoint.x -= sizeDiffX/2;
 					destPoint.y -= sizeDiffY/2;
-				}
-			} else if (mode == TEXT_MODE_RAINBOW) {
-				tint = argbToHex(255, rndInt(0, 255), rndInt(0, 255), rndInt(0, 255));
-			} else if (mode == TEXT_MODE_WAVE) {
-				destPoint.x += cos(engine->time*area->waveSpeed + ((float)i/area->defsNum)*(2.0*M_PI)) * area->waveX + 20;
+				}   
+                break;
+            }
+            case Rainbow:
+                tint = argbToHex(255, rndInt(0, 255), rndInt(0, 255), rndInt(0, 255));
+                break;
+            case Wave:
+                destPoint.x += cos(engine->time*area->waveSpeed + ((float)i/area->defsNum)*(2.0*M_PI)) * area->waveX + 20;
 				destPoint.y += sin(engine->time*area->waveSpeed + ((float)i/area->defsNum)*(2.0*M_PI)) * area->waveY + 20;
-			}
+                break;
+            default: break; /* Nothing */
+            }
 		}
 
 		sprite->drawPixelsFromAsset(def->sourceTextureAsset, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, destPoint.x, destPoint.y, scale.x, scale.y, tint);

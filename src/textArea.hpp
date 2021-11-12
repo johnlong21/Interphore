@@ -1,15 +1,15 @@
 #include "mintSprite.hpp"
 #include "text.hpp"
 
-#define TEXT_AREA_MODES_LIMIT 16
+constexpr int TEXT_AREA_MODES_LIMIT = 16;
 
-enum TextAreaMode {
-    TEXT_MODE_NONE,
-    TEXT_MODE_JIGGLE,
-    TEXT_MODE_ZOOM_OUT,
-    TEXT_MODE_ZOOM_IN,
-    TEXT_MODE_RAINBOW,
-    TEXT_MODE_WAVE,
+enum class TextAreaMode {
+    None,
+    Jiggle,
+    ZoomOut,
+    ZoomIn,
+    Rainbow,
+    Wave
 };
 
 struct TextArea {

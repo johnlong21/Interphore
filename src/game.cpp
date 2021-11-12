@@ -933,12 +933,12 @@ duk_ret_t setTextAreaZoomTime(duk_context *ctx) {
 }
 
 duk_ret_t setTextAreaZoomOut(duk_context *ctx) {
-	game->area.addMode(TEXT_MODE_ZOOM_OUT);
+	game->area.addMode(TextAreaMode::ZoomOut);
 	return 0;
 }
 
 duk_ret_t setTextAreaZoomIn(duk_context *ctx) {
-	game->area.addMode(TEXT_MODE_ZOOM_IN);
+	game->area.addMode(TextAreaMode::ZoomIn);
 	return 0;
 }
 
@@ -946,7 +946,7 @@ duk_ret_t setTextAreaJiggle(duk_context *ctx) {
 	int jiggleY = duk_get_int(ctx, -1);
 	int jiggleX = duk_get_int(ctx, -2);
 
-	game->area.addMode(TEXT_MODE_JIGGLE);
+	game->area.addMode(TextAreaMode::Jiggle);
 	game->area.jiggleX = jiggleX;
 	game->area.jiggleY = jiggleY;
 
@@ -954,7 +954,7 @@ duk_ret_t setTextAreaJiggle(duk_context *ctx) {
 }
 
 duk_ret_t setTextAreaRainbow(duk_context *ctx) {
-	game->area.addMode(TEXT_MODE_RAINBOW);
+	game->area.addMode(TextAreaMode::Rainbow);
 	return 0;
 }
 
@@ -965,7 +965,7 @@ duk_ret_t setTextAreaWave(duk_context *ctx) {
 	game->area.waveX = waveX;
 	game->area.waveY = waveY;
 	game->area.waveSpeed = waveSpeed;
-	game->area.addMode(TEXT_MODE_WAVE);
+	game->area.addMode(TextAreaMode::Wave);
 	return 0;
 }
 

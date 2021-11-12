@@ -11,16 +11,16 @@
 #define Max(x, y) ((x)>(y)?(x):(y))
 #define Min(x, y) ((x)<(y)?(x):(y))
 
-enum Dir8 {
-	DIR8_CENTER = 0,
-	DIR8_LEFT,
-	DIR8_RIGHT,
-	DIR8_UP,
-	DIR8_DOWN,
-	DIR8_UP_LEFT,
-	DIR8_UP_RIGHT,
-	DIR8_DOWN_LEFT,
-	DIR8_DOWN_RIGHT
+enum class Dir8 {
+	Center = 0,
+	Left,
+	Right,
+	Up,
+	Down,
+	UpLeft,
+	UpRight,
+	DownLeft,
+	DownRight
 };
 
 enum Ease {

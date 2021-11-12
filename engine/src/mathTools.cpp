@@ -163,76 +163,84 @@ float mathTween(float baseNumber, float endNumber, float time, float endTime, Ea
 }
 
 float tweenEase(float p, Ease ease) {
-	if (ease == LINEAR) {
+    switch (ease) {
+	case LINEAR:
 		return p;
-	} else if (ease == QUAD_IN) {
+    case QUAD_IN:
 		return p * p;
-	} else if (ease == QUAD_OUT) {
+	case QUAD_OUT:
 		return -(p * (p - 2));
-	} else if (ease == QUAD_IN_OUT) {
+	case QUAD_IN_OUT:
 		if (p < 0.5) return 2 * p * p;
 		else return (-2 * p * p) + (4 * p) - 1;
-	} else if (ease == CUBIC_IN) {
+	case CUBIC_IN:
 		return p * p * p;
-	} else if (ease == CUBIC_OUT) {
+	case CUBIC_OUT: {
 		float f = (p - 1);
 		return f * f * f + 1;
-	} else if (ease == CUBIC_IN_OUT) {
+    }
+	case CUBIC_IN_OUT: {
 		float f = ((2 * p) - 2);
 		if (p < 0.5) return 4 * p * p * p;
 		else return 0.5 * f * f * f + 1;
-	} else if (ease == QUART_IN) {
+    }
+	case QUART_IN:
 		return p * p * p * p;
-	} else if (ease == QUART_OUT) {
+	case QUART_OUT: {
 		float f = (p - 1);
 		return f * f * f * (1 - p) + 1;
-	} else if (ease == QUART_IN_OUT) {
+    }
+	case QUART_IN_OUT: {
 		float f = (p - 1);
 		if (p < 0.5) return 8 * p * p * p * p;
 		else return -8 * f * f * f * f + 1;
-	} else if (ease == QUINT_IN) {
+    }
+	case QUINT_IN:
 		return p * p * p * p * p;
-	} else if (ease == QUINT_OUT) {
+	case QUINT_OUT: {
 		float f = (p - 1);
 		return f * f * f * f * f + 1;
-	} else if (ease == QUINT_IN_OUT) {
+    }
+	case QUINT_IN_OUT: {
 		float f = ((2 * p) - 2);
 		if (p < 0.5) return 16 * p * p * p * p * p;
 		else return  0.5 * f * f * f * f * f + 1;
-	} else if (ease == SINE_IN) {
+    }
+	case SINE_IN:
 		return sin((p - 1) * M_PI_2) + 1;
-	} else if (ease == SINE_OUT) {
+	case SINE_OUT:
 		return sin(p * M_PI_2);
-	} else if (ease == SINE_IN_OUT) {
+	case SINE_IN_OUT:
 		return 0.5 * (1 - cos(p * M_PI));
-	} else if (ease == CIRC_IN) {
+	case CIRC_IN:
 		return 1 - sqrt(1 - (p * p));
-	} else if (ease == CIRC_OUT) {
+	case CIRC_OUT:
 		return sqrt((2 - p) * p);
-	} else if (ease == CIRC_IN_OUT) {
+	case CIRC_IN_OUT:
 		if (p < 0.5) return 0.5 * (1 - sqrt(1 - 4 * (p * p)));
 		else return 0.5 * (sqrt(-((2 * p) - 3) * ((2 * p) - 1)) + 1);
-	} else if (ease == EXP_IN) {
+	case EXP_IN:
 		return (p == 0.0) ? p : pow(2, 10 * (p - 1));
-	} else if (ease == EXP_OUT) {
+	case EXP_OUT:
 		return (p == 1.0) ? p : 1 - pow(2, -10 * p);
-	} else if (ease == EXP_IN_OUT) {
+	case EXP_IN_OUT:
 		if (p == 0.0 || p == 1.0) return p;
 		if (p < 0.5) return 0.5 * pow(2, (20 * p) - 10);
 		else return -0.5 * pow(2, (-20 * p) + 10) + 1;
-	} else if (ease == ELASTIC_IN) {
+	case ELASTIC_IN:
 		return sin(13 * M_PI_2 * p) * pow(2, 10 * (p - 1));
-	} else if (ease == ELASTIC_OUT) {
+	case ELASTIC_OUT:
 		return sin(-13 * M_PI_2 * (p + 1)) * pow(2, -10 * p) + 1;
-	} else if (ease == ELASTIC_IN_OUT) {
+	case ELASTIC_IN_OUT:
 		if (p < 0.5) return 0.5 * sin(13 * M_PI_2 * (2 * p)) * pow(2, 10 * ((2 * p) - 1));
 		else return 0.5 * (sin(-13 * M_PI_2 * ((2 * p - 1) + 1)) * pow(2, -10 * (2 * p - 1)) + 2);
-	} else if (ease == BACK_IN) {
+	case BACK_IN:
 		return p * p * p - p * sin(p * M_PI);
-	} else if (ease == BACK_OUT) {
+	case BACK_OUT: {
 		float f = (1 - p);
 		return 1 - (f * f * f - f * sin(f * M_PI));
-	} else if (ease == BACK_IN_OUT) {
+    }
+	case BACK_IN_OUT:
 		if (p < 0.5) {
 			float f = 2 * p;
 			return 0.5 * (f * f * f - f * sin(f * M_PI));
@@ -240,18 +248,18 @@ float tweenEase(float p, Ease ease) {
 			float f = (1 - (2*p - 1));
 			return 0.5 * (1 - (f * f * f - f * sin(f * M_PI))) + 0.5;
 		}
-	} else if (ease == BOUNCE_IN) {
+	case BOUNCE_IN:
 		return 1 - tweenEase(1 - p, BOUNCE_OUT);
-	} else if (ease == BOUNCE_OUT) {
+	case BOUNCE_OUT:
 		if (p < 4/11.0) return (121 * p * p)/16.0;
 		else if (p < 8/11.0) return (363/40.0 * p * p) - (99/10.0 * p) + 17/5.0;
 		else if (p < 9/10.0) return (4356/361.0 * p * p) - (35442/1805.0 * p) + 16061/1805.0;
 		else return (54/5.0 * p * p) - (513/25.0 * p) + 268/25.0;
-	} else if (ease == BOUNCE_IN_OUT) {
+	case BOUNCE_IN_OUT:
 		if (p < 0.5) return 0.5 * tweenEase(p*2, BOUNCE_IN);
 		else return 0.5 * tweenEase(p * 2 - 1, BOUNCE_OUT) + 0.5;
+    default:
+        return 0;
 	}
-
-	return 0;
 }
 
