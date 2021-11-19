@@ -182,7 +182,7 @@ function(definition_and_variable)
 endfunction()
 
 # Platform defines
-if(UNIX AND NOT ANDROID AND NOT APPLE)
+if(UNIX AND NOT ANDROID AND NOT APPLE AND NOT EMSCRIPTEN)
   definition_and_variable(
     SEMI_LINUX
 

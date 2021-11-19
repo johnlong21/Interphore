@@ -1,3 +1,6 @@
+#include <cstring>
+#include <cstdio>
+
 #include <emscripten/fetch.h>
 
 #include "networking.hpp"
