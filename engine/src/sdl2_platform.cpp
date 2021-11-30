@@ -51,7 +51,7 @@ void initPlatform() {
 	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 #ifdef SEMI_HTML5
-    SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
+    // SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
 #endif
 
     int flags = SDL_WINDOW_OPENGL;
@@ -71,6 +71,13 @@ void initPlatform() {
 	sdlContext = SDL_GL_CreateContext(sdlWindow);
 	Assert(sdlContext);
 
+#ifdef SEMI_HTML5
+	printf("Setting inf loop\n");
+	platformShouldClose = true;
+	emscripten_set_main_loop(updateEngine, 0, 0);
+	printf("Set\n");
+#endif
+
 	Assert(!SDL_GL_SetSwapInterval(1));
 
 #ifdef GLEW_STATIC
@@ -81,12 +88,6 @@ void initPlatform() {
 	platPlatform = PLAT_SDL2;
 
 	printf("Maybe set\n");
-#ifdef SEMI_HTML5
-	printf("Setting inf loop\n");
-	platformShouldClose = true;
-	emscripten_set_main_loop(updateEngine, 0, 0);
-	printf("Set\n");
-#endif
 
 #ifdef SEMI_DESKTOP
     NFD_Init();
