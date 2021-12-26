@@ -955,20 +955,18 @@ void MintSprite::alignInside(MintSprite *other, Dir8 dir, int xpad, int ypad) {
 	MintSprite *spr = this;
 	Assert(spr->parent == other || spr->parent == other->parent);
 
-    using enum Dir8;
-
 	Point dirVec = {};
     switch (dir) {
-    case Center:
+    case Dir8::Center:
         dirVec.setTo(0.5, 0.5); break;
-	case Up: dirVec.setTo(0.5, 0); break;
-	case Down: dirVec.setTo(0.5, 1); break;
-	case Left: dirVec.setTo(0, 0.5); break;
-	case Right: dirVec.setTo(1, 0.5); break;
-	case UpLeft: dirVec.setTo(0, 0); break;
-	case UpRight: dirVec.setTo(1, 0); break;
-	case DownLeft: dirVec.setTo(0, 1); break;
-	case DownRight: dirVec.setTo(1, 1); break;
+	case Dir8::Up: dirVec.setTo(0.5, 0); break;
+	case Dir8::Down: dirVec.setTo(0.5, 1); break;
+	case Dir8::Left: dirVec.setTo(0, 0.5); break;
+	case Dir8::Right: dirVec.setTo(1, 0.5); break;
+	case Dir8::UpLeft: dirVec.setTo(0, 0); break;
+	case Dir8::UpRight: dirVec.setTo(1, 0); break;
+	case Dir8::DownLeft: dirVec.setTo(0, 1); break;
+	case Dir8::DownRight: dirVec.setTo(1, 1); break;
     }
 
 	Rect otherRect;

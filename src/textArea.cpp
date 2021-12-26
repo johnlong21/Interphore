@@ -76,16 +76,14 @@ void TextArea::update() {
 		Point scale = {1, 1};
 
 		for (int modeI = 0; modeI < area->modesNum; modeI++) {
-            using enum TextAreaMode;
-
 			TextAreaMode mode = area->modes[modeI];
 
             switch (mode) {
-            case Jiggle:
+            case TextAreaMode::Jiggle:
 				destPoint.x += rndInt(-area->jiggleX, area->jiggleX);
 				destPoint.y += rndInt(-area->jiggleY, area->jiggleY);
                 break;
-            case ZoomOut: {
+            case TextAreaMode::ZoomOut: {
                 float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
 				if (charPerc > i+1) {
 					continue;
@@ -106,7 +104,7 @@ void TextArea::update() {
 				}
                 break;
             }
-            case ZoomIn: {
+            case TextAreaMode::ZoomIn: {
                 float charPerc = mathClampMap(engine->time, area->modeStartTime, area->modeStartTime + zoomTime, 0, area->defsNum);
 				if (charPerc > i+1) {
 					continue;
@@ -127,10 +125,10 @@ void TextArea::update() {
 				}   
                 break;
             }
-            case Rainbow:
+            case TextAreaMode::Rainbow:
                 tint = argbToHex(255, rndInt(0, 255), rndInt(0, 255), rndInt(0, 255));
                 break;
-            case Wave:
+            case TextAreaMode::Wave:
                 destPoint.x += cos(engine->time*area->waveSpeed + ((float)i/area->defsNum)*(2.0*M_PI)) * area->waveX + 20;
 				destPoint.y += sin(engine->time*area->waveSpeed + ((float)i/area->defsNum)*(2.0*M_PI)) * area->waveY + 20;
                 break;
