@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cstdarg>
 
 #include "mathTools.hpp"
 #include "stringTools.hpp"
