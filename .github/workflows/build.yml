@@ -37,7 +37,7 @@ jobs:
         mkdir -p /d/interphore/interphore-${{github.sha}}/
         cp -r interphore.exe assets\
               $(ldd interphore.exe | grep /mingw64/bin | awk '{ print $3; }')\
-              /mingw64/bin/{libssl-1_1-x64.dll,libcrypto-1_1-x64.dll}\
+              /mingw64/bin/{libssl-3-x64.dll,libcrypto-3-x64.dll}\
               /d/interphore/interphore-${{github.sha}}
 
     - name: Delete old artifacts
