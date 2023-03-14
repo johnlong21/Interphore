@@ -8,7 +8,7 @@ jobs:
   build-windows:
     runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -52,10 +52,53 @@ jobs:
         name: "interphore-windows"
         path: "D:\\interphore"
 
+    - name: Upload the windows release to itch.io
+      env:
+        BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+        CHANNEL: windows
+        RELDIR: "D:\\interphore"
+      run: |
+        Invoke-WebRequest -Uri "https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default" -OutFile "butler.zip"
+        Expand-Archive -Path "butler.zip" -DestinationPath "D:\\"
+
+        D:\\butler.exe push ${Env:RELDIR} vaartis/interphore:${Env:CHANNEL} --userversion 0.2.0-${Env:GITHUB_SHA}
+
+  build-html5:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install deps
+      run: |
+        sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build ffmpeg
+
+    - uses: mymindstorm/setup-emsdk@v12
+      with:
+        version: 3.1.13
+        actions-cache-folder: 'emsdk-cache'
+
+    - name: Build
+      run: |
+        mkdir _build && cd _build
+        emcmake cmake -DCMAKE_BUILD_TYPE=Release .. && emmake make
+        sudo mv html5 /interphore
+
+    - name: Upload to itch.io
+      env:
+        BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+        CHANNEL: html5
+        RELDIR: "/interphore/"
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip && chmod +x butler
+        ./butler push ${RELDIR} vaartis/interphore:${CHANNEL} --userversion 0.2.0-${GITHUB_SHA}
+
   build-android:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -78,3 +121,13 @@ jobs:
       with:
         name: "interphore-debug.apk"
         path: "/interphore-debug.apk"
+
+    - name: Upload to itch.io
+      env:
+        BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+        CHANNEL: android
+        RELDIR: "/interphore-debug.apk"
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip && chmod +x butler
+        ./butler push ${RELDIR} vaartis/interphore:${CHANNEL} --userversion 0.2.0-${GITHUB_SHA}
