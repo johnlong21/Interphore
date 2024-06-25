@@ -11,7 +11,7 @@ addChoice("Back to extras", "scratchModStart");
 :Completed Mods
 !`
 addChoice("Sidebutt", function() {
-	execAsset("WavesMod.phore");
+	execAsset("wavesMod.phore");
 });
 `
 [Go back|modsStart]
