@@ -1,35 +1,5 @@
 data.mod = {};
 
-streamAsset("coin.png", "https://i.imgur.com/mmt2kcc.png");
-
-
-streamAsset("g1.png", "https://prn.frl/i/w5vjuvyts9qcqsoe.jpg");
-streamAsset("g2.png", "https://prn.frl/i/6wom72wtz409t0r4.jpg");
-streamAsset("g3.png", "https://prn.frl/i/6h86wgddc38aw84j.jpg");
-streamAsset("g4.png", "https://prn.frl/i/ffjhku50nhl4v1kl.jpg");
-streamAsset("g5.png", "https://prn.frl/i/5vzbnekdlel91kt8.jpg");
-streamAsset("g6.png", "https://prn.frl/i/11bauwfi8gskbkep.jpg");
-streamAsset("g7.png", "https://prn.frl/i/1ymujey98v6ow8pz.jpg");
-streamAsset("g8.png", "https://prn.frl/i/o956jdlcxp33ikh0.jpg");
-streamAsset("g9.png", "https://prn.frl/i/n6vpkefbrbka6oz1.jpg");
-streamAsset("g10.png", "https://prn.frl/i/evcfnyxq3dtcmcms.jpg");
-streamAsset("g11.png", "https://prn.frl/i/at1way8624eson6g.jpg");
-streamAsset("g12.png", "https://prn.frl/i/bmr9cje3nwte0a86.jpg");
-
-streamAsset("t1.png", "https://prn.frl/i/90pmzctr206ry34d.jpg");
-streamAsset("t2.png", "https://prn.frl/i/6ry8dcegs10hinxz.png");
-streamAsset("t3.png", "https://prn.frl/i/lu5peyfaipftu7h9.jpg");
-streamAsset("t4.png", "https://prn.frl/i/twldzpy6kvp3oesy.jpg");
-streamAsset("t5.png", "https://prn.frl/i/eyeazbmqh0mmuof9.jpg");
-streamAsset("t6.png", "https://prn.frl/i/keujhboqwp72dtu3.jpg");
-streamAsset("t7.png", "https://prn.frl/i/4wtxx6czlxfit45o.jpg");
-streamAsset("t8.png", "https://prn.frl/i/v7jvl4bm4c5x59rb.jpg");
-streamAsset("t9.png", "https://prn.frl/i/xt1xcl1ulxwbkrym.jpg");
-streamAsset("t10.png", "https://prn.frl/i/9un1moyf8bz1ims5.jpg");
-streamAsset("t11.png", "https://prn.frl/i/3wod07yglkhytsap.jpg");
-streamAsset("t12.png", "https://prn.frl/i/iedjy50d8ljukb0t.jpg");
-streamAsset("t13.png", "https://prn.frl/i/6ry8dcegs10hinxz.png");
-
 
 function Fiona(gender) {
 	if (gender === undefined) gender = data.gender;
