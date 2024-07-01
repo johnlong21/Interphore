@@ -18,3 +18,4 @@ errors.err
 _build
 .cache
 compile_commands.json
+build
