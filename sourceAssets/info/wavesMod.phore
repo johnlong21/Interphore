@@ -160,12 +160,6 @@ Here's some images.
 !`if (data.bees < 1) addChoice("A decision", "bee1");`
 !`if (data.bees > 1) addChoice("A different decision", "bee2");`
 
-!`
-var coin = addImage("coin.png");
-coin.x = 800;
-coin.y = 100;
-`
-
 [Go back|Start]
 ---
 
@@ -254,14 +248,6 @@ This is a check if everything worked.
 `Fio6(data.mod.gender)`: If so, write smth
 `Fio6(data.mod.gender)`: Anything rly... I won't bite :b
 !`data.bees = 2;`
-!`if (data.mod.gender === "male") { var tr3 = addImage("t3.png");
-tr3.x = 800;
-tr3.y = 100;
-}`
-!`if (data.mod.gender === "female") { var gr3 = addImage("g3.png");
-gr3.x = 800;
-gr3.y = 100;
-}`
 [Hi|encounter1]
 !`if (data.mod.gender === "female") addChoice("Hey Fiona! Remember me? We met in a Paraphore mod :D", "encounter1c");`
 ---
@@ -838,15 +824,7 @@ But since yesterday i kinda decided to... uhm leave out my private parts...
 hand while `herHis(data.mod.gender)` green face slowly turns red. 
 "Oh god... I really can't wait much longer. ~ You better leave now. 
 Do yourself a favor and cover your ears till you get some distance."
-!`if (data.mod.gender === "male") { var tr1 = addImage("t1.png");
-tr1.x = 800;
-tr1.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr1 = addImage("g1.png");
-gr1.x = 800;
-gr1.y = 100;
-}`
 [Or I could help you out. ;)|Goo Stuff 1]
 [Leave|Done]
 ---
@@ -873,16 +851,6 @@ you embrace the scent of `herHis(data.mod.gender)` !`if (data.mod.gender === "fe
 
 `HerHis(data.mod.gender)` little pucker twitches in anticipation. "Pleeeaaase, my assshoole!"
 
-
-!`if (data.mod.gender === "male") { var truu20 = addImage("t13.png");
-truu20.x = 800;
-truu20.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr2 = addImage("g2.png");
-gr2.x = 800;
-gr2.y = 100;
-}`
 [Fingerfuck it|Finger 1]
 [Tonguefuck it|Tongue 1]
 ---
@@ -1131,15 +1099,7 @@ Inspecting what you shoved all the way inside `herHim(data.mod.gender)` you look
 `Fiona(data.mod.gender)`: Hey you're back! :D
 `Fiona(data.mod.gender)`: That is... uh... great! Yep, really good. Just as planned no worries. 
 `Fiona(data.mod.gender)`: Sooo... How was the mod?
-!`if (data.mod.gender === "male") { var tr3 = addImage("t3.png");
-tr3.x = 800;
-tr3.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr3 = addImage("g3.png");
-gr3.x = 800;
-gr3.y = 100;
-}`
 [Great!|encounter11a]
 [Awful!|encounter11b]
 [Just start the next one already|encounter11c]
@@ -1239,15 +1199,7 @@ gr3.y = 100;
 `Fiona(data.mod.gender)`: Ok here we go...
 `Fiona(data.mod.gender)`: Hope you don't mind the size. They kinda big and plumb.
 `Fiona(data.mod.gender)`: Atleast it's really fun to squish them. ~
-!`if (data.mod.gender === "male") { var tr4 = addImage("t4.png");
-tr4.x = 800;
-tr4.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr4 = addImage("g4.png");
-gr4.x = 800;
-gr4.y = 100;
-}`
 [The bigger the better :)|encounter20a]
 [Ewwww! They look ugly!|encounter20b]
 [How can you type without touching the keyboard?|encounter20c]
@@ -1264,15 +1216,7 @@ gr4.y = 100;
 `Fiona(data.mod.gender)`: Ok here we go...
 `Fiona(data.mod.gender)`: Hope you don't mind the size. They kinda big and plumb.
 `Fiona(data.mod.gender)`: Atleast it's really fun to squish them. ~
-!`if (data.mod.gender === "male") { var tr4 = addImage("t4.png");
-tr4.x = 800;
-tr4.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr4 = addImage("g4.png");
-gr4.x = 800;
-gr4.y = 100;
-}`
 [The bigger the better :)|encounter20a]
 [Ewwww! They look ugly!|encounter20b]
 [How can you type without touching the keyboard?|encounter20c]
@@ -1284,15 +1228,7 @@ gr4.y = 100;
 `Fiona(data.mod.gender)`: Sorry to disappoint.
 `Fiona(data.mod.gender)`: I really wish I had some big, jiggly, soft breasts. ~
 `Fiona(data.mod.gender)`: But unfortunately Mynt made me this way.
-!`if (data.mod.gender === "male") { var tr4 = addImage("t4.png");
-tr4.x = 800;
-tr4.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr4 = addImage("g4.png");
-gr4.x = 800;
-gr4.y = 100;
-}`
 [I really like it the way it is :)|encounter20am]
 [Ewwww! Ugly!|encounter20b]
 [How can you type without touching the keyboard?|encounter20cm]
@@ -1530,15 +1466,6 @@ Door: *Bam* *Footsteps fading away* *whimpering sounds* *sniff*
       I might have to wear one of her belts. 
 `Fiona(data.mod.gender)`: They can help fix the problem. 
 
-!`if (data.mod.gender === "male") { var tr5 = addImage("t5.png");
-tr5.x = 800;
-tr5.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr5 = addImage("g5.png");
-gr5.x = 800;
-gr5.y = 100;
-}`
 [Next|encounter31]
 ---
 
@@ -1573,15 +1500,6 @@ gr5.y = 100;
 
 :encounter33
 `Fio6(data.mod.gender)`: Tadaaa: a `girl(data.mod.gender)`'s butt :)
-!`if (data.mod.gender === "male") { var tr6 = addImage("t6.png");
-tr6.x = 800;
-tr6.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr6 = addImage("g6.png");
-gr6.x = 800;
-gr6.y = 100;
-}`
 [Do you mind going nude again?|encounter34]
 ---
 
@@ -1718,14 +1636,7 @@ Cassie: I could clean it, then? Oh! Look it's winking at me. Should I take
 that as a yes? It almost seems like it wants to be licked.
 
 `Fiona(data.mod.gender)`: It doesnnnnt.
-!`if (data.mod.gender === "male") { var tr7 = addImage("t7.png");
-tr7.x = 800;
-tr7.y = 100;
-}`
-!`if (data.mod.gender === "female") { var gr7 = addImage("g7.png");
-gr7.x = 800;
-gr7.y = 100;
-}`
+
 !`if (data.mod.gender === "female") addChoice("Fionas butthole is clean", "encounter48clean");`
 !`if (data.mod.gender === "male") addChoice("Adleys butthole is clean", "encounter48clean");`
 [If only you had the time to shower before all this|encounter48]
@@ -2113,15 +2024,7 @@ throat then. Try not to puke. It's for your own good trust me.
 Cassie: Fuck that's good. Finally some thrusting to do.
 
 *smack* *smack* *smack* *smack* *smack* 
-!`if (data.mod.gender === "male") { var tr8 = addImage("t8.png");
-tr8.x = 800;
-tr8.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr8 = addImage("g8.png");
-gr8.x = 800;
-gr8.y = 100;
-}`
 [Next|encounter63]
 ---
 
@@ -2179,15 +2082,7 @@ Cassie: Oh what? You didn't expect that, did you? But there's still an inch left
 Cassie: That's it. Finally. I get to fuck `Fiona(data.mod.gender)` in `herHis(data.mod.gender)` asshole. Ready for some thrusting?
 `Fiona(data.mod.gender)`: Do- don't hold back. <3
 Cassie: Oh i won't!
-!`if (data.mod.gender === "male") { var tr9 = addImage("t9.png");
-tr9.x = 800;
-tr9.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr9 = addImage("g9.png");
-gr9.x = 800;
-gr9.y = 100;
-}`
 [Next|encounter67]
 ---
 
@@ -2202,15 +2097,7 @@ Cassie: Your turn to work for it sweetie.
 Cassie: Gnnfff your killing it baby. Keep it up! Hnf - Like a pornstar. You can't tell me you never done this before.
 `Fiona(data.mod.gender)`: Hnnng Haaa Hnnnf
 Cassie: Your ass is the fucking best. I'm going to cum buckets. Hnnnn I'm gonna cuuuum!
-!`if (data.mod.gender === "male") { var tr10 = addImage("t10.png");
-tr10.x = 800;
-tr10.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr10 = addImage("g10.png");
-gr10.x = 800;
-gr10.y = 100;
-}`
 [Next|encounter68]
 ---
 
@@ -2279,16 +2166,6 @@ forgetting itself. In that case..."
  brutal trust inside `herHim(data.mod.gender)`. A burning wave swaps through `herHis(data.mod.gender)` 
  insides, reminiscent of downing a good scotch. 
 
-!`if (data.mod.gender === "male") { var tr9 = addImage("t9.png");
-tr9.x = 800;
-tr9.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr9 = addImage("g9.png");
-gr9.x = 800;
-gr9.y = 100;
-}`
-
 [Next|encounter684]
 ---
 
@@ -2314,16 +2191,6 @@ asscheeks, having the heavy balls slap against `herHis(data.mod.gender)` !`if (d
 
 `She(data.mod.gender)` just can't help it, `she(data.mod.gender)` has to obey and 
 starts barking like a mindless whore.
-
-!`if (data.mod.gender === "male") { var tr10 = addImage("t10.png");
-tr10.x = 800;
-tr10.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr10 = addImage("g10.png");
-gr10.x = 800;
-gr10.y = 100;
-}`
 
 [Next|encounter685]
 ---
@@ -2384,15 +2251,6 @@ what that moron just said.
 
 Emma: Don't listen to her. You learned for this test, right?
 
-!`if (data.mod.gender === "male") { var tr11 = addImage("t11.png");
-tr11.x = 800;
-tr11.y = 100;
-}`
-
-!`if (data.mod.gender === "female") { var gr11 = addImage("g11.png");
-gr11.x = 800;
-gr11.y = 100;
-}`
 [Next|school1]
 ---
 :school1
@@ -2511,15 +2369,7 @@ getting battered open by `herHis(data.mod.gender)` master.
 And while pleasures and pains wrangling slowly melts `herHis(data.mod.gender)` brain, 
 `she(data.mod.gender)` knows that bearing with it for just a few more minutes will 
 make it worth the while.
-!`if (data.mod.gender === "male") { var tr12 = addImage("t12.png");
-tr12.x = 800;
-tr12.y = 100;
-}`
 
-!`if (data.mod.gender === "female") { var gr12 = addImage("g12.png");
-gr12.x = 800;
-gr12.y = 100;
-}`
 [Next|Num1t]
 ---
 
